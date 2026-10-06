@@ -12,29 +12,53 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
       },
       {
         source: '/manifest.json',
         headers: [
-          { key: 'Content-Type', value: 'application/manifest+json' },
-          { key: 'Cache-Control', value: 'public, max-age=86400' },
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400',
+          },
         ],
       },
       {
         source: '/_next/static/:path*',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
         ],
       },
       {
         source: '/sw.js',
         headers: [
-          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
         ],
       },
     ];
@@ -50,12 +74,10 @@ if (!isDev) {
   const withPWA = withPWAInit({
     dest: 'public',
     register: true,
-    skipWaiting: true,
-    // Keep the Workbox config minimal. We inject HTML precache entries
-    // manually in scripts/fix-precache.mjs after the build.
+
     workboxOptions: {
       disableDevLogs: true,
-      clientsClaim: true,
+      cleanupOutdatedCaches: true,
     },
   });
 
