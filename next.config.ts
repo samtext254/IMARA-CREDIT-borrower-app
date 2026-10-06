@@ -1,7 +1,5 @@
 import type { NextConfig } from 'next';
 
-const isDev = process.env.NODE_ENV === 'development';
-
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -39,7 +37,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400',
+            value: 'no-cache, no-store, must-revalidate',
           },
         ],
       },
@@ -52,36 +50,8 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        source: '/sw.js',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
-          },
-        ],
-      },
     ];
   },
 };
 
-let exported: NextConfig = nextConfig;
-
-if (!isDev) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const withPWAInit = require('@ducanh2912/next-pwa').default;
-
-  const withPWA = withPWAInit({
-    dest: 'public',
-    register: true,
-
-    workboxOptions: {
-      disableDevLogs: true,
-      cleanupOutdatedCaches: true,
-    },
-  });
-
-  exported = withPWA(nextConfig);
-}
-
-export default exported;
+export default nextConfig;
