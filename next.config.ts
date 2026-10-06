@@ -50,45 +50,12 @@ if (!isDev) {
   const withPWA = withPWAInit({
     dest: 'public',
     register: true,
+    skipWaiting: true,
+    // Keep the Workbox config minimal. We inject HTML precache entries
+    // manually in scripts/fix-precache.mjs after the build.
     workboxOptions: {
       disableDevLogs: true,
-      skipWaiting: true,
       clientsClaim: true,
-
-      // ─── THE FIX ───────────────────────────────────────────────
-      // Explicitly precache the HTML routes so the app can launch
-      // even when the network is slow or the server is cold.
-      additionalManifestEntries: [
-        { url: '/', revision: null },
-        { url: '/home', revision: null },
-        { url: '/login', revision: null },
-        { url: '/verify', revision: null },
-        { url: '/apply/loan', revision: null },
-        { url: '/apply', revision: null },
-        { url: '/apply/confirm', revision: null },
-        { url: '/apply/review', revision: null },
-        { url: '/loans', revision: null },
-        { url: '/notifications', revision: null },
-        { url: '/profile', revision: null },
-      ],
-
-      runtimeCaching: [
-        // HTML navigations: network first, fall back to cache after 3s
-        {
-          urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
-          handler: 'NetworkFirst',
-          options: {
-            cacheName: 'pages',
-            networkTimeoutSeconds: 3,
-            expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
-          },
-        },
-        // API: always network
-        {
-          urlPattern: /\/api\/.*/i,
-          handler: 'NetworkOnly',
-        },
-      ],
     },
   });
 
