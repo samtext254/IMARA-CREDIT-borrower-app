@@ -46,40 +46,52 @@ let exported: NextConfig = nextConfig;
 if (!isDev) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const withPWAInit = require('@ducanh2912/next-pwa').default;
+
   const withPWA = withPWAInit({
     dest: 'public',
     register: true,
-    // Fall back to home if a page isn't cached
-    fallbacks: {
-      document: '/home',
-    },
     workboxOptions: {
       disableDevLogs: true,
       skipWaiting: true,
       clientsClaim: true,
-      // Precache the landing page AND home
+
+      // ─── THE FIX ───────────────────────────────────────────────
+      // Explicitly precache the HTML routes so the app can launch
+      // even when the network is slow or the server is cold.
       additionalManifestEntries: [
         { url: '/', revision: null },
         { url: '/home', revision: null },
         { url: '/login', revision: null },
+        { url: '/verify', revision: null },
+        { url: '/apply/loan', revision: null },
+        { url: '/apply', revision: null },
+        { url: '/apply/confirm', revision: null },
+        { url: '/apply/review', revision: null },
+        { url: '/loans', revision: null },
+        { url: '/notifications', revision: null },
+        { url: '/profile', revision: null },
       ],
-      // Time out network after 4s and fall back to cache
+
       runtimeCaching: [
+        // HTML navigations: network first, fall back to cache after 3s
         {
           urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
           handler: 'NetworkFirst',
           options: {
             cacheName: 'pages',
-            networkTimeoutSeconds: 4,
-            expiration: {
-              maxEntries: 50,
-              maxAgeSeconds: 7 * 24 * 60 * 60,
-            },
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 50, maxAgeSeconds: 7 * 24 * 60 * 60 },
           },
+        },
+        // API: always network
+        {
+          urlPattern: /\/api\/.*/i,
+          handler: 'NetworkOnly',
         },
       ],
     },
   });
+
   exported = withPWA(nextConfig);
 }
 
