@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -10,14 +12,8 @@ const nextConfig: NextConfig = {
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           {
             key: 'Referrer-Policy',
             value: 'strict-origin-when-cross-origin',
@@ -37,7 +33,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
+            value: 'public, max-age=86400',
           },
         ],
       },
@@ -50,8 +46,36 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
     ];
   },
 };
 
-export default nextConfig;
+let exported: NextConfig = nextConfig;
+
+if (!isDev) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const withPWAInit = require('@ducanh2912/next-pwa').default;
+
+  const withPWA = withPWAInit({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    workboxOptions: {
+      disableDevLogs: true,
+      clientsClaim: true,
+    },
+  });
+
+  exported = withPWA(nextConfig);
+}
+
+export default exported;
