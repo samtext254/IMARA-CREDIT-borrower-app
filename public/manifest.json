@@ -2,7 +2,7 @@
   "name": "IMARA CREDIT",
   "short_name": "IMARA",
   "description": "Quick, transparent business loans from IMARA CREDIT. Apply in minutes, repay with M-Pesa.",
-  "start_url": "/home",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -49,12 +49,6 @@
       "short_name": "Loans",
       "url": "/loans",
       "description": "View your active and past loans"
-    },
-    {
-      "name": "Repay",
-      "short_name": "Repay",
-      "url": "/repay/l1",
-      "description": "Make a repayment"
     }
   ]
 }

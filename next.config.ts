@@ -31,28 +31,53 @@ const nextConfig: NextConfig = {
           { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
         ],
       },
+      {
+        source: '/sw.js',
+        headers: [
+          { key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' },
+        ],
+      },
     ];
   },
 };
 
-// Only wrap with PWA in production builds.
-// In dev, next-pwa's Webpack hook conflicts with Next 15's Turbopack.
 let exported: NextConfig = nextConfig;
 
 if (!isDev) {
-  // Dynamic import so dev never even loads next-pwa
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const withPWAInit = require('@ducanh2912/next-pwa').default;
   const withPWA = withPWAInit({
     dest: 'public',
     register: true,
-    cacheOnFrontEndNav: true,
-    aggressiveFrontEndNavCaching: true,
-    reloadOnOnline: true,
+    // Fall back to home if a page isn't cached
+    fallbacks: {
+      document: '/home',
+    },
     workboxOptions: {
       disableDevLogs: true,
       skipWaiting: true,
       clientsClaim: true,
+      // Precache the landing page AND home
+      additionalManifestEntries: [
+        { url: '/', revision: null },
+        { url: '/home', revision: null },
+        { url: '/login', revision: null },
+      ],
+      // Time out network after 4s and fall back to cache
+      runtimeCaching: [
+        {
+          urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'pages',
+            networkTimeoutSeconds: 4,
+            expiration: {
+              maxEntries: 50,
+              maxAgeSeconds: 7 * 24 * 60 * 60,
+            },
+          },
+        },
+      ],
     },
   });
   exported = withPWA(nextConfig);
