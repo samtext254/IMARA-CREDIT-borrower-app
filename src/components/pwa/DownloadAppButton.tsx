@@ -15,6 +15,12 @@ interface BeforeInstallPromptEvent extends Event {
 function isInstallUnlikely(): boolean {
   if (typeof window === 'undefined') return true;
 
+  // ── Reliable feature detection (checked first) ───────────────────────
+  // The `beforeinstallprompt` event exists on `window` only in browsers
+  // that support PWA install. Chrome < 108, Chrome 101 on Android 8.1,
+  // and many older OEM browsers do NOT have it.
+  if (!('onbeforeinstallprompt' in window)) return true;
+
   const ua = window.navigator.userAgent;
 
   // In-app browsers (Facebook, Instagram, WhatsApp, Twitter, LinkedIn…)
@@ -30,17 +36,26 @@ function isInstallUnlikely(): boolean {
   const firefoxAndroid = /Firefox/i.test(ua) && /Android/i.test(ua);
   if (firefoxAndroid) return true;
 
+  // ── Old Chrome on Android (pre-108) ───────────────────────────────────
+  // Chrome 108 introduced the current PWA install criteria. Older versions
+  // may fail to launch installed PWAs due to a shorter launch timeout and
+  // buggy start_url handling. We hide the button on these.
+  const chromeMatch = ua.match(/Chrome\/(\d+)/);
+  if (chromeMatch) {
+    const major = parseInt(chromeMatch[1], 10);
+    if (major < 108) return true;
+  }
+
   return false;
 }
 
 /**
  * Floating corner "Download app" pill with slide-up animation.
  *
- * - Android Chrome / Edge: shows after `beforeinstallprompt` fires,
- *   and triggers the native install dialog on tap.
+ * - Modern Android Chrome / Edge: shows after `beforeinstallprompt` fires.
  * - iOS Safari: shows with a "Share → Add to Home Screen" hint.
- * - Everything else (Samsung Internet, in-app browsers, Firefox Android):
- *   hidden entirely — no button, no alert.
+ * - Everything else (old Chrome, Samsung Internet, in-app browsers,
+ *   Firefox Android): hidden entirely — no button, no alert, no failure.
  * - Already installed: hidden.
  * - Dismissable per session.
  */
@@ -48,7 +63,6 @@ export function DownloadAppButton({
   variant = 'corner',
   className = '',
 }: {
-  /** Kept for backwards compatibility with the landing page call site. */
   variant?: 'corner' | 'primary' | 'secondary';
   className?: string;
 }) {
@@ -73,7 +87,7 @@ export function DownloadAppButton({
       return;
     }
 
-    // Unsupported browsers → hide
+    // Unsupported browsers → hide (this now catches old Chrome too)
     if (isInstallUnlikely()) return;
 
     const ua = window.navigator.userAgent;
@@ -82,16 +96,14 @@ export function DownloadAppButton({
 
     // iOS: show the hint, no event will fire
     if (ios) {
-      // Small delay so it doesn't pop instantly on load
       const t = setTimeout(() => setVisible(true), 2000);
       return () => clearTimeout(t);
     }
 
-    // Chrome/Edge: wait for the deferred prompt
+    // Modern Chrome/Edge: wait for the deferred prompt
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
-      // Show after a short delay so it slides in nicely
       setTimeout(() => setVisible(true), 1500);
     };
 
@@ -146,7 +158,6 @@ export function DownloadAppButton({
             {isIOS ? 'Add to Home Screen' : 'Install app'}
           </button>
 
-          {/* small dismiss X, top-right of the pill */}
           <button
             onClick={dismiss}
             aria-label="Dismiss"
@@ -160,7 +171,7 @@ export function DownloadAppButton({
   }
 
   /* ------------------------------------------------------------------ */
-  /*  Legacy inline button (kept for landing page or others)             */
+  /*  Legacy inline button (landing page)                                */
   /* ------------------------------------------------------------------ */
   if (!visible) return null;
 
