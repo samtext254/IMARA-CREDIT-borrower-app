@@ -1,286 +1,300 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowRight, ChevronRight, Plus } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ArrowRight,
+  ChevronRight,
+  Receipt,
+  WalletCards,
+} from 'lucide-react';
+import { ImaraApiError } from '@/lib/api';
+import { loans as loansApi, loanDueDate } from '@/lib/loans';
+import type { Loan, LoanStatus } from '@/lib/loans';
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-type LoanStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'DISBURSED'
-  | 'ACTIVE'
-  | 'OVERDUE'
-  | 'DEFAULTED'
-  | 'PAID'
-  | 'REJECTED';
-
-interface Loan {
-  id: string;
-  reference: string;
-  status: LoanStatus;
-  outstanding: number;
-  principal: number;
-  progress: number;
-  dueDate?: string;
-  submittedAt?: string;
-  closedAt?: string;
-  daysOverdue?: number;
-  reason?: string;
+function formatKes(amount: string | number | null | undefined): string {
+  if (amount === null || amount === undefined || amount === '') return '0';
+  const n = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (isNaN(n)) return '0';
+  return Math.round(n).toLocaleString('en-KE');
 }
 
-/* ------------------------------------------------------------------ */
-/*  Mock data                                                          */
-/* ------------------------------------------------------------------ */
-const MOCK_LOANS: Loan[] = [
-  {
-    id: 'l1',
-    reference: 'IL-2026-000142',
-    status: 'ACTIVE',
-    outstanding: 8500,
-    principal: 20000,
-    progress: 70,
-    dueDate: '2026-10-15',
-  },
-  {
-    id: 'l2',
-    reference: 'IL-2026-000143',
-    status: 'PENDING',
-    outstanding: 0,
-    principal: 5000,
-    progress: 0,
-    submittedAt: '2026-10-02',
-  },
-  {
-    id: 'l3',
-    reference: 'IL-2026-000139',
-    status: 'OVERDUE',
-    outstanding: 3200,
-    principal: 6000,
-    progress: 45,
-    dueDate: '2026-09-28',
-    daysOverdue: 4,
-  },
-  {
-    id: 'l4',
-    reference: 'IL-2026-000121',
-    status: 'PAID',
-    outstanding: 0,
-    principal: 10000,
-    progress: 100,
-    closedAt: '2026-09-20',
-  },
-  {
-    id: 'l5',
-    reference: 'IL-2026-000118',
-    status: 'REJECTED',
-    outstanding: 0,
-    principal: 15000,
-    progress: 0,
-    submittedAt: '2026-09-18',
-    reason: 'Insufficient credit history',
-  },
-];
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
 
-/* ------------------------------------------------------------------ */
-/*  Display config                                                     */
-/* ------------------------------------------------------------------ */
 const STATUS_LABELS: Record<LoanStatus, string> = {
-  PENDING: 'Pending',
+  PENDING: 'Under review',
   APPROVED: 'Approved',
+  REJECTED: 'Declined',
   DISBURSED: 'Disbursed',
   ACTIVE: 'Active',
   OVERDUE: 'Overdue',
+  PAID: 'Repaid',
   DEFAULTED: 'Defaulted',
-  PAID: 'Paid',
-  REJECTED: 'Rejected',
+  WRITTEN_OFF: 'Written off',
 };
 
-const STATUS_PILL: Record<LoanStatus, string> = {
-  PENDING:   'bg-amber-50 text-amber-700 border-amber-200',
-  APPROVED:  'bg-sky-50 text-sky-700 border-sky-200',
-  DISBURSED: 'bg-plum-50 text-plum-700 border-plum-200',
-  ACTIVE:    'bg-plum-50 text-plum-700 border-plum-200',
-  OVERDUE:   'bg-orange-50 text-orange-700 border-orange-200',
-  DEFAULTED: 'bg-red-50 text-red-700 border-red-200',
-  PAID:      'bg-leaf-50 text-leaf-700 border-leaf-200',
-  REJECTED:  'bg-ink-100 text-ink-500 border-ink-200',
+const STATUS_STYLES: Record<LoanStatus, { bg: string; text: string }> = {
+  PENDING: { bg: 'bg-ink-100/60', text: 'text-ink-700' },
+  APPROVED: { bg: 'bg-leaf-50', text: 'text-leaf-700' },
+  REJECTED: { bg: 'bg-red-50', text: 'text-red-700' },
+  DISBURSED: { bg: 'bg-leaf-50', text: 'text-leaf-700' },
+  ACTIVE: { bg: 'bg-leaf-50', text: 'text-leaf-700' },
+  OVERDUE: { bg: 'bg-amber-50', text: 'text-amber-700' },
+  PAID: { bg: 'bg-plum-50', text: 'text-plum-700' },
+  DEFAULTED: { bg: 'bg-red-50', text: 'text-red-700' },
+  WRITTEN_OFF: { bg: 'bg-red-50', text: 'text-red-700' },
 };
 
-const STATUS_BAR: Record<LoanStatus, string> = {
-  PENDING:   'bg-amber-400',
-  APPROVED:  'bg-sky-500',
-  DISBURSED: 'bg-plum-600',
-  ACTIVE:    'bg-plum-700',
-  OVERDUE:   'bg-orange-500',
-  DEFAULTED: 'bg-red-500',
-  PAID:      'bg-leaf-500',
-  REJECTED:  'bg-ink-300',
-};
-
-/* ------------------------------------------------------------------ */
-/*  Tabs                                                               */
-/* ------------------------------------------------------------------ */
-const TABS = [
-  {
-    id: 'all',
-    label: 'All',
-    match: (_l: Loan) => true,
-  },
-  {
-    id: 'active',
-    label: 'Active',
-    match: (l: Loan) =>
-      l.status === 'DISBURSED' || l.status === 'ACTIVE' || l.status === 'OVERDUE',
-  },
-  {
-    id: 'history',
-    label: 'History',
-    match: (l: Loan) =>
-      l.status === 'PAID' || l.status === 'REJECTED' || l.status === 'DEFAULTED',
-  },
-] as const;
-
-type TabId = (typeof TABS)[number]['id'];
-
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
-function formatKES(n: number): string {
-  return new Intl.NumberFormat('en-KE', {
-    style: 'currency',
-    currency: 'KES',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '—';
-  return new Intl.DateTimeFormat('en-KE', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(d);
-}
-
-/* ------------------------------------------------------------------ */
-/*  Page                                                               */
-/* ------------------------------------------------------------------ */
 export default function LoansPage() {
-  const router = useRouter();
-  const [tab, setTab] = useState<TabId>('all');
+  const [allLoans, setAllLoans] = useState<Loan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const activeTab = TABS.find((t) => t.id === tab)!;
-  const visible = MOCK_LOANS.filter(activeTab.match);
+  useEffect(() => {
+    let cancelled = false;
 
-  const hasAnyLoans = MOCK_LOANS.length > 0;
+    (async () => {
+      try {
+        const res = await loansApi.getLoans({ limit: 50 });
+        if (cancelled) return;
+        setAllLoans(res.data || []);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ImaraApiError) {
+          setError(err.message);
+        } else {
+          setError('Could not load your loans. Please try again.');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { activeLoan, pastLoans, pendingLoans } = useMemo(() => {
+    const active = allLoans.filter(
+      (l) =>
+        l.status === 'ACTIVE' ||
+        l.status === 'OVERDUE' ||
+        l.status === 'DISBURSED'
+    );
+    const pending = allLoans.filter((l) => l.status === 'PENDING');
+    const past = allLoans.filter(
+      (l) =>
+        l.status === 'PAID' ||
+        l.status === 'REJECTED' ||
+        l.status === 'DEFAULTED' ||
+        l.status === 'WRITTEN_OFF'
+    );
+    return {
+      activeLoan: active[0] || null,
+      pastLoans: past,
+      pendingLoans: pending,
+    };
+  }, [allLoans]);
+
+  const hasActive = activeLoan !== null;
+  const hasPending = pendingLoans.length > 0;
+  const hasAny = allLoans.length > 0;
+  const canApply = !hasActive && !hasPending;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-page">
+        <div className="sticky top-0 z-30 bg-plum-700">
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div className="h-6 w-24 animate-pulse rounded bg-white/10" />
+          </div>
+        </div>
+        <div className="px-3 pt-3 space-y-3">
+          <div className="h-32 animate-pulse rounded-3xl bg-ink-100/40" />
+          <div className="h-20 animate-pulse rounded-2xl bg-ink-100/40" />
+          <div className="h-20 animate-pulse rounded-2xl bg-ink-100/40" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-page pb-24">
-
-      {/* ============ NAV — plum purple ============ */}
-      <div className="sticky top-0 z-30 bg-plum-800">
-        <div className="flex items-center justify-between gap-3 px-5 py-4">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">
-              Your book
-            </p>
-            <h1 className="mt-0.5 text-[17px] font-semibold tracking-tight text-white">
-              My loans
-            </h1>
-          </div>
-
-          <button
-            onClick={() => router.push('/apply/loan')}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition active:scale-95"
-            aria-label="New loan"
-          >
-            <Plus size={18} strokeWidth={2.6} />
-          </button>
+      {/* ============ NAV ============ */}
+      <div className="sticky top-0 z-30 bg-plum-700">
+        <div className="flex items-center gap-3 px-5 py-4">
+          <h1 className="text-[16px] font-semibold tracking-tight text-white">
+            My Loans
+          </h1>
         </div>
-
-        {/* Yellow accent line */}
         <div className="h-1 w-full bg-brand-500" />
       </div>
 
-      {/* ============ TABS — purple, on white ============ */}
-      <div className="sticky top-[73px] z-20 flex border-b border-ink-100 bg-white">
-        {TABS.map((t) => {
-          const isActive = t.id === tab;
-          const count = MOCK_LOANS.filter(t.match).length;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={`relative flex-1 px-4 py-3 text-[12.5px] font-semibold tracking-tight transition ${
-                isActive ? 'text-plum-700' : 'text-ink-400'
-              }`}
-            >
-              <span className="inline-flex items-center gap-1.5">
-                {t.label}
-                <span
-                  className={`inline-grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold ${
-                    isActive
-                      ? 'bg-plum-700 text-white'
-                      : 'bg-ink-100 text-ink-500'
-                  }`}
-                >
-                  {count}
-                </span>
-              </span>
-              {isActive && (
-                <span className="absolute inset-x-4 -bottom-px h-0.5 rounded-full bg-plum-700" />
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* ============ EMPTY STATE ============ */}
+      {!hasAny && !error && (
+        <div className="px-3 pt-3">
+          <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
+                  No loans yet
+                </p>
+                <p className="mt-2 text-[20px] font-bold leading-tight tracking-tight text-plum-800">
+                  Apply for your first loan
+                </p>
+              </div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-plum-800/10 text-plum-800">
+                <WalletCards size={19} strokeWidth={2.2} />
+              </div>
+            </div>
 
-      {/* ============ EMPTY STATE (no loans at all) ============ */}
-      {!hasAnyLoans && (
-        <div className="px-6 pt-16 text-center">
-          <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-plum-50 text-plum-700">
-            <Plus size={26} strokeWidth={2.2} />
+            <Link
+              href="/apply/loan"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+            >
+              Apply for a loan
+              <ArrowRight size={15} strokeWidth={2.5} />
+            </Link>
           </div>
-          <h2 className="mt-5 text-[16px] font-bold tracking-tight text-ink-950">
-            No loans yet
-          </h2>
-          <p className="mx-auto mt-1.5 max-w-[16rem] text-[12.5px] leading-snug text-ink-500">
-            Apply for your first loan and it will appear here.
-          </p>
+        </div>
+      )}
+
+      {/* ============ ERROR STATE ============ */}
+      {error && (
+        <div className="px-3 pt-3">
+          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-[12.5px] font-medium text-red-700">
+            {error}
+          </div>
+        </div>
+      )}
+
+      {/* ============ PENDING LOANS ============ */}
+      {pendingLoans.length > 0 && (
+        <section className="mt-3 bg-white">
+          <div className="flex items-center justify-between border-b border-ink-100 bg-white px-5 py-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+              Under review
+            </h2>
+            <span className="text-[11px] font-semibold text-ink-500">
+              {pendingLoans.length}
+            </span>
+          </div>
+
+          {pendingLoans.map((loan, idx) => (
+            <LoanRow
+              key={loan.id}
+              loan={loan}
+              isLast={idx === pendingLoans.length - 1}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* ============ ACTIVE LOAN ============ */}
+      {activeLoan && (
+        <section className="mt-3 bg-white">
+          <div className="flex items-center justify-between border-b border-ink-100 bg-white px-5 py-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+              Active loan
+            </h2>
+          </div>
+
+          <Link
+            href={`/loans/${activeLoan.id}`}
+            className="block px-5 py-4 transition active:bg-ink-100/40"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                      STATUS_STYLES[activeLoan.status].bg
+                    } ${STATUS_STYLES[activeLoan.status].text}`}
+                  >
+                    {STATUS_LABELS[activeLoan.status]}
+                  </span>
+                  <span className="text-[10.5px] font-medium text-ink-400">
+                    {activeLoan.loan_reference}
+                  </span>
+                </div>
+                <p className="mt-2 text-[20px] font-bold leading-none tracking-tight text-ink-950 tabular-nums">
+                  KES {formatKes(activeLoan.outstanding_total)}
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-ink-400">
+                  of KES {formatKes(activeLoan.principal_amount)} principal
+                </p>
+              </div>
+              <ChevronRight
+                size={18}
+                className="shrink-0 text-ink-400"
+                strokeWidth={2.2}
+              />
+            </div>
+
+            <div className="mt-4 flex items-center gap-3 border-t border-ink-100 pt-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+                  Due
+                </p>
+                <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-800">
+                  {formatDate(loanDueDate(activeLoan))}
+                </p>
+              </div>
+              <div className="min-w-0 flex-1 text-right">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+                  Outstanding
+                </p>
+                <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-800 tabular-nums">
+                  KES {formatKes(activeLoan.outstanding_total)}
+                </p>
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
+
+      {/* ============ PAST LOANS ============ */}
+      {pastLoans.length > 0 && (
+        <section className="mt-3 bg-white">
+          <div className="flex items-center justify-between border-b border-ink-100 bg-white px-5 py-3">
+            <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+              History
+            </h2>
+            <span className="text-[11px] font-semibold text-ink-500">
+              {pastLoans.length}
+            </span>
+          </div>
+
+          {pastLoans.map((loan, idx) => (
+            <LoanRow
+              key={loan.id}
+              loan={loan}
+              isLast={idx === pastLoans.length - 1}
+            />
+          ))}
+        </section>
+      )}
+
+      {/* ============ APPLY CTA ============ */}
+      {canApply && hasAny && (
+        <div className="px-3 pt-3">
           <Link
             href="/apply/loan"
-            className="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-plum-800 px-5 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 py-3.5 text-[14px] font-bold tracking-tight text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)] transition active:scale-[0.985]"
           >
-            Apply for a loan
+            Apply for a new loan
             <ArrowRight size={15} strokeWidth={2.5} />
           </Link>
-        </div>
-      )}
-
-      {/* ============ EMPTY STATE (this tab has none) ============ */}
-      {hasAnyLoans && visible.length === 0 && (
-        <div className="px-6 pt-14 text-center">
-          <h2 className="text-[14px] font-semibold tracking-tight text-ink-800">
-            Nothing here
-          </h2>
-          <p className="mx-auto mt-1 max-w-[16rem] text-[12px] leading-snug text-ink-500">
-            No loans in {activeTab.label.toLowerCase()} yet.
-          </p>
-        </div>
-      )}
-
-      {/* ============ LOAN CARDS ============ */}
-      {visible.length > 0 && (
-        <div className="space-y-3 px-3 py-3">
-          {visible.map((loan) => (
-            <LoanCard key={loan.id} loan={loan} />
-          ))}
         </div>
       )}
     </div>
@@ -288,101 +302,68 @@ export default function LoansPage() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Loan card                                                          */
+/*  Loan row                                                           */
 /* ------------------------------------------------------------------ */
-function LoanCard({ loan }: { loan: Loan }) {
-  const isInProgress =
+function LoanRow({ loan, isLast }: { loan: Loan; isLast: boolean }) {
+  const style = STATUS_STYLES[loan.status];
+  const label = STATUS_LABELS[loan.status];
+
+  const isCredit =
+    loan.status === 'DISBURSED' ||
     loan.status === 'ACTIVE' ||
-    loan.status === 'OVERDUE' ||
-    loan.status === 'DISBURSED';
+    loan.status === 'APPROVED' ||
+    loan.status === 'PAID';
 
-  const isPending = loan.status === 'PENDING' || loan.status === 'APPROVED';
+  const amount =
+    loan.outstanding_total && Number(loan.outstanding_total) > 0
+      ? loan.outstanding_total
+      : loan.principal_amount;
 
-  const primaryAmount = isInProgress ? loan.outstanding : loan.principal;
-  const primaryLabel = isInProgress ? 'Outstanding' : 'Loan amount';
-
-  let subLine: React.ReactNode = null;
-  if (loan.status === 'ACTIVE' && loan.dueDate) {
-    subLine = (
-      <>
-        Next due <span className="font-semibold text-ink-800">{formatDate(loan.dueDate)}</span>
-      </>
-    );
-  } else if (loan.status === 'OVERDUE' && loan.daysOverdue != null) {
-    subLine = (
-      <span className="font-semibold text-orange-700">
-        {loan.daysOverdue} day{loan.daysOverdue === 1 ? '' : 's'} overdue
-      </span>
-    );
-  } else if (isPending && loan.submittedAt) {
-    subLine = (
-      <>
-        Submitted <span className="font-semibold text-ink-800">{formatDate(loan.submittedAt)}</span>
-      </>
-    );
-  } else if (loan.status === 'PAID' && loan.closedAt) {
-    subLine = (
-      <>
-        Closed <span className="font-semibold text-ink-800">{formatDate(loan.closedAt)}</span>
-      </>
-    );
-  } else if (loan.status === 'REJECTED' && loan.reason) {
-    subLine = <span className="text-ink-500">{loan.reason}</span>;
-  }
+  const dateSource =
+    loan.disbursed_at || loan.closed_at || loan.created_at;
 
   return (
     <Link
       href={`/loans/${loan.id}`}
-      className="block overflow-hidden rounded-2xl bg-white transition active:scale-[0.995]"
+      className={`flex items-center gap-3.5 px-5 py-3.5 transition active:bg-ink-100/40 ${
+        isLast ? '' : 'border-b border-ink-100'
+      }`}
     >
-      {/* header */}
-      <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
-            {primaryLabel}
-          </p>
-          <p className="mt-1 text-[22px] font-bold leading-none tracking-[-0.02em] text-ink-950 tabular-nums">
-            {formatKES(primaryAmount)}
-          </p>
-          <p className="mt-1 text-[11px] font-medium text-ink-400">
-            {loan.reference}
-          </p>
-        </div>
-
-        <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${STATUS_PILL[loan.status]}`}
-        >
-          {STATUS_LABELS[loan.status]}
-        </span>
+      <div
+        className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${
+          isCredit ? 'bg-leaf-50 text-leaf-600' : style.bg + ' ' + style.text
+        }`}
+      >
+        <Receipt size={18} strokeWidth={2.2} />
       </div>
 
-      {/* progress bar */}
-      {(isInProgress || loan.status === 'PAID') && loan.progress > 0 && (
-        <div className="px-4 pb-3">
-          <div className="h-1.5 overflow-hidden rounded-full bg-ink-100">
-            <div
-              className={`h-full rounded-full transition-all ${STATUS_BAR[loan.status]}`}
-              style={{ width: `${loan.progress}%` }}
-            />
-          </div>
-          <div className="mt-1.5 flex items-center justify-between text-[10.5px] font-medium text-ink-400">
-            <span>{loan.progress}% repaid</span>
-            <span>of {formatKES(loan.principal)}</span>
-          </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span
+            className={`rounded-full px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wider ${style.bg} ${style.text}`}
+          >
+            {label}
+          </span>
         </div>
-      )}
+        <p className="mt-1 truncate text-[11px] font-medium text-ink-400">
+          {formatDate(dateSource)} · {loan.term_days} days
+        </p>
+      </div>
 
-      {/* sub-line + chevron */}
-      {subLine && (
-        <div className="flex items-center justify-between gap-3 border-t border-ink-100 px-4 py-2.5">
-          <p className="truncate text-[11.5px] text-ink-500">{subLine}</p>
-          <ChevronRight
-            size={14}
-            className="shrink-0 text-ink-400"
-            strokeWidth={2.2}
-          />
-        </div>
-      )}
+      <div className="shrink-0 text-right">
+        <p className="text-[13.5px] font-bold tabular-nums tracking-tight text-ink-950">
+          KES {formatKes(amount)}
+        </p>
+        <p className="mt-0.5 text-[10px] font-medium text-ink-400">
+          of {formatKes(loan.principal_amount)}
+        </p>
+      </div>
+
+      <ChevronRight
+        size={16}
+        className="shrink-0 text-ink-300"
+        strokeWidth={2}
+      />
     </Link>
   );
 }

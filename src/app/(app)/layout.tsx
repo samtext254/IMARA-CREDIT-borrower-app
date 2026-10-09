@@ -1,12 +1,19 @@
-import { BottomNav } from '@/components/borrower/BottomNav';
-import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
+// src/app/(app)/layout.tsx
+//
+// ─── APP LAYOUT (PROTECTED) ─────────────────────────────────────
+// Wraps every authenticated page with:
+//   1. A session check (calls /v1/imara/auth/me on mount)
+//   2. A loading skeleton until the check resolves
+//   3. The bottom nav shell
+//
+// If the session is dead, the shared SessionWatcher fires and
+// routes to /session-expired. This component does not handle that
+// redirect itself — it just stops rendering children and shows a
+// skeleton.
+// ────────────────────────────────────────────────────────────────
+
+import { AppLayoutShell } from './_shell';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto bg-page">
-      <main className="flex-1 pb-20">{children}</main>
-      <BottomNav />
-      <DownloadAppButton />
-    </div>
-  );
+  return <AppLayoutShell>{children}</AppLayoutShell>;
 }

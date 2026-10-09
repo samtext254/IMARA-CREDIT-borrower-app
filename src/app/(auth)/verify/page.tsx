@@ -4,11 +4,8 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { imara, ImaraApiError } from '@/lib/api';
 
-/* ------------------------------------------------------------------ */
-/*  Dev bypass code — swap for real server check when wired            */
-/* ------------------------------------------------------------------ */
-const DEV_OTP = '123456';
 const CODE_LENGTH = 6;
 const RESEND_COOLDOWN_SECONDS = 30;
 
@@ -73,7 +70,10 @@ function OtpBoxes({
 
   function onPaste(e: React.ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
+    const pasted = e.clipboardData
+      .getData('text')
+      .replace(/\D/g, '')
+      .slice(0, CODE_LENGTH);
     if (!pasted) return;
     onChange(pasted);
     const last = Math.min(pasted.length, CODE_LENGTH) - 1;
@@ -116,13 +116,41 @@ function OtpBoxes({
 function VerifyForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const email = params.get('email') || '';
+  const emailFromUrl = params.get('email') || '';
 
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(RESEND_COOLDOWN_SECONDS);
   const [resent, setResent] = useState(false);
+  const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+
+  // ─── Fetch OTP context on mount ─────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await imara.otpContext();
+        if (!cancelled) {
+          setMaskedEmail(res.maskedEmail);
+          setExpiresAt(res.expiresAt);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ImaraApiError) {
+          if (err.code === 'OTP_NOT_FOUND' || err.code === 'OTP_EXPIRED') {
+            router.replace('/login');
+            return;
+          }
+        }
+        // Network error — leave the page visible so the user can retry.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   useEffect(() => {
     if (secondsLeft <= 0) return;
@@ -142,39 +170,86 @@ function VerifyForm() {
     setError(null);
 
     try {
-      // -----------------------------------------------------------------
-      // DEV BYPASS: accept 123456 locally.
-      // Replace this block with a real fetch to the auth-engine.
-      // -----------------------------------------------------------------
-      await new Promise((r) => setTimeout(r, 700));
+      const res = await imara.verifyOtp(code);
 
-      if (code !== DEV_OTP) {
-        throw new Error('Incorrect code. Try again.');
+      // ─── Forced password change path ─────────────────────
+      // The backend did not issue a session because this borrower
+      // is still on a temp password. Route to /reset-password
+      // with the short-lived resetToken.
+      if (res.requiresPasswordReset) {
+        const params = new URLSearchParams({
+          token: res.resetToken,
+          email: res.email,
+        });
+        router.replace(`/reset-password?${params.toString()}`);
+        return;
       }
 
-      // Success → dashboard (NOT the landing page)
       router.push('/home');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong');
+      if (err instanceof ImaraApiError) {
+        switch (err.code) {
+          case 'INVALID_OTP':
+            setError('That code is incorrect. Please try again.');
+            break;
+          case 'OTP_EXPIRED':
+            setError('Your code has expired. Request a new one.');
+            break;
+          case 'OTP_ATTEMPTS_EXCEEDED':
+            setError(
+              'Too many incorrect attempts. Please request a new code.'
+            );
+            break;
+          case 'OTP_NOT_FOUND':
+            // The temporary session is gone — send them back to login.
+            router.replace('/login');
+            return;
+          case 'RATE_LIMITED':
+            setError(err.message);
+            break;
+          default:
+            setError(err.message || 'Verification failed. Please try again.');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Something went wrong');
+      }
       setCode('');
       setSubmitting(false);
     }
   }
 
-  function onResend() {
+  async function onResend() {
     if (secondsLeft > 0) return;
-    // TODO: POST /api/auth/otp/resend
-    setResent(true);
-    setSecondsLeft(RESEND_COOLDOWN_SECONDS);
-    setTimeout(() => setResent(false), 2500);
+    setError(null);
+    try {
+      const res = await imara.resendOtp();
+      setExpiresAt(res.expiresAt);
+      setResent(true);
+      setSecondsLeft(RESEND_COOLDOWN_SECONDS);
+      setTimeout(() => setResent(false), 2500);
+    } catch (err) {
+      if (err instanceof ImaraApiError) {
+        if (err.code === 'OTP_NOT_FOUND') {
+          router.replace('/login');
+          return;
+        }
+        if (err.code === 'RATE_LIMITED') {
+          const wait = err.retryAfter ?? RESEND_COOLDOWN_SECONDS;
+          setSecondsLeft(wait);
+          setError(err.message);
+          return;
+        }
+      }
+      setError('Could not resend the code. Please try again.');
+    }
   }
 
   const fullCode = code.length === CODE_LENGTH;
+  const displayEmail = maskedEmail || emailFromUrl || 'your email';
 
   return (
     <div className="min-h-screen bg-white">
-
-      {/* ============ HERO HEADER — plum + yellow ============ */}
+      {/* ============ HERO HEADER ============ */}
       <div className="relative overflow-hidden rounded-b-[32px] bg-plum-800 px-6 pt-8 pb-10">
         <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-plum-700/60 blur-3xl" />
         <div className="pointer-events-none absolute -left-24 top-20 h-48 w-48 rounded-full bg-plum-900/50 blur-3xl" />
@@ -193,32 +268,26 @@ function VerifyForm() {
         </h1>
         <p className="relative mt-2 max-w-[18rem] text-[12.5px] font-medium leading-snug text-white/70">
           We sent a 6-digit code to{' '}
-          <span className="font-semibold text-brand-500">
-            {email || 'your email'}
-          </span>
-          .
+          <span className="font-semibold text-brand-500">{displayEmail}</span>.
         </p>
       </div>
 
       {/* ============ FORM ============ */}
       <div className="px-6 pt-8 pb-10">
-
         {/* Email preview chip */}
-        {email && (
-          <div className="mb-6 flex items-center gap-3 rounded-2xl border border-ink-100 bg-white px-4 py-3">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-50 text-plum-700">
-              <Mail size={16} strokeWidth={2.2} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
-                Sent to
-              </p>
-              <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-950">
-                {email}
-              </p>
-            </div>
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-ink-100 bg-white px-4 py-3">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-50 text-plum-700">
+            <Mail size={16} strokeWidth={2.2} />
           </div>
-        )}
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+              Sent to
+            </p>
+            <p className="mt-0.5 truncate text-[12.5px] font-semibold text-ink-950">
+              {displayEmail}
+            </p>
+          </div>
+        </div>
 
         {/* Code entry */}
         <div>
@@ -280,12 +349,6 @@ function VerifyForm() {
             {submitting ? 'Verifying…' : 'Verify'}
           </Button>
         </div>
-
-        {/* Dev hint */}
-        <p className="mt-6 text-center text-[10.5px] font-medium leading-snug text-ink-400">
-          Demo mode: enter{' '}
-          <span className="font-bold text-plum-700">123456</span> to continue.
-        </p>
       </div>
     </div>
   );

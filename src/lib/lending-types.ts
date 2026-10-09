@@ -67,6 +67,7 @@ export interface KycProfile {
   /** Present only when isBusiness === true */
   businessInfo?: BusinessInfo;
 }
+
 /* ================================================================ */
 /*  Interest rates                                                  */
 /* ================================================================ */
@@ -170,13 +171,21 @@ export interface AgreementAcceptance {
   signedAt: string;
 }
 
-/** Everything collected across the apply flow, as one draft object */
+/**
+ * Everything collected across the apply flow, as one draft object.
+ *
+ * Fields are optional because the draft is written incrementally
+ * as the user moves from step to step. `productId` is the credit
+ * engine's loan product UUID, captured at step 1 and reused when
+ * the application is finally submitted at step 4.
+ */
 export interface LoanApplicationDraft {
-  kyc: KycProfile;
-  request: LoanRequest;
-  disbursement: DisbursementInfo;
-  repayment: RepaymentPreferences;
-  agreement: AgreementAcceptance;
+  productId?: string;
+  kyc?: Partial<KycProfile>;
+  request?: Partial<LoanRequest>;
+  disbursement?: Partial<DisbursementInfo>;
+  repayment?: Partial<RepaymentPreferences>;
+  agreement?: Partial<AgreementAcceptance>;
 }
 
 /* ================================================================ */

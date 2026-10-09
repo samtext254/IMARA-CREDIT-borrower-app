@@ -41,7 +41,7 @@ export default function LandingPage() {
 
         {/* Primary — yellow with purple text */}
         <Link
-          href="/login"
+          href="/login?m=250084"
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-4 text-[15px] font-bold tracking-tight text-plum-800 shadow-[0_10px_28px_-10px_rgba(255,206,7,0.6)] transition active:scale-[0.985]"
         >
           Get started
@@ -50,7 +50,7 @@ export default function LandingPage() {
 
         {/* Secondary — translucent white */}
         <Link
-          href="/login"
+          href="/login?m=250084"
           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 px-6 py-4 text-[15px] font-bold tracking-tight text-white ring-1 ring-white/15 transition active:scale-[0.985]"
         >
           I already have an account

@@ -14,6 +14,9 @@ import {
   type LoanPurpose,
   type LoanTermDays,
 } from '@/lib/lending-types';
+import { ImaraApiError } from '@/lib/api';
+import { loans as loansApi } from '@/lib/loans';
+import type { Eligibility, LoanProduct } from '@/lib/loans';
 
 /* ------------------------------------------------------------------ */
 /*  Local UI helpers                                                   */
@@ -70,7 +73,16 @@ function SectionCard({
 /* ------------------------------------------------------------------ */
 /*  Config                                                             */
 /* ------------------------------------------------------------------ */
-const MOCK_CREDIT_LIMIT = 25000;
+const DEFAULT_CREDIT_LIMIT = 10000;
+
+/** Any loan in one of these statuses blocks a new application. */
+const BLOCKING_STATUSES = [
+  'PENDING',
+  'APPROVED',
+  'DISBURSED',
+  'ACTIVE',
+  'OVERDUE',
+] as const;
 
 const TERM_OPTIONS: LoanTermDays[] = [7, 14, 30, 60, 90];
 const PURPOSE_OPTIONS: LoanPurpose[] = [
@@ -83,11 +95,32 @@ const PURPOSE_OPTIONS: LoanPurpose[] = [
 ];
 const QUICK_AMOUNTS = [1000, 2500, 5000, 10000];
 
+function blockingMessage(status: string): string {
+  switch (status) {
+    case 'PENDING':
+      return 'You already have an application under review.';
+    case 'APPROVED':
+      return 'You already have an approved loan awaiting disbursement.';
+    case 'DISBURSED':
+      return 'You already have a disbursed loan awaiting activation.';
+    case 'ACTIVE':
+      return 'You already have an active loan.';
+    case 'OVERDUE':
+      return 'You already have an overdue loan. Please clear it before applying again.';
+    default:
+      return 'You are not eligible for a new loan right now.';
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function ApplyLoanPage() {
   const router = useRouter();
+
+  const [product, setProduct] = useState<LoanProduct | null>(null);
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const [amount, setAmount] = useState<number>(0);
   const [amountInput, setAmountInput] = useState('');
@@ -101,6 +134,48 @@ export default function ApplyLoanPage() {
   const purposeRef = useRef<HTMLDivElement>(null);
   const purposeNoteRef = useRef<HTMLInputElement>(null);
 
+  // ─── Fetch product + eligibility + gating check ─────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const [prodRes, eligRes, loansRes] = await Promise.all([
+          loansApi.getProduct(),
+          loansApi.getEligibility(),
+          loansApi.getLoans({ limit: 20 }),
+        ]);
+        if (cancelled) return;
+
+        // ─── Application gating ───────────────────────────────
+        // Block the page if the borrower has any loan in flight.
+        const blocking = (loansRes.data || []).find((l) =>
+          (BLOCKING_STATUSES as readonly string[]).includes(l.status)
+        );
+
+        if (blocking) {
+          setLoadError(blockingMessage(blocking.status));
+          return;
+        }
+
+        setProduct(prodRes.data);
+        setEligibility(eligRes.data);
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof ImaraApiError) {
+          setLoadError(err.message);
+        } else {
+          setLoadError('Could not load loan details.');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // ─── Restore draft ──────────────────────────────────────────
   useEffect(() => {
     const draft = readDraft();
     const r = draft.request;
@@ -112,7 +187,17 @@ export default function ApplyLoanPage() {
     setPurposeNote(r.purposeNote ?? '');
   }, []);
 
-  const max = MOCK_CREDIT_LIMIT;
+  // ─── Bounds ─────────────────────────────────────────────────
+  const max = useMemo(() => {
+    const available = eligibility?.credit_limit
+      ? parseFloat(eligibility.credit_limit.available_limit || '0')
+      : DEFAULT_CREDIT_LIMIT;
+    const productMax = product
+      ? parseFloat(product.max_amount || '0')
+      : Infinity;
+    return Math.min(available, productMax);
+  }, [eligibility, product]);
+
   const clampedAmount = Math.min(Math.max(amount, 0), max);
 
   function applyAmountInput(raw: string) {
@@ -185,12 +270,47 @@ export default function ApplyLoanPage() {
         purpose: purpose!,
         purposeNote: purpose === 'other' ? purposeNote.trim() : undefined,
       },
+      productId: product?.id,
     });
 
-    router.push('/apply'); // Step 2
+    router.push('/apply');
   }
 
   const sliderPct = max > 0 ? (clampedAmount / max) * 100 : 0;
+
+  // ─── Load error state ───────────────────────────────────────
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-page pb-24">
+        <div className="sticky top-0 z-30 border-b border-ink-100 bg-white">
+          <div className="flex items-center gap-3 px-4 py-2.5">
+            <button
+              onClick={() => router.back()}
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-100/70 text-ink-800 transition active:scale-95"
+              aria-label="Back"
+            >
+              <ArrowLeft size={17} strokeWidth={2.2} />
+            </button>
+            <h1 className="text-[15px] font-semibold tracking-tight text-ink-950">
+              Loan request
+            </h1>
+          </div>
+        </div>
+        <div className="px-6 pt-12 text-center">
+          <p className="text-[14px] font-semibold text-ink-800">
+            Not available right now
+          </p>
+          <p className="mt-2 text-[12px] text-ink-500">{loadError}</p>
+          <button
+            onClick={() => router.push('/home')}
+            className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-plum-700 px-4 py-2 text-[12px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+          >
+            Back to home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-page pb-48">
@@ -214,7 +334,6 @@ export default function ApplyLoanPage() {
           </div>
         </div>
         <div className="h-0.5 w-full bg-ink-100">
-          {/* progress bar — yellow */}
           <div className="h-full w-1/4 bg-brand-500 transition-all" />
         </div>
       </div>
@@ -233,7 +352,6 @@ export default function ApplyLoanPage() {
       {/* AMOUNT */}
       <SectionCard title="How much do you need?">
         <div ref={amountRef}>
-          {/* Hero quote card — yellow with purple text */}
           <div className="overflow-hidden rounded-2xl bg-brand-500 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
             <div className="px-4 pt-5 pb-4 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
@@ -266,7 +384,6 @@ export default function ApplyLoanPage() {
             </div>
           </div>
 
-          {/* Slider — purple fill */}
           <div className="mt-4">
             <input
               type="range"
@@ -286,7 +403,6 @@ export default function ApplyLoanPage() {
             />
           </div>
 
-          {/* Quick amounts */}
           <div className="mt-3 grid grid-cols-4 gap-2">
             {QUICK_AMOUNTS.map((v) => {
               const disabled = v > max;

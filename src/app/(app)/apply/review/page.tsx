@@ -12,6 +12,8 @@ import {
   PURPOSE_LABELS,
   type LoanApplicationDraft,
 } from '@/lib/lending-types';
+import { ImaraApiError } from '@/lib/api';
+import { loans as loansApi } from '@/lib/loans';
 
 function SectionCard({
   title,
@@ -50,6 +52,7 @@ export default function ApplyReviewPage() {
   const [signature, setSignature] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setDraft(readDraft());
@@ -73,16 +76,63 @@ export default function ApplyReviewPage() {
     (f === 'signature' && !signatureOk)
   );
 
-  function onSubmit() {
+  async function onSubmit() {
     setSubmitted(true);
+    setError(null);
     if (!canSubmit) return;
 
+    const productId = draft.productId;
+    const amount = draft.request?.amount;
+    const termDays = draft.request?.termDays;
+
+    if (!productId) {
+      setError('Missing product. Please start the application again.');
+      return;
+    }
+    if (!amount || !termDays) {
+      setError('Missing amount or term. Please start again.');
+      return;
+    }
+
     setBusy(true);
-    // TODO: POST /api/lending/loans with draft
-    setTimeout(() => {
+    try {
+      await loansApi.apply({
+        product_id: productId,
+        principal: amount,
+        term_days: termDays,
+      });
+
       clearDraft();
       router.push('/apply-done');
-    }, 900);
+    } catch (err) {
+      if (err instanceof ImaraApiError) {
+        switch (err.code) {
+          case 'AMOUNT_OUT_OF_RANGE':
+            setError('The amount is outside the allowed range.');
+            break;
+          case 'TERM_OUT_OF_RANGE':
+            setError('The term is outside the allowed range.');
+            break;
+          case 'LIMIT_EXCEEDED':
+            setError('The amount exceeds your available credit limit.');
+            break;
+          case 'NO_CREDIT_LIMIT':
+            setError('You do not have an active credit limit. Contact your lender.');
+            break;
+          case 'KYC_REQUIRED':
+            setError('Your KYC verification is incomplete.');
+            break;
+          case 'PRODUCT_INACTIVE':
+            setError('This loan product is not currently available.');
+            break;
+          default:
+            setError(err.message || 'Could not submit your application.');
+        }
+      } else {
+        setError('Something went wrong. Please try again.');
+      }
+      setBusy(false);
+    }
   }
 
   return (
@@ -101,12 +151,11 @@ export default function ApplyReviewPage() {
               Step 4 of 4
             </p>
             <h1 className="truncate text-[15px] font-semibold tracking-tight text-ink-950">
-              Review & sign
+              Review &amp; sign
             </h1>
           </div>
         </div>
         <div className="h-0.5 w-full bg-ink-100">
-          {/* progress bar — yellow, full */}
           <div className="h-full w-full bg-brand-500 transition-all" />
         </div>
       </div>
@@ -117,9 +166,7 @@ export default function ApplyReviewPage() {
         </p>
       </div>
 
-      {/* LOAN SUMMARY */}
       <SectionCard title="Loan summary">
-        {/* Yellow summary card with purple text */}
         <div className="overflow-hidden rounded-2xl bg-brand-500 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
           <div className="px-4 pt-4 pb-3 text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
@@ -169,7 +216,6 @@ export default function ApplyReviewPage() {
         </div>
       </SectionCard>
 
-      {/* BORROWER */}
       <SectionCard title="Your details">
         <div className="divide-y divide-ink-100">
           <Row label="Name" value={draft.kyc?.fullName ?? '—'} />
@@ -184,7 +230,6 @@ export default function ApplyReviewPage() {
         </div>
       </SectionCard>
 
-      {/* AGREEMENT */}
       <SectionCard title="Agreement">
         <button
           type="button"
@@ -241,6 +286,11 @@ export default function ApplyReviewPage() {
       </SectionCard>
 
       <div className="fixed bottom-14 left-1/2 z-20 w-full max-w-[28rem] -translate-x-1/2 border-t border-ink-100 bg-white/95 px-4 py-2.5 backdrop-blur-md">
+        {error && (
+          <div className="mb-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-[11.5px] font-medium text-red-700">
+            {error}
+          </div>
+        )}
         <Button
           type="button"
           onClick={onSubmit}
