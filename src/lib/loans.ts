@@ -126,9 +126,14 @@ export interface LoanScheduleEntry {
   principal_due: string;
   interest_due: string;
   fees_due: string;
+  penalty_due?: string | null;
   total_due: string;
   paid_amount: string;
   status: string;
+  penalty_applied?: boolean | null;
+  penalty_applied_at?: string | null;
+  paid_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Pagination {

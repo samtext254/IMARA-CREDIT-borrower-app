@@ -20,6 +20,7 @@ import {
   WalletCards,
   ShieldAlert,
   ShieldCheck,
+  AlertTriangle,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
@@ -67,6 +68,12 @@ function formatKes(amount: string | number | null | undefined): string {
   const n = typeof amount === 'string' ? parseFloat(amount) : amount;
   if (isNaN(n)) return '0';
   return Math.round(n).toLocaleString('en-KE');
+}
+
+function toNumber(v: string | number | null | undefined): number {
+  if (v === null || v === undefined || v === '') return 0;
+  const n = typeof v === 'string' ? parseFloat(v) : v;
+  return Number.isFinite(n) ? n : 0;
 }
 
 function formatDate(iso: string | null | undefined): string {
@@ -174,12 +181,6 @@ function ProgressRing({
 /* ------------------------------------------------------------------ */
 /*  KYC banner                                                         */
 /* ------------------------------------------------------------------ */
-/**
- * Persistent banner shown above the hero when KYC is not verified.
- * Coexists with the modal — this stays, the modal dismisses.
- * Hidden entirely when the modal is currently open, to avoid
- * stacking two KYC prompts on top of each other.
- */
 function KycBanner({
   data,
   hidden,
@@ -229,7 +230,6 @@ function KycBanner({
           cta: null,
         }
       : {
-          // PENDING
           bg: 'bg-brand-500/15',
           border: 'border-brand-500/40',
           iconBg: 'bg-brand-500/30',
@@ -285,7 +285,6 @@ function KycBanner({
           )}
         </div>
 
-        {/* Small progress ring on the right — only for PENDING / REJECTED */}
         {kycStatus !== 'SUBMITTED' && (
           <div className="shrink-0">
             <ProgressRing value={progress.percentage} size={44} stroke={4} />
@@ -658,9 +657,23 @@ export default function HomePage() {
     const nextInst =
       activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
 
-    const nextPaymentAmount = nextInst
-      ? nextInst.total_due
-      : activeLoan?.outstanding_total || '0';
+    // The loan's outstanding penalty must be reflected in the "next
+    // payment" amount, otherwise the borrower sees a smaller number
+    // than what they actually need to pay to clear the instalment.
+    const penaltyOutstanding = activeLoan
+      ? toNumber((activeLoan as any).outstanding_penalty)
+      : 0;
+
+    const loanOutstanding = activeLoan
+      ? toNumber(activeLoan.outstanding_total)
+      : 0;
+
+    const instalmentDue = nextInst ? toNumber(nextInst.total_due) : null;
+
+    const nextPaymentAmount =
+      instalmentDue !== null
+        ? String(instalmentDue + penaltyOutstanding)
+        : String(loanOutstanding);
 
     const nextPaymentDate = nextInst
       ? nextInst.due_date
@@ -675,6 +688,7 @@ export default function HomePage() {
       progress,
       nextPaymentAmount,
       nextPaymentDate,
+      penaltyOutstanding,
     };
   }, [borrower, eligibility, activeLoan, activeSchedule]);
 
@@ -694,6 +708,9 @@ export default function HomePage() {
   const kycNotVerified = !!kycData && kycData.kycStatus !== 'VERIFIED';
 
   const canApply = !hasBlockingLoan && kycVerified;
+
+  const loanIsOverdue = activeLoan?.status === 'OVERDUE';
+  const hasPenalty = derived.penaltyOutstanding > 0;
 
   return (
     <div className="min-h-screen bg-page pb-24">
@@ -730,13 +747,33 @@ export default function HomePage() {
       </div>
 
       {/* ============ KYC BANNER ============ */}
-      {/* Persistent prompt. Hidden when the modal is currently open
-          so we do not stack two KYC UI elements. */}
       <KycBanner
         data={kycData}
         hidden={showKycModal}
         onOpenModal={openKycModal}
       />
+
+      {/* ============ OVERDUE / PENALTY ALERT ============ */}
+      {loanActive && loanIsOverdue && hasPenalty && (
+        <div className="px-3 pt-3">
+          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-red-100 text-red-700">
+              <AlertTriangle size={16} strokeWidth={2.4} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-red-700/80">
+                Payment overdue
+              </p>
+              <p className="mt-0.5 text-[13.5px] font-bold tracking-tight text-red-900">
+                A late payment fee has been applied
+              </p>
+              <p className="mt-0.5 text-[11px] text-red-800/90">
+                KES {formatKes(derived.penaltyOutstanding)} penalty added to your outstanding balance.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ============ HERO — active loan ============ */}
       {loanActive && activeLoan && (
@@ -759,6 +796,28 @@ export default function HomePage() {
             </div>
 
             <div className="my-4 h-px bg-plum-800/10" />
+
+            {/* Outstanding breakdown including penalty when present */}
+            {hasPenalty && (
+              <>
+                <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-2">
+                  <span>Outstanding (loan)</span>
+                  <span className="tabular-nums font-semibold text-plum-800">
+                    KES {formatKes(toNumber(activeLoan.outstanding_total) - derived.penaltyOutstanding)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-3">
+                  <span className="inline-flex items-center gap-1">
+                    <AlertTriangle size={11} strokeWidth={2.4} />
+                    Late payment fee
+                  </span>
+                  <span className="tabular-nums font-bold text-red-700">
+                    KES {formatKes(derived.penaltyOutstanding)}
+                  </span>
+                </div>
+                <div className="my-2 h-px bg-plum-800/10" />
+              </>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800">
@@ -1022,8 +1081,8 @@ export default function HomePage() {
       {/* ============ KYC MODAL ============ */}
       <KycModal
         open={showKycModal}
-        data={kycData}
         onClose={dismissKycModal}
+        data={kycData}
       />
     </div>
   );
