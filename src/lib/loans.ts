@@ -52,8 +52,6 @@ export type LoanStatus =
   | 'DEFAULTED'
   | 'WRITTEN_OFF';
 
-// The shape returned by the credit engine.
-// NOTE: the principal field is `principal_amount`, not `principal`.
 export interface Loan {
   id: string;
   merchant_id: number;
@@ -63,21 +61,18 @@ export interface Loan {
   loan_reference: string;
   currency: string;
 
-  // Amounts
   principal_amount: string;
   interest_amount: string;
   fees_amount: string;
   penalty_amount: string;
   total_due: string;
 
-  // Outstanding
   outstanding_principal: string;
   outstanding_interest: string;
   outstanding_fees: string;
   outstanding_penalty: string;
   outstanding_total: string;
 
-  // Terms
   term_days: number;
   interest_rate: string;
   interest_period: string;
@@ -86,10 +81,8 @@ export interface Loan {
   penalty_rate_per_day: string;
   grace_period_days: number;
 
-  // Status
   status: LoanStatus;
 
-  // Dates
   requested_at: string | null;
   approved_at: string | null;
   approved_by: string | null;
@@ -101,19 +94,15 @@ export interface Loan {
   last_payment_at: string | null;
   closed_at: string | null;
 
-  // Accounts
   repayment_account_number: string | null;
   disbursement_account_number: string | null;
   disbursement_transaction_id: string | null;
 
-  // Idempotency
   originator_idempotency_key: string | null;
   disbursement_idempotency_key: string | null;
 
-  // Metadata
   metadata: Record<string, unknown> | null;
 
-  // Timestamps
   created_at: string;
   updated_at: string;
 }
@@ -142,15 +131,53 @@ export interface Pagination {
   count: number;
 }
 
+// ─── Repayment intent (returned by POST /repay and GET status) ──
+export type RepaymentStatus =
+  | 'PENDING'
+  | 'STK_SENT'
+  | 'SUCCESS'
+  | 'FAILED';
+
+export interface RepaymentIntentResult {
+  repayment_id: string;
+  loan_id: string;
+  loan_reference: string | null;
+  amount: number;
+  phone_number: string;
+  status: RepaymentStatus;
+  transaction_id: string;
+  checkout_request_id: string | null;
+  outstanding: {
+    principal: string;
+    interest: string;
+    fees: string;
+    penalty: string;
+    total: string;
+  } | null;
+  replayed: boolean;
+}
+
+export interface RepaymentStatusResult {
+  intent_id: string;
+  status: RepaymentStatus;
+  amount: number;
+  checkout_request_id: string | null;
+  mpesa_receipt: string | null;
+  result_code: string | null;
+  result_desc: string | null;
+  completed_at: string | null;
+  loan_repayment_id: string | null;
+  new_outstanding_total: string | null;
+  loan_status: LoanStatus;
+  updated_at: string;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────
-// Convenience accessor since `principal` is not the field name.
 export function loanPrincipal(loan: Loan): string {
   return loan.principal_amount ?? '0';
 }
 
 export function loanDueDate(loan: Loan): string | null {
-  // The credit engine exposes `maturity_date` for BULLET loans, and
-  // `first_due_date` for installment loans. Prefer whichever exists.
   return loan.maturity_date ?? loan.first_due_date ?? null;
 }
 
@@ -170,10 +197,6 @@ export const loans = {
     );
   },
 
-  // Fetch the borrower's merchant's first active loan product.
-  // The auth engine proxy resolves this from the merchant_id in
-  // the session — the browser never sees a product ID until we
-  // return it here.
   getProduct: () =>
     api.get<{ data: LoanProduct }>('/v1/imara/loans/product'),
 
@@ -208,23 +231,15 @@ export const loans = {
     id: string,
     data: { amount: string | number; phone_number?: string }
   ) =>
-    api.post<{
-      data: {
-        loan_id: string;
-        loan_reference: string;
-        outstanding: {
-          principal: string;
-          interest: string;
-          fees: string;
-          penalty: string;
-          total: string;
-        };
-        requested_amount: string;
-        phone_number: string | null;
-        next_action: string;
-        message: string;
-      };
-    }>(`/v1/imara/loans/${id}/repay`, data),
+    api.post<{ data: RepaymentIntentResult }>(
+      `/v1/imara/loans/${id}/repay`,
+      data
+    ),
+
+  getRepaymentStatus: (loanId: string, intentId: string) =>
+    api.get<{ data: RepaymentStatusResult }>(
+      `/v1/imara/loans/${loanId}/repayments/${intentId}/status`
+    ),
 };
 
 export default loans;
