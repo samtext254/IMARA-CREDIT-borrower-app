@@ -657,9 +657,6 @@ export default function HomePage() {
     const nextInst =
       activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
 
-    // The loan's outstanding penalty must be reflected in the "next
-    // payment" amount, otherwise the borrower sees a smaller number
-    // than what they actually need to pay to clear the instalment.
     const penaltyOutstanding = activeLoan
       ? toNumber((activeLoan as any).outstanding_penalty)
       : 0;
@@ -704,12 +701,26 @@ export default function HomePage() {
   const loanActive = activeLoan !== null;
   const hasBlockingLoan = blockingLoan !== null;
 
+  // The loan we show as "the" loan the borrower needs to act on. Prefer
+  // the active loan (already set from the ACTIVE status query). Fall
+  // back to the blocking loan if it exists but the active query is
+  // empty (e.g. only a PENDING loan exists).
+  const focusLoan = activeLoan || blockingLoan;
+
+  // Whether the focus loan is specifically overdue. This drives the
+  // red warning line and the "View and Pay" CTA text.
+  const focusLoanIsOverdue = focusLoan?.status === 'OVERDUE';
+
+  // Whether the focus loan is in an "active money owed" state (ACTIVE
+  // or OVERDUE) which allows repayments.
+  const focusLoanIsRepayable =
+    focusLoan?.status === 'ACTIVE' || focusLoan?.status === 'OVERDUE';
+
   const kycVerified = kycData?.kycStatus === 'VERIFIED';
   const kycNotVerified = !!kycData && kycData.kycStatus !== 'VERIFIED';
 
   const canApply = !hasBlockingLoan && kycVerified;
 
-  const loanIsOverdue = activeLoan?.status === 'OVERDUE';
   const hasPenalty = derived.penaltyOutstanding > 0;
 
   return (
@@ -754,7 +765,7 @@ export default function HomePage() {
       />
 
       {/* ============ OVERDUE / PENALTY ALERT ============ */}
-      {loanActive && loanIsOverdue && hasPenalty && (
+      {loanActive && focusLoanIsOverdue && hasPenalty && (
         <div className="px-3 pt-3">
           <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
             <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-red-100 text-red-700">
@@ -768,7 +779,8 @@ export default function HomePage() {
                 A late payment fee has been applied
               </p>
               <p className="mt-0.5 text-[11px] text-red-800/90">
-                KES {formatKes(derived.penaltyOutstanding)} penalty added to your outstanding balance.
+                KES {formatKes(derived.penaltyOutstanding)} penalty added to your
+                outstanding balance.
               </p>
             </div>
           </div>
@@ -803,7 +815,11 @@ export default function HomePage() {
                 <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-2">
                   <span>Outstanding (loan)</span>
                   <span className="tabular-nums font-semibold text-plum-800">
-                    KES {formatKes(toNumber(activeLoan.outstanding_total) - derived.penaltyOutstanding)}
+                    KES{' '}
+                    {formatKes(
+                      toNumber(activeLoan.outstanding_total) -
+                        derived.penaltyOutstanding
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-3">
@@ -843,13 +859,24 @@ export default function HomePage() {
               </div>
             </div>
 
-            <Link
-              href={`/repay/${activeLoan.id}`}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-            >
-              Repay now
-              <ArrowRight size={15} strokeWidth={2.5} />
-            </Link>
+            {/* CTA — Pay now for repayable loans, View loan otherwise */}
+            {focusLoanIsRepayable && activeLoan ? (
+              <Link
+                href={`/repay/${activeLoan.id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+              >
+                {focusLoanIsOverdue ? 'Pay my overdue loan' : 'Pay now'}
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </Link>
+            ) : (
+              <Link
+                href={`/loans/${activeLoan.id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+              >
+                View full loan
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </Link>
+            )}
           </div>
         </div>
       )}
@@ -875,18 +902,51 @@ export default function HomePage() {
 
             <div className="my-4 h-px bg-plum-800/10" />
 
-            <div className="flex items-center gap-2 text-[12px] font-medium text-plum-800/70">
-              <CheckCircle2 size={15} strokeWidth={2.2} />
-              <span>
-                {kycNotVerified
-                  ? 'Complete your KYC to unlock borrowing'
-                  : hasBlockingLoan
-                  ? statusLabel(blockingLoan!.status)
-                  : 'Your profile is complete'}
-              </span>
-            </div>
+            {/* Status line — warns red when the block is due to an
+                overdue loan, otherwise neutral */}
+            {hasBlockingLoan && blockingLoan!.status === 'OVERDUE' ? (
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-red-800">
+                <AlertTriangle size={15} strokeWidth={2.4} />
+                <span>You have an overdue loan — pay now to avoid further fees</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-[12px] font-medium text-plum-800/70">
+                <CheckCircle2 size={15} strokeWidth={2.2} />
+                <span>
+                  {kycNotVerified
+                    ? 'Complete your KYC to unlock borrowing'
+                    : hasBlockingLoan
+                    ? statusLabel(blockingLoan!.status)
+                    : 'Your profile is complete'}
+                </span>
+              </div>
+            )}
 
-            {canApply ? (
+            {/* CTA cascade — the priority order is:
+                  1. Overdue loan      → "View and Pay my overdue loan"
+                  2. Blocking loan     → "View my loan"  (PENDING/APPROVED/DISBURSED)
+                  3. No loan + KYC ok  → "Apply for a loan"
+                  4. No KYC            → "Complete your KYC"
+                  5. Fallback          → "View my loans" */}
+            {focusLoan && focusLoanIsRepayable ? (
+              <Link
+                href={`/repay/${focusLoan.id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+              >
+                {focusLoanIsOverdue
+                  ? 'View and Pay my overdue loan'
+                  : 'Pay my loan'}
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </Link>
+            ) : hasBlockingLoan && blockingLoan ? (
+              <Link
+                href={`/loans/${blockingLoan.id}`}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+              >
+                View my loan
+                <ArrowRight size={15} strokeWidth={2.5} />
+              </Link>
+            ) : canApply ? (
               <Link
                 href="/apply/loan"
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
@@ -907,7 +967,7 @@ export default function HomePage() {
                 href="/loans"
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
               >
-                View my loan
+                View my loans
                 <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             )}
