@@ -884,7 +884,7 @@ export default function HomePage() {
                   KES {formatKes(activeLoan.outstanding_total)}
                 </p>
                 <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">
-                  of KES {formatKes(activeLoan.principal_amount)} principal
+                  of KES {formatKes(activeLoan.total_due)} total
                 </p>
               </div>
 
