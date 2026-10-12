@@ -1,13 +1,6 @@
 // imara-onlineservice/src/lib/loans.ts
-//
-// ─── LOANS API CLIENT ───────────────────────────────────────────
-// All calls go to the auth engine proxy at /v1/imara/loans/*.
-// The browser never sees a credit-engine API key.
-// ────────────────────────────────────────────────────────────────
-
 import { api } from './api';
 
-// ─── Types (from the credit engine's response shapes) ──────────
 export interface CreditLimit {
   id: string;
   max_limit: string;
@@ -42,15 +35,8 @@ export interface LoanProduct {
 }
 
 export type LoanStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'REJECTED'
-  | 'DISBURSED'
-  | 'ACTIVE'
-  | 'OVERDUE'
-  | 'PAID'
-  | 'DEFAULTED'
-  | 'WRITTEN_OFF';
+  | 'PENDING' | 'APPROVED' | 'REJECTED' | 'DISBURSED' | 'ACTIVE'
+  | 'OVERDUE' | 'PAID' | 'DEFAULTED' | 'WRITTEN_OFF';
 
 export interface Loan {
   id: string;
@@ -131,12 +117,7 @@ export interface Pagination {
   count: number;
 }
 
-// ─── Repayment intent (returned by POST /repay and GET status) ──
-export type RepaymentStatus =
-  | 'PENDING'
-  | 'STK_SENT'
-  | 'SUCCESS'
-  | 'FAILED';
+export type RepaymentStatus = 'PENDING' | 'STK_SENT' | 'SUCCESS' | 'FAILED';
 
 export interface RepaymentIntentResult {
   repayment_id: string;
@@ -148,11 +129,7 @@ export interface RepaymentIntentResult {
   transaction_id: string;
   checkout_request_id: string | null;
   outstanding: {
-    principal: string;
-    interest: string;
-    fees: string;
-    penalty: string;
-    total: string;
+    principal: string; interest: string; fees: string; penalty: string; total: string;
   } | null;
   replayed: boolean;
 }
@@ -172,7 +149,28 @@ export interface RepaymentStatusResult {
   updated_at: string;
 }
 
-// ─── Helpers ────────────────────────────────────────────────────
+export type ActivityKind =
+  | 'loan_submitted'
+  | 'loan_approved'
+  | 'loan_rejected'
+  | 'loan_disbursed'
+  | 'loan_active'
+  | 'loan_overdue'
+  | 'loan_paid'
+  | 'loan_defaulted'
+  | 'loan_written_off'
+  | 'loan_event'
+  | 'repayment_received';
+
+export interface ActivityItem {
+  kind: ActivityKind;
+  loan_id: string;
+  loan_reference: string | null;
+  amount: number | null;
+  receipt: string | null;
+  at: string;
+}
+
 export function loanPrincipal(loan: Loan): string {
   return loan.principal_amount ?? '0';
 }
@@ -181,65 +179,52 @@ export function loanDueDate(loan: Loan): string | null {
   return loan.maturity_date ?? loan.first_due_date ?? null;
 }
 
-// ─── Endpoints ──────────────────────────────────────────────────
 export const loans = {
-  getEligibility: (params?: {
-    requested_amount?: string | number;
-    product_id?: string;
-  }) => {
+  getEligibility: (params?: { requested_amount?: string | number; product_id?: string }) => {
     const qs = new URLSearchParams();
-    if (params?.requested_amount)
-      qs.set('requested_amount', String(params.requested_amount));
+    if (params?.requested_amount) qs.set('requested_amount', String(params.requested_amount));
     if (params?.product_id) qs.set('product_id', params.product_id);
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
-    return api.get<{ data: Eligibility }>(
-      `/v1/imara/loans/eligibility${suffix}`
-    );
+    return api.get<{ data: Eligibility }>(`/v1/imara/loans/eligibility${suffix}`);
   },
 
   getProduct: () =>
     api.get<{ data: LoanProduct }>('/v1/imara/loans/product'),
 
-  getLoans: (params?: {
-    status?: LoanStatus;
-    limit?: number;
-    offset?: number;
-  }) => {
+  getLoans: (params?: { status?: LoanStatus; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();
     if (params?.status) qs.set('status', params.status);
     if (params?.limit !== undefined) qs.set('limit', String(params.limit));
     if (params?.offset !== undefined) qs.set('offset', String(params.offset));
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
-    return api.get<{ data: Loan[]; pagination: Pagination }>(
-      `/v1/imara/loans${suffix}`
-    );
+    return api.get<{ data: Loan[]; pagination: Pagination }>(`/v1/imara/loans${suffix}`);
   },
 
   getLoan: (id: string) =>
-    api.get<{ data: { loan: Loan; schedule: LoanScheduleEntry[] } }>(
-      `/v1/imara/loans/${id}`
-    ),
+    api.get<{ data: { loan: Loan; schedule: LoanScheduleEntry[] } }>(`/v1/imara/loans/${id}`),
 
   apply: (data: {
-    product_id: string;
-    principal: string | number;
-    term_days?: number;
+    product_id: string; principal: string | number; term_days?: number;
     metadata?: Record<string, unknown>;
   }) => api.post<{ data: Loan; replayed: boolean }>('/v1/imara/loans', data),
 
-  repay: (
-    id: string,
-    data: { amount: string | number; phone_number?: string }
-  ) =>
-    api.post<{ data: RepaymentIntentResult }>(
-      `/v1/imara/loans/${id}/repay`,
-      data
-    ),
+  repay: (id: string, data: { amount: string | number; phone_number?: string }) =>
+    api.post<{ data: RepaymentIntentResult }>(`/v1/imara/loans/${id}/repay`, data),
 
   getRepaymentStatus: (loanId: string, intentId: string) =>
     api.get<{ data: RepaymentStatusResult }>(
       `/v1/imara/loans/${loanId}/repayments/${intentId}/status`
     ),
+
+  getActivity: (params?: { limit?: number; offset?: number }) => {
+    const qs = new URLSearchParams();
+    if (params?.limit !== undefined) qs.set('limit', String(params.limit));
+    if (params?.offset !== undefined) qs.set('offset', String(params.offset));
+    const suffix = qs.toString() ? `?${qs.toString()}` : '';
+    return api.get<{ data: ActivityItem[]; pagination: Pagination }>(
+      `/v1/imara/activity${suffix}`
+    );
+  },
 };
 
 export default loans;

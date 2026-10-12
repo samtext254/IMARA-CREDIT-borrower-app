@@ -25,7 +25,7 @@ import {
 import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
-import type { Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
+import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
 import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 import KycModal from '@/components/KycModal';
 
@@ -122,6 +122,90 @@ function statusLabel(status: string): string {
       return 'You have an overdue loan';
     default:
       return 'Your profile is complete';
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Activity row mapper                                                */
+/* ------------------------------------------------------------------ */
+function activityRow(item: ActivityItem): {
+  title: string;
+  Icon: typeof CheckCircle2;
+  iconClass: string;
+  amountClass: string;
+} {
+  switch (item.kind) {
+    case 'repayment_received':
+      return {
+        title: 'Repayment received',
+        Icon: CheckCircle2,
+        iconClass: 'bg-leaf-50 text-leaf-600',
+        amountClass: 'text-leaf-600',
+      };
+    case 'loan_submitted':
+      return {
+        title: 'Loan application',
+        Icon: Receipt,
+        iconClass: 'bg-ink-100/60 text-ink-500',
+        amountClass: 'text-ink-900',
+      };
+    case 'loan_approved':
+      return {
+        title: 'Loan approved',
+        Icon: CheckCircle2,
+        iconClass: 'bg-leaf-50 text-leaf-600',
+        amountClass: 'text-ink-900',
+      };
+    case 'loan_rejected':
+      return {
+        title: 'Loan declined',
+        Icon: Receipt,
+        iconClass: 'bg-red-50 text-red-600',
+        amountClass: 'text-red-600',
+      };
+    case 'loan_disbursed':
+      return {
+        title: 'Loan disbursed',
+        Icon: WalletCards,
+        iconClass: 'bg-plum-50 text-plum-700',
+        amountClass: 'text-ink-900',
+      };
+    case 'loan_active':
+      return {
+        title: 'Loan active',
+        Icon: CheckCircle2,
+        iconClass: 'bg-leaf-50 text-leaf-600',
+        amountClass: 'text-leaf-600',
+      };
+    case 'loan_overdue':
+      return {
+        title: 'Loan overdue',
+        Icon: AlertTriangle,
+        iconClass: 'bg-red-50 text-red-600',
+        amountClass: 'text-red-600',
+      };
+    case 'loan_paid':
+      return {
+        title: 'Loan fully repaid',
+        Icon: CheckCircle2,
+        iconClass: 'bg-leaf-50 text-leaf-600',
+        amountClass: 'text-leaf-600',
+      };
+    case 'loan_defaulted':
+    case 'loan_written_off':
+      return {
+        title: 'Loan closed',
+        Icon: Receipt,
+        iconClass: 'bg-red-50 text-red-600',
+        amountClass: 'text-red-600',
+      };
+    default:
+      return {
+        title: 'Loan update',
+        Icon: Receipt,
+        iconClass: 'bg-ink-100/60 text-ink-500',
+        amountClass: 'text-ink-900',
+      };
   }
 }
 
@@ -495,6 +579,7 @@ export default function HomePage() {
   const [activeLoan, setActiveLoan] = useState<Loan | null>(null);
   const [activeSchedule, setActiveSchedule] = useState<LoanScheduleEntry[]>([]);
   const [recentLoans, setRecentLoans] = useState<Loan[]>([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -506,13 +591,14 @@ export default function HomePage() {
 
     (async () => {
       try {
-        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes] =
+        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes, activityRes] =
           await Promise.allSettled([
             imara.me(),
             loansApi.getEligibility(),
             loansApi.getLoans({ status: 'ACTIVE', limit: 1 }),
             loansApi.getLoans({ limit: 20 }),
             getKycStatus(),
+            loansApi.getActivity({ limit: 20 }),
           ]);
 
         if (cancelled) return;
@@ -547,6 +633,12 @@ export default function HomePage() {
           setRecentLoans(recentLoansRes.value.data || []);
         } else if (!(recentLoansRes.reason instanceof ImaraApiError)) {
           console.error('Recent loans fetch failed:', recentLoansRes.reason);
+        }
+
+        if (activityRes.status === 'fulfilled') {
+          setActivity(activityRes.value.data || []);
+        } else if (!(activityRes.reason instanceof ImaraApiError)) {
+          console.error('Activity fetch failed:', activityRes.reason);
         }
 
         if (kycRes.status === 'fulfilled') {
@@ -701,18 +793,10 @@ export default function HomePage() {
   const loanActive = activeLoan !== null;
   const hasBlockingLoan = blockingLoan !== null;
 
-  // The loan we show as "the" loan the borrower needs to act on. Prefer
-  // the active loan (already set from the ACTIVE status query). Fall
-  // back to the blocking loan if it exists but the active query is
-  // empty (e.g. only a PENDING loan exists).
   const focusLoan = activeLoan || blockingLoan;
 
-  // Whether the focus loan is specifically overdue. This drives the
-  // red warning line and the "View and Pay" CTA text.
   const focusLoanIsOverdue = focusLoan?.status === 'OVERDUE';
 
-  // Whether the focus loan is in an "active money owed" state (ACTIVE
-  // or OVERDUE) which allows repayments.
   const focusLoanIsRepayable =
     focusLoan?.status === 'ACTIVE' || focusLoan?.status === 'OVERDUE';
 
@@ -809,7 +893,6 @@ export default function HomePage() {
 
             <div className="my-4 h-px bg-plum-800/10" />
 
-            {/* Outstanding breakdown including penalty when present */}
             {hasPenalty && (
               <>
                 <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-2">
@@ -842,10 +925,10 @@ export default function HomePage() {
 
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">
-                  Next payment
+                  Amount due
                 </p>
                 <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">
-                  KES {formatKes(derived.nextPaymentAmount)}
+                  KES {formatKes(activeLoan.outstanding_total)}
                 </p>
               </div>
 
@@ -859,7 +942,6 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* CTA — Pay now for repayable loans, View loan otherwise */}
             {focusLoanIsRepayable && activeLoan ? (
               <Link
                 href={`/repay/${activeLoan.id}`}
@@ -902,8 +984,6 @@ export default function HomePage() {
 
             <div className="my-4 h-px bg-plum-800/10" />
 
-            {/* Status line — warns red when the block is due to an
-                overdue loan, otherwise neutral */}
             {hasBlockingLoan && blockingLoan!.status === 'OVERDUE' ? (
               <div className="flex items-center gap-2 text-[12px] font-semibold text-red-800">
                 <AlertTriangle size={15} strokeWidth={2.4} />
@@ -922,12 +1002,6 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* CTA cascade — the priority order is:
-                  1. Overdue loan      → "View and Pay my overdue loan"
-                  2. Blocking loan     → "View my loan"  (PENDING/APPROVED/DISBURSED)
-                  3. No loan + KYC ok  → "Apply for a loan"
-                  4. No KYC            → "Complete your KYC"
-                  5. Fallback          → "View my loans" */}
             {focusLoan && focusLoanIsRepayable ? (
               <Link
                 href={`/repay/${focusLoan.id}`}
@@ -1031,13 +1105,13 @@ export default function HomePage() {
         <SectionHeader
           title="Recent activity"
           action={
-            recentLoans.length > 0
-              ? { label: 'View all', onClick: () => router.push('/loans') }
+            activity.length > 0
+              ? { label: 'View all', onClick: () => router.push('/notifications') }
               : undefined
           }
         />
 
-        {recentLoans.length === 0 ? (
+        {activity.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-ink-100/60 text-ink-400">
               <Receipt size={20} strokeWidth={2} />
@@ -1050,88 +1124,39 @@ export default function HomePage() {
             </p>
           </div>
         ) : (
-          recentLoans.slice(0, 5).map((loan, idx) => {
-            const isMoneyIn =
-              loan.status === 'APPROVED' ||
-              loan.status === 'DISBURSED' ||
-              loan.status === 'ACTIVE' ||
-              loan.status === 'OVERDUE';
-
-            const isSettled = loan.status === 'PAID';
-
-            const isFailed =
-              loan.status === 'REJECTED' ||
-              loan.status === 'DEFAULTED' ||
-              loan.status === 'WRITTEN_OFF';
-
-            const titleMap: Record<string, string> = {
-              PENDING: 'Loan application',
-              APPROVED: 'Loan approved',
-              REJECTED: 'Loan declined',
-              DISBURSED: 'Loan disbursed',
-              ACTIVE: 'Loan active',
-              OVERDUE: 'Loan overdue',
-              PAID: 'Loan repaid',
-              DEFAULTED: 'Loan defaulted',
-              WRITTEN_OFF: 'Loan written off',
-            };
-
-            const title = titleMap[loan.status] || 'Loan';
-
-            let amountLabel = `KES ${formatKes(loan.principal_amount)}`;
-            if (isMoneyIn || isSettled) {
-              amountLabel = `KES ${formatKes(loan.outstanding_total)}`;
-            }
-
-            const iconClass =
-              isMoneyIn || isSettled
-                ? 'bg-leaf-50 text-leaf-600'
-                : isFailed
-                ? 'bg-red-50 text-red-600'
-                : 'bg-ink-100/60 text-ink-500';
-
-            const amountClass =
-              isMoneyIn || isSettled
-                ? 'text-leaf-600'
-                : isFailed
-                ? 'text-red-600'
-                : 'text-ink-900';
-
-            const Icon = isMoneyIn || isSettled ? CheckCircle2 : Receipt;
-
-            const dateLabel = formatDate(
-              loan.disbursed_at || loan.closed_at || loan.created_at
-            );
-
-            const displayed = recentLoans.slice(0, 5);
-
+          activity.slice(0, 5).map((item, idx, arr) => {
+            const styled = activityRow(item);
+            const isLast = idx === arr.length - 1;
             return (
               <div
-                key={loan.id}
+                key={`${item.kind}-${item.loan_id}-${item.at}`}
                 className={`flex items-center gap-3.5 px-5 py-3.5 ${
-                  idx !== displayed.length - 1 ? 'border-b border-ink-100' : ''
+                  !isLast ? 'border-b border-ink-100' : ''
                 }`}
               >
                 <div
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${iconClass}`}
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${styled.iconClass}`}
                 >
-                  <Icon size={18} strokeWidth={2.2} />
+                  <styled.Icon size={18} strokeWidth={2.2} />
                 </div>
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[13.5px] font-semibold tracking-tight text-ink-950">
-                    {title}
+                    {styled.title}
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-ink-400">
-                    {dateLabel}
+                    {formatDate(item.at)}
+                    {item.receipt ? ` · ${item.receipt}` : ''}
                   </p>
                 </div>
 
-                <p
-                  className={`shrink-0 text-[13.5px] font-bold tabular-nums tracking-tight ${amountClass}`}
-                >
-                  {amountLabel}
-                </p>
+                {item.amount != null && (
+                  <p
+                    className={`shrink-0 text-[13.5px] font-bold tabular-nums tracking-tight ${styled.amountClass}`}
+                  >
+                    KES {formatKes(item.amount)}
+                  </p>
+                )}
               </div>
             );
           })
