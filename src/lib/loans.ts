@@ -222,7 +222,7 @@ export const loans = {
     if (params?.offset !== undefined) qs.set('offset', String(params.offset));
     const suffix = qs.toString() ? `?${qs.toString()}` : '';
     return api.get<{ data: ActivityItem[]; pagination: Pagination }>(
-      `/v1/imara/activity${suffix}`
+      `/v1/imara/loans/activity${suffix}`
     );
   },
 };
