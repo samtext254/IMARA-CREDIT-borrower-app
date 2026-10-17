@@ -9,18 +9,19 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  CreditCard,
   HelpCircle,
-  History,
   LogOut,
-  Plus,
   Receipt,
   Settings,
   User,
   WalletCards,
   ShieldAlert,
-  ShieldCheck,
   AlertTriangle,
+  PiggyBank,
+  FileText,
+  Send,
+  Smartphone,
+  Banknote,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
@@ -1068,35 +1069,43 @@ export default function HomePage() {
       )}
 
       {/* ============ QUICK ACTIONS ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader title="Quick actions" />
-        <div
-          className={`grid gap-3 px-4 py-5 ${
-            canApply ? 'grid-cols-4' : 'grid-cols-3'
-          }`}
-        >
-          {canApply && (
+      <section className="px-3 pt-3">
+        <div className="rounded-3xl border border-ink-100 bg-white px-4 pb-5 pt-4 shadow-[0_8px_24px_-16px_rgba(15,21,18,0.25)]">
+          <h2 className="mb-4 text-[13px] font-bold tracking-tight text-ink-950">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-3 gap-y-5">
             <QuickAction
-              href="/apply/loan"
-              icon={<Plus size={19} />}
-              label="Apply"
+              href="/savings"
+              icon={<PiggyBank size={20} strokeWidth={2} />}
+              label="Savings"
             />
-          )}
-          <QuickAction
-            href="/loans"
-            icon={<CreditCard size={19} />}
-            label="Statement"
-          />
-          <QuickAction
-            href="/loans"
-            icon={<History size={19} />}
-            label="History"
-          />
-          <QuickAction
-            href="/profile"
-            icon={<HelpCircle size={19} />}
-            label="Help"
-          />
+            <QuickAction
+              href="/loans"
+              icon={<FileText size={20} strokeWidth={2} />}
+              label="Statement"
+            />
+            <QuickAction
+              href="/send-money"
+              icon={<Send size={20} strokeWidth={2} />}
+              label="Send Money"
+            />
+            <QuickAction
+              href="/pay-bills"
+              icon={<Receipt size={20} strokeWidth={2} />}
+              label="Pay Bills"
+            />
+            <QuickAction
+              href="/airtime"
+              icon={<Smartphone size={20} strokeWidth={2} />}
+              label="Buy Airtime"
+            />
+            <QuickAction
+              href="/loans"
+              icon={<Banknote size={20} strokeWidth={2} />}
+              label="My Loans"
+            />
+          </div>
         </div>
       </section>
 
@@ -1188,12 +1197,12 @@ function QuickAction({
   return (
     <Link
       href={href}
-      className="flex flex-col items-center gap-2 transition active:scale-95"
+      className="flex flex-col items-center gap-2 text-center transition active:scale-95"
     >
-      <div className="grid h-14 w-14 place-items-center rounded-xl bg-plum-700 text-white">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-plum-50 text-plum-700 ring-1 ring-plum-700/10">
         {icon}
       </div>
-      <span className="text-[11px] font-semibold tracking-tight text-ink-700">
+      <span className="text-[11.5px] font-semibold leading-tight tracking-tight text-ink-800">
         {label}
       </span>
     </Link>
