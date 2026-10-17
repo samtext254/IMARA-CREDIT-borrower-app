@@ -723,7 +723,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white pb-24">
       {/* ============ HEADER + HERO (one surface) ============ */}
       <header className="bg-plum-800 px-5 pb-14 pt-[calc(env(safe-area-inset-top)+16px)] text-white">
-        <div className="flex items-center gap-3">
+        <div className="-mx-5 flex items-center gap-3 border-b border-white/10 px-5 pb-4">
           <AvatarMenu
             initials={derived.initials}
             name={derived.displayName}
@@ -748,7 +748,7 @@ export default function HomePage() {
         </div>
 
         {loanActive && activeLoan ? (
-          <div className="mt-8">
+          <div className="mt-6">
             <div className="flex items-center justify-between">
               <p className="text-[13.5px] text-white/60">Outstanding balance</p>
               <button
@@ -801,7 +801,7 @@ export default function HomePage() {
             )}
           </div>
         ) : (
-          <div className="mt-8">
+          <div className="mt-6">
             <div className="flex items-center justify-between">
               <p className="text-[13.5px] text-white/60">Available to borrow</p>
               <button

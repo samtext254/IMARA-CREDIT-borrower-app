@@ -1,70 +1,93 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
+
+function LandingContent() {
+  const searchParams = useSearchParams();
+  const merchantId = searchParams.get('m');
+  const lenderSlug = searchParams.get('lender');
+
+  const loginParams = new URLSearchParams();
+  if (merchantId) loginParams.set('m', merchantId);
+  if (lenderSlug) loginParams.set('lender', lenderSlug);
+  
+  const queryString = loginParams.toString();
+  const loginUrl = `/login${queryString ? `?${queryString}` : ''}`;
+
+  return (
+    <div className="relative min-h-[100dvh] w-full flex flex-col justify-between bg-black overflow-hidden font-sans">
+      
+      {/* Background Image with Dark Gradient Overlay */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+        style={{ 
+          // Replace with your actual image URL or local file (e.g., url("/hero.jpg"))
+          backgroundImage: 'url("https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=2070&auto=format&fit=crop")',
+        }}
+      >
+        {/* Deep gradient to make text readable, fading to solid black at the bottom */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/20 to-black" />
+      </div>
+
+      {/* ============ TOP SECTION: Logo & Headline ============ */}
+      <div className="relative z-10 flex flex-col items-center pt-16 px-6 text-center w-full">
+        
+        {/* ZENKA-style SVG Logo */}
+        <div className="mb-6 flex flex-col items-center">
+          <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-3">
+            <path d="M30 30 L70 30 L30 70 L70 70" stroke="white" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" className="opacity-90"/>
+            <path d="M70 30 L50 50 L70 70" stroke="white" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" className="opacity-90"/>
+          </svg>
+          
+          <h1 className="text-white text-[26px] font-light tracking-[0.35em] uppercase pl-2">
+            Imara
+          </h1>
+        </div>
+
+        {/* Tagline */}
+        <h2 className="text-white text-[22px] font-bold leading-[1.3] tracking-wide mt-6 uppercase">
+          Smart Loans <br /> 
+          For Smart People
+        </h2>
+      </div>
+
+      {/* ============ BOTTOM SECTION: CTA & Legal ============ */}
+      <div className="relative z-10 w-full px-6 pb-8 flex flex-col items-center mt-auto">
+        
+        {/* Huge Yellow Pill Button */}
+        <Link 
+          href={loginUrl}
+          className="w-full max-w-sm flex items-center justify-center bg-[#F4D03F] hover:bg-[#e5bc00] text-black font-extrabold text-[15px] py-[18px] rounded-full transition-transform active:scale-[0.98] mb-8"
+        >
+          GET STARTED
+        </Link>
+
+        {/* Legal Text - Exact ZENKA Layout */}
+        <div className="text-center w-full max-w-[340px] space-y-2">
+          <p className="text-white text-[12px] leading-[1.4]">
+            By signing up you are agreeing to our{' '}
+            <Link href="/terms" className="underline font-semibold">Terms & Conditions</Link>,{' '}
+            <Link href="/terms" className="underline font-semibold">Terms of Use</Link>,{' '}
+            <Link href="/privacy" className="underline font-semibold">Affiliation Policy</Link>,{' '}
+            <Link href="/terms" className="underline font-semibold">PEP statement</Link> and{' '}
+            <Link href="/privacy" className="underline font-semibold">Privacy Policy</Link>.
+          </p>
+
+          <p className="text-white/50 text-[8.5px] leading-[1.3] pt-2">
+            Representative Example for First Loan: a 61-day loan with principal amount of Ksh 1,000, the processing fee would be Ksh 250 and the total amount due would be Ksh 1,250.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function LandingPage() {
   return (
-    <div className="relative flex min-h-screen flex-col overflow-hidden bg-plum-800">
-
-      {/* Decorative background blobs */}
-      <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full bg-plum-700/60 blur-3xl" />
-      <div className="pointer-events-none absolute -left-32 top-1/3 h-72 w-72 rounded-full bg-plum-900/50 blur-3xl" />
-
-      {/* ============ TOP: brand + tagline ============ */}
-      <div className="relative flex flex-1 flex-col items-center justify-center px-8 text-center">
-
-        {/* Brand mark — yellow rounded square with a purple "I" */}
-        <div className="grid h-20 w-20 place-items-center rounded-3xl bg-brand-500 text-plum-800 shadow-[0_18px_40px_-12px_rgba(255,206,7,0.5)]">
-          <span className="text-[40px] font-black leading-none tracking-tighter">
-            I
-          </span>
-        </div>
-
-        {/* Wordmark */}
-        <h1 className="mt-7 text-[26px] font-black tracking-[0.18em] text-white">
-          IMARA
-        </h1>
-        <p className="mt-1 text-[13px] font-bold tracking-[0.42em] text-brand-500">
-          CREDIT
-        </p>
-
-        {/* Tagline */}
-        <p className="mt-8 max-w-[15rem] text-[14px] font-medium leading-snug text-white/70">
-          Your finance, in perfect harmony.
-        </p>
-      </div>
-
-      {/* ============ BOTTOM: CTAs ============ */}
-      <div className="relative space-y-3 px-6 pb-10">
-
-        {/* Primary — yellow with purple text */}
-        <Link
-          href="/login?m=250084"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-4 text-[15px] font-bold tracking-tight text-plum-800 shadow-[0_10px_28px_-10px_rgba(255,206,7,0.6)] transition active:scale-[0.985]"
-        >
-          Get started
-          <ArrowRight size={17} strokeWidth={2.5} />
-        </Link>
-
-        {/* Secondary — translucent white */}
-        <Link
-          href="/login?m=250084"
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white/10 px-6 py-4 text-[15px] font-bold tracking-tight text-white ring-1 ring-white/15 transition active:scale-[0.985]"
-        >
-          I already have an account
-        </Link>
-
-        {/* Download app — inline variant, only shows when installable */}
-        <DownloadAppButton variant="primary" className="w-full" />
-
-        {/* Legal */}
-        <p className="pt-3 text-center text-[10.5px] leading-snug text-white/40">
-          By continuing you agree to the IMARA CREDIT Terms
-          &amp; Privacy Policy.
-        </p>
-      </div>
-    </div>
+    <Suspense fallback={<div className="min-h-screen bg-black" />}>
+      <LandingContent />
+    </Suspense>
   );
 }
