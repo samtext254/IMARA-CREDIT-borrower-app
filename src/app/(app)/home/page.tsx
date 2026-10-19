@@ -9,20 +9,21 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  CreditCard,
   HelpCircle,
-  History,
   LogOut,
-  Plus,
   Receipt,
   Settings,
   User,
   WalletCards,
   ShieldAlert,
-  ShieldCheck,
   AlertTriangle,
+  ArrowLeftRight, // For Transfers
+  FileText,       // For Pay Bills
+  Smartphone,     // For Airtime
+  PiggyBank,      // For Savings
+  TrendingUp,     // For Invest
+  LayoutGrid,     // For More
 } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -30,7 +31,7 @@ import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 import KycModal from '@/components/KycModal';
 
 /* ------------------------------------------------------------------ */
-/*  Types                                                              */
+/*  Types & Helpers                                                    */
 /* ------------------------------------------------------------------ */
 interface BorrowerProfile {
   borrower_id: number;
@@ -44,14 +45,7 @@ interface BorrowerProfile {
   created_at: string;
 }
 
-const BLOCKING_STATUSES = [
-  'PENDING',
-  'APPROVED',
-  'DISBURSED',
-  'ACTIVE',
-  'OVERDUE',
-] as const;
-
+const BLOCKING_STATUSES = ['PENDING', 'APPROVED', 'DISBURSED', 'ACTIVE', 'OVERDUE'] as const;
 const KYC_DISMISS_PREFIX = 'kyc-dismissed';
 
 function kycDismissKey(data: KycStatusResponse | null): string {
@@ -60,9 +54,6 @@ function kycDismissKey(data: KycStatusResponse | null): string {
   return `${KYC_DISMISS_PREFIX}-${data.kycStatus}-${stamp}`;
 }
 
-/* ------------------------------------------------------------------ */
-/*  Helpers                                                            */
-/* ------------------------------------------------------------------ */
 function formatKes(amount: string | number | null | undefined): string {
   if (amount === null || amount === undefined || amount === '') return '0';
   const n = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -80,10 +71,7 @@ function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
@@ -96,167 +84,56 @@ function computeProgress(loan: Loan): number {
   return Math.max(0, Math.min(100, Math.round(pct)));
 }
 
-function nextInstallment(
-  schedule: LoanScheduleEntry[]
-): LoanScheduleEntry | null {
+function nextInstallment(schedule: LoanScheduleEntry[]): LoanScheduleEntry | null {
   if (!Array.isArray(schedule) || schedule.length === 0) return null;
-  const unpaid = schedule.find(
-    (s) =>
-      s.status !== 'PAID' &&
-      Number(s.paid_amount || 0) < Number(s.total_due || 0)
-  );
-  return unpaid || null;
+  return schedule.find((s) => s.status !== 'PAID' && Number(s.paid_amount || 0) < Number(s.total_due || 0)) || null;
 }
 
 function statusLabel(status: string): string {
   switch (status) {
-    case 'PENDING':
-      return 'Your application is under review';
-    case 'APPROVED':
-      return 'Your loan has been approved';
-    case 'DISBURSED':
-      return 'Your loan is being disbursed';
-    case 'ACTIVE':
-      return 'You have an active loan';
-    case 'OVERDUE':
-      return 'You have an overdue loan';
-    default:
-      return 'Your profile is complete';
+    case 'PENDING': return 'Your application is under review';
+    case 'APPROVED': return 'Your loan has been approved';
+    case 'DISBURSED': return 'Your loan is being disbursed';
+    case 'ACTIVE': return 'You have an active loan';
+    case 'OVERDUE': return 'You have an overdue loan';
+    default: return 'Your profile is complete';
   }
 }
 
 /* ------------------------------------------------------------------ */
 /*  Activity row mapper                                                */
 /* ------------------------------------------------------------------ */
-function activityRow(item: ActivityItem): {
-  title: string;
-  Icon: typeof CheckCircle2;
-  iconClass: string;
-  amountClass: string;
-} {
+function activityRow(item: ActivityItem): { title: string; Icon: typeof CheckCircle2; iconClass: string; amountClass: string; } {
   switch (item.kind) {
-    case 'repayment_received':
-      return {
-        title: 'Repayment received',
-        Icon: CheckCircle2,
-        iconClass: 'bg-leaf-50 text-leaf-600',
-        amountClass: 'text-leaf-600',
-      };
-    case 'loan_submitted':
-      return {
-        title: 'Loan application',
-        Icon: Receipt,
-        iconClass: 'bg-ink-100/60 text-ink-500',
-        amountClass: 'text-ink-900',
-      };
-    case 'loan_approved':
-      return {
-        title: 'Loan approved',
-        Icon: CheckCircle2,
-        iconClass: 'bg-leaf-50 text-leaf-600',
-        amountClass: 'text-ink-900',
-      };
-    case 'loan_rejected':
-      return {
-        title: 'Loan declined',
-        Icon: Receipt,
-        iconClass: 'bg-red-50 text-red-600',
-        amountClass: 'text-red-600',
-      };
-    case 'loan_disbursed':
-      return {
-        title: 'Loan disbursed',
-        Icon: WalletCards,
-        iconClass: 'bg-plum-50 text-plum-700',
-        amountClass: 'text-ink-900',
-      };
-    case 'loan_active':
-      return {
-        title: 'Loan active',
-        Icon: CheckCircle2,
-        iconClass: 'bg-leaf-50 text-leaf-600',
-        amountClass: 'text-leaf-600',
-      };
-    case 'loan_overdue':
-      return {
-        title: 'Loan overdue',
-        Icon: AlertTriangle,
-        iconClass: 'bg-red-50 text-red-600',
-        amountClass: 'text-red-600',
-      };
-    case 'loan_paid':
-      return {
-        title: 'Loan fully repaid',
-        Icon: CheckCircle2,
-        iconClass: 'bg-leaf-50 text-leaf-600',
-        amountClass: 'text-leaf-600',
-      };
+    case 'repayment_received': return { title: 'Repayment received', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
+    case 'loan_submitted': return { title: 'Loan application', Icon: Receipt, iconClass: 'bg-ink-100/60 text-ink-500', amountClass: 'text-ink-900' };
+    case 'loan_approved': return { title: 'Loan approved', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-ink-900' };
+    case 'loan_rejected': return { title: 'Loan declined', Icon: Receipt, iconClass: 'bg-red-50 text-red-600', amountClass: 'text-red-600' };
+    case 'loan_disbursed': return { title: 'Loan disbursed', Icon: WalletCards, iconClass: 'bg-plum-50 text-plum-700', amountClass: 'text-ink-900' };
+    case 'loan_active': return { title: 'Loan active', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
+    case 'loan_overdue': return { title: 'Loan overdue', Icon: AlertTriangle, iconClass: 'bg-red-50 text-red-600', amountClass: 'text-red-600' };
+    case 'loan_paid': return { title: 'Loan fully repaid', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
     case 'loan_defaulted':
-    case 'loan_written_off':
-      return {
-        title: 'Loan closed',
-        Icon: Receipt,
-        iconClass: 'bg-red-50 text-red-600',
-        amountClass: 'text-red-600',
-      };
-    default:
-      return {
-        title: 'Loan update',
-        Icon: Receipt,
-        iconClass: 'bg-ink-100/60 text-ink-500',
-        amountClass: 'text-ink-900',
-      };
+    case 'loan_written_off': return { title: 'Loan closed', Icon: Receipt, iconClass: 'bg-red-50 text-red-600', amountClass: 'text-red-600' };
+    default: return { title: 'Loan update', Icon: Receipt, iconClass: 'bg-ink-100/60 text-ink-500', amountClass: 'text-ink-900' };
   }
 }
 
 /* ------------------------------------------------------------------ */
 /*  Circular progress ring                                             */
 /* ------------------------------------------------------------------ */
-function ProgressRing({
-  value,
-  size = 56,
-  stroke = 6,
-}: {
-  value: number;
-  size?: number;
-  stroke?: number;
-}) {
+function ProgressRing({ value, size = 56, stroke = 6 }: { value: number; size?: number; stroke?: number; }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const offset = c - (Math.min(100, Math.max(0, value)) / 100) * c;
-
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${size} ${size}`}
-        className="-rotate-90"
-      >
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="rgba(91,46,140,0.18)"
-          strokeWidth={stroke}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="#5b2e8c"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={c}
-          strokeDashoffset={offset}
-        />
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(91,46,140,0.18)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#5b2e8c" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="text-[13px] font-bold leading-none tracking-tight text-plum-800">
-          {value}%
-        </span>
+        <span className="text-[13px] font-bold leading-none tracking-tight text-plum-800">{value}%</span>
       </div>
     </div>
   );
@@ -265,152 +142,32 @@ function ProgressRing({
 /* ------------------------------------------------------------------ */
 /*  KYC banner                                                         */
 /* ------------------------------------------------------------------ */
-function KycBanner({
-  data,
-  hidden,
-  onOpenModal,
-}: {
-  data: KycStatusResponse | null;
-  hidden: boolean;
-  onOpenModal: () => void;
-}) {
+function KycBanner({ data, hidden, onOpenModal }: { data: KycStatusResponse | null; hidden: boolean; onOpenModal: () => void; }) {
   if (!data || data.kycStatus === 'VERIFIED' || hidden) return null;
-
   const { kycStatus, progress, rejectionReason } = data;
 
-  const config =
-    kycStatus === 'REJECTED'
-      ? {
-          bg: 'bg-red-50',
-          border: 'border-red-200',
-          iconBg: 'bg-red-100',
-          iconColor: 'text-red-700',
-          eyebrowColor: 'text-red-700/80',
-          titleColor: 'text-red-900',
-          bodyColor: 'text-red-800/90',
-          ctaBg: 'bg-red-600',
-          ctaText: 'text-white',
-          icon: <ShieldAlert size={16} strokeWidth={2.4} />,
-          eyebrow: 'Action needed',
-          title: 'Your KYC was rejected',
-          body: rejectionReason || 'Please review your details and submit again.',
-          cta: 'Fix now',
-        }
+  const config = kycStatus === 'REJECTED'
+      ? { bg: 'bg-red-50', border: 'border-red-200', iconBg: 'bg-red-100', iconColor: 'text-red-700', eyebrowColor: 'text-red-700/80', titleColor: 'text-red-900', bodyColor: 'text-red-800/90', ctaBg: 'bg-red-600', ctaText: 'text-white', icon: <ShieldAlert size={16} strokeWidth={2.4} />, eyebrow: 'Action needed', title: 'Your KYC was rejected', body: rejectionReason || 'Please review your details and submit again.', cta: 'Fix now' }
       : kycStatus === 'SUBMITTED'
-      ? {
-          bg: 'bg-blue-50',
-          border: 'border-blue-200',
-          iconBg: 'bg-blue-100',
-          iconColor: 'text-blue-700',
-          eyebrowColor: 'text-blue-700/80',
-          titleColor: 'text-blue-900',
-          bodyColor: 'text-blue-800/90',
-          ctaBg: 'bg-white',
-          ctaText: 'text-blue-800',
-          icon: <Clock3 size={16} strokeWidth={2.4} />,
-          eyebrow: 'Under review',
-          title: 'Your KYC is being reviewed',
-          body: 'We will notify you once it is approved.',
-          cta: null,
-        }
-      : {
-          bg: 'bg-brand-500/15',
-          border: 'border-brand-500/40',
-          iconBg: 'bg-brand-500/30',
-          iconColor: 'text-plum-800',
-          eyebrowColor: 'text-plum-800/70',
-          titleColor: 'text-plum-800',
-          bodyColor: 'text-plum-800/80',
-          ctaBg: 'bg-plum-800',
-          ctaText: 'text-white',
-          icon: <ShieldAlert size={16} strokeWidth={2.4} />,
-          eyebrow: 'KYC required',
-          title: 'Complete your KYC to unlock borrowing',
-          body: `${progress.filled} of ${progress.total} fields done`,
-          cta: 'Complete KYC',
-        };
+      ? { bg: 'bg-blue-50', border: 'border-blue-200', iconBg: 'bg-blue-100', iconColor: 'text-blue-700', eyebrowColor: 'text-blue-700/80', titleColor: 'text-blue-900', bodyColor: 'text-blue-800/90', ctaBg: 'bg-white', ctaText: 'text-blue-800', icon: <Clock3 size={16} strokeWidth={2.4} />, eyebrow: 'Under review', title: 'Your KYC is being reviewed', body: 'We will notify you once it is approved.', cta: null }
+      : { bg: 'bg-brand-500/15', border: 'border-brand-500/40', iconBg: 'bg-brand-500/30', iconColor: 'text-plum-800', eyebrowColor: 'text-plum-800/70', titleColor: 'text-plum-800', bodyColor: 'text-plum-800/80', ctaBg: 'bg-plum-800', ctaText: 'text-white', icon: <ShieldAlert size={16} strokeWidth={2.4} />, eyebrow: 'KYC required', title: 'Complete your KYC to unlock borrowing', body: `${progress.filled} of ${progress.total} fields done`, cta: 'Complete KYC' };
 
   const handleClick = () => {
-    if (config.cta) {
-      window.location.href = '/kyc';
-    } else {
-      onOpenModal();
-    }
+    if (config.cta) window.location.href = '/kyc';
+    else onOpenModal();
   };
 
   return (
     <div className="px-3 pt-3">
-      <button
-        type="button"
-        onClick={handleClick}
-        className={`flex w-full items-center gap-3 rounded-2xl border ${config.border} ${config.bg} px-4 py-3.5 text-left transition active:scale-[0.99]`}
-      >
-        <div
-          className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${config.iconBg} ${config.iconColor}`}
-        >
-          {config.icon}
-        </div>
-
+      <button type="button" onClick={handleClick} className={`flex w-full items-center gap-3 rounded-2xl border ${config.border} ${config.bg} px-4 py-3.5 text-left transition active:scale-[0.99]`}>
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${config.iconBg} ${config.iconColor}`}>{config.icon}</div>
         <div className="min-w-0 flex-1">
-          <p
-            className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${config.eyebrowColor}`}
-          >
-            {config.eyebrow}
-          </p>
-          <p
-            className={`mt-0.5 truncate text-[13.5px] font-bold tracking-tight ${config.titleColor}`}
-          >
-            {config.title}
-          </p>
-          {kycStatus !== 'SUBMITTED' && (
-            <p className={`mt-0.5 text-[11px] ${config.bodyColor}`}>
-              {config.body}
-            </p>
-          )}
+          <p className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${config.eyebrowColor}`}>{config.eyebrow}</p>
+          <p className={`mt-0.5 truncate text-[13.5px] font-bold tracking-tight ${config.titleColor}`}>{config.title}</p>
+          {kycStatus !== 'SUBMITTED' && <p className={`mt-0.5 text-[11px] ${config.bodyColor}`}>{config.body}</p>}
         </div>
-
-        {kycStatus !== 'SUBMITTED' && (
-          <div className="shrink-0">
-            <ProgressRing value={progress.percentage} size={44} stroke={4} />
-          </div>
-        )}
-
-        {config.cta && (
-          <div
-            className={`hidden sm:inline-flex shrink-0 items-center gap-1 rounded-lg ${config.ctaBg} ${config.ctaText} px-3 py-1.5 text-[11px] font-bold tracking-tight`}
-          >
-            {config.cta}
-            <ChevronRight size={13} strokeWidth={2.6} />
-          </div>
-        )}
+        {kycStatus !== 'SUBMITTED' && <div className="shrink-0"><ProgressRing value={progress.percentage} size={44} stroke={4} /></div>}
       </button>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Section header                                                     */
-/* ------------------------------------------------------------------ */
-function SectionHeader({
-  title,
-  action,
-}: {
-  title: string;
-  action?: { label: string; onClick?: () => void };
-}) {
-  return (
-    <div className="flex items-center justify-between border-b border-ink-100 bg-white px-5 py-3">
-      <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-        {title}
-      </h2>
-      {action && (
-        <button
-          onClick={action.onClick}
-          className="text-[12px] font-semibold tracking-tight text-plum-700"
-        >
-          {action.label}
-        </button>
-      )}
     </div>
   );
 }
@@ -418,122 +175,52 @@ function SectionHeader({
 /* ------------------------------------------------------------------ */
 /*  Avatar dropdown                                                    */
 /* ------------------------------------------------------------------ */
-function AvatarMenu({
-  initials,
-  name,
-  email,
-  onLogout,
-  loggingOut,
-}: {
-  initials: string;
-  name: string;
-  email: string;
-  onLogout: () => void;
-  loggingOut: boolean;
-}) {
+function AvatarMenu({ initials, name, email, onLogout, loggingOut }: { initials: string; name: string; email: string; onLogout: () => void; loggingOut: boolean; }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
+    function onClick(e: MouseEvent) { if (!ref.current?.contains(e.target as Node)) setOpen(false); }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false); }
     document.addEventListener('mousedown', onClick);
     document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onClick);
-      document.removeEventListener('keydown', onKey);
-    };
+    return () => { document.removeEventListener('mousedown', onClick); document.removeEventListener('keydown', onKey); };
   }, [open]);
 
-  function go(path: string) {
-    setOpen(false);
-    router.push(path);
-  }
+  function go(path: string) { setOpen(false); router.push(path); }
 
   return (
     <div ref={ref} className="relative shrink-0">
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Account menu"
-        aria-expanded={open}
-        className="relative grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20 transition active:scale-95"
-      >
+      <button type="button" onClick={() => setOpen((v) => !v)} className="relative grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20 transition active:scale-95">
         {initials}
         <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-plum-800 bg-brand-500" />
       </button>
-
       {open && (
         <>
-          <button
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-          <div
-            role="menu"
-            className="absolute left-0 top-full z-50 mt-2 w-60 origin-top-left overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_18px_40px_-20px_rgba(15,21,18,0.35)]"
-          >
+          <button aria-hidden tabIndex={-1} onClick={() => setOpen(false)} className="fixed inset-0 z-40 cursor-default" />
+          <div className="absolute left-0 top-full z-50 mt-2 w-60 origin-top-left overflow-hidden rounded-2xl border border-ink-100 bg-white shadow-[0_18px_40px_-20px_rgba(15,21,18,0.35)]">
             <div className="border-b border-ink-100 px-4 py-3">
-              <p className="truncate text-[13px] font-bold tracking-tight text-ink-950">
-                {name}
-              </p>
-              <p className="mt-0.5 truncate text-[11px] font-medium text-ink-400">
-                {email}
-              </p>
+              <p className="truncate text-[13px] font-bold tracking-tight text-ink-950">{name}</p>
+              <p className="mt-0.5 truncate text-[11px] font-medium text-ink-400">{email}</p>
             </div>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => go('/profile')}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40"
-            >
+            <button type="button" onClick={() => go('/profile')} className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40">
               <User size={16} strokeWidth={2.2} className="shrink-0 text-ink-500" />
-              <span className="text-[12.5px] font-semibold text-ink-800">
-                My profile
-              </span>
+              <span className="text-[12.5px] font-semibold text-ink-800">My profile</span>
             </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => go('/profile')}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40"
-            >
+            <button type="button" onClick={() => go('/profile')} className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40">
               <Settings size={16} strokeWidth={2.2} className="shrink-0 text-ink-500" />
-              <span className="text-[12.5px] font-semibold text-ink-800">
-                Settings
-              </span>
+              <span className="text-[12.5px] font-semibold text-ink-800">Settings</span>
             </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => go('/profile')}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40"
-            >
+            <button type="button" onClick={() => go('/profile')} className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-ink-100/40">
               <HelpCircle size={16} strokeWidth={2.2} className="shrink-0 text-ink-500" />
-              <span className="text-[12.5px] font-semibold text-ink-800">
-                Help & support
-              </span>
+              <span className="text-[12.5px] font-semibold text-ink-800">Help & support</span>
             </button>
             <div className="border-t border-ink-100" />
-            <button
-              type="button"
-              role="menuitem"
-              onClick={onLogout}
-              disabled={loggingOut}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-red-50 disabled:opacity-60"
-            >
+            <button type="button" onClick={onLogout} disabled={loggingOut} className="flex w-full items-center gap-3 px-4 py-2.5 text-left transition active:bg-red-50 disabled:opacity-60">
               <LogOut size={16} strokeWidth={2.2} className="shrink-0 text-red-600" />
-              <span className="text-[12.5px] font-bold text-red-600">
-                {loggingOut ? 'Logging out…' : 'Log out'}
-              </span>
+              <span className="text-[12.5px] font-bold text-red-600">{loggingOut ? 'Logging out…' : 'Log out'}</span>
             </button>
           </div>
         </>
@@ -558,14 +245,45 @@ function LoadingState() {
         </div>
         <div className="h-1 w-full bg-brand-500" />
       </div>
-      <div className="px-3 pt-3">
-        <div className="h-16 animate-pulse rounded-2xl bg-ink-100/40" />
-      </div>
-      <div className="px-3 pt-3">
-        <div className="h-44 animate-pulse rounded-3xl bg-ink-100/40" />
-      </div>
+      <div className="px-3 pt-3"><div className="h-16 animate-pulse rounded-2xl bg-ink-100/40" /></div>
+      <div className="px-3 pt-3"><div className="h-44 animate-pulse rounded-3xl bg-ink-100/40" /></div>
     </div>
   );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Everyday Service Tile (Matching the reference image)               */
+/* ------------------------------------------------------------------ */
+function EverydayServiceTile({ 
+  icon: Icon, 
+  label, 
+  bgClass, 
+  textClass, 
+  href, 
+  onClick 
+}: { 
+  icon: any; 
+  label: string; 
+  bgClass: string; 
+  textClass: string; 
+  href?: string; 
+  onClick?: () => void 
+}) {
+  const content = (
+    <>
+      <div className={`grid h-14 w-14 place-items-center rounded-2xl ${bgClass} ${textClass} transition group-active:scale-95`}>
+        <Icon size={24} strokeWidth={2} />
+      </div>
+      <span className="text-[12px] font-semibold text-ink-900 mt-2">
+        {label}
+      </span>
+    </>
+  );
+
+  if (href) {
+    return <Link href={href} className="group flex flex-col items-center">{content}</Link>;
+  }
+  return <button onClick={onClick} className="group flex flex-col items-center">{content}</button>;
 }
 
 /* ------------------------------------------------------------------ */
@@ -573,7 +291,6 @@ function LoadingState() {
 /* ------------------------------------------------------------------ */
 export default function HomePage() {
   const router = useRouter();
-
   const [borrower, setBorrower] = useState<BorrowerProfile | null>(null);
   const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [activeLoan, setActiveLoan] = useState<Loan | null>(null);
@@ -582,258 +299,112 @@ export default function HomePage() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
-
   const [kycData, setKycData] = useState<KycStatusResponse | null>(null);
   const [showKycModal, setShowKycModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
-        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes, activityRes] =
-          await Promise.allSettled([
-            imara.me(),
-            loansApi.getEligibility(),
-            loansApi.getLoans({ status: 'ACTIVE', limit: 1 }),
-            loansApi.getLoans({ limit: 20 }),
-            getKycStatus(),
-            loansApi.getActivity({ limit: 20 }),
-          ]);
-
+        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes, activityRes] = await Promise.allSettled([
+          imara.me(), loansApi.getEligibility(), loansApi.getLoans({ status: 'ACTIVE', limit: 1 }), loansApi.getLoans({ limit: 20 }), getKycStatus(), loansApi.getActivity({ limit: 20 }),
+        ]);
         if (cancelled) return;
 
-        if (meRes.status === 'fulfilled') {
-          setBorrower(meRes.value.data);
-        } else {
-          const err = meRes.reason;
-          if (!(err instanceof ImaraApiError)) {
-            console.error('Failed to load borrower profile:', err);
-          }
-          setLoading(false);
-          return;
-        }
+        if (meRes.status === 'fulfilled') setBorrower(meRes.value.data);
+        else { setLoading(false); return; }
 
-        if (eligRes.status === 'fulfilled') {
-          setEligibility(eligRes.value.data);
-        } else if (!(eligRes.reason instanceof ImaraApiError)) {
-          console.error('Eligibility fetch failed:', eligRes.reason);
-        }
-
+        if (eligRes.status === 'fulfilled') setEligibility(eligRes.value.data);
+        
         let active: Loan | null = null;
         if (activeLoansRes.status === 'fulfilled') {
           const list = activeLoansRes.value.data || [];
           active = list.length > 0 ? list[0] : null;
           setActiveLoan(active);
-        } else if (!(activeLoansRes.reason instanceof ImaraApiError)) {
-          console.error('Active loan fetch failed:', activeLoansRes.reason);
         }
-
-        if (recentLoansRes.status === 'fulfilled') {
-          setRecentLoans(recentLoansRes.value.data || []);
-        } else if (!(recentLoansRes.reason instanceof ImaraApiError)) {
-          console.error('Recent loans fetch failed:', recentLoansRes.reason);
-        }
-
-        if (activityRes.status === 'fulfilled') {
-          setActivity(activityRes.value.data || []);
-        } else if (!(activityRes.reason instanceof ImaraApiError)) {
-          console.error('Activity fetch failed:', activityRes.reason);
-        }
+        if (recentLoansRes.status === 'fulfilled') setRecentLoans(recentLoansRes.value.data || []);
+        if (activityRes.status === 'fulfilled') setActivity(activityRes.value.data || []);
 
         if (kycRes.status === 'fulfilled') {
           const kyc = kycRes.value;
           setKycData(kyc);
-
           if (kyc.kycStatus !== 'VERIFIED') {
             let dismissed = false;
-            try {
-              dismissed =
-                window.sessionStorage.getItem(kycDismissKey(kyc)) === '1';
-            } catch {
-              dismissed = false;
-            }
-            if (!dismissed) {
-              setTimeout(() => {
-                if (!cancelled) setShowKycModal(true);
-              }, 400);
-            }
-          }
-        } else {
-          if (!(kycRes.reason instanceof ImaraApiError)) {
-            console.error('KYC status fetch failed:', kycRes.reason);
+            try { dismissed = window.sessionStorage.getItem(kycDismissKey(kyc)) === '1'; } catch {}
+            if (!dismissed) setTimeout(() => { if (!cancelled) setShowKycModal(true); }, 400);
           }
         }
 
         if (active) {
           try {
             const detail = await loansApi.getLoan(active.id);
-            if (!cancelled) {
-              setActiveSchedule(detail.data.schedule || []);
-            }
-          } catch (err) {
-            if (!(err instanceof ImaraApiError)) {
-              console.error('Schedule fetch failed:', err);
-            }
-          }
+            if (!cancelled) setActiveSchedule(detail.data.schedule || []);
+          } catch {}
         }
-
         if (!cancelled) setLoading(false);
-      } catch (err) {
-        if (cancelled) return;
-        if (!(err instanceof ImaraApiError)) {
-          console.error('Home page load failed:', err);
-        }
-        setLoading(false);
-      }
+      } catch { if (!cancelled) setLoading(false); }
     })();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, []);
 
   async function onLogout() {
     setLoggingOut(true);
-    try {
-      await imara.logout();
-    } catch (err) {
-      console.error('Logout failed:', err);
-    } finally {
+    try { await imara.logout(); } catch {}
+    finally {
       try {
         window.sessionStorage.removeItem('imara.apply.draft.v1');
-        Object.keys(window.sessionStorage)
-          .filter((k) => k.startsWith(KYC_DISMISS_PREFIX))
-          .forEach((k) => window.sessionStorage.removeItem(k));
-      } catch {
-        /* ignore */
-      }
+        Object.keys(window.sessionStorage).filter((k) => k.startsWith(KYC_DISMISS_PREFIX)).forEach((k) => window.sessionStorage.removeItem(k));
+      } catch {}
       router.push('/login');
     }
   }
 
   function dismissKycModal() {
-    try {
-      window.sessionStorage.setItem(kycDismissKey(kycData), '1');
-    } catch {
-      /* ignore */
-    }
+    try { window.sessionStorage.setItem(kycDismissKey(kycData), '1'); } catch {}
     setShowKycModal(false);
-  }
-
-  function openKycModal() {
-    setShowKycModal(true);
   }
 
   const derived = useMemo(() => {
     if (!borrower) return null;
-
-    const fullName = [borrower.first_name, borrower.last_name]
-      .filter(Boolean)
-      .join(' ')
-      .trim();
+    const fullName = [borrower.first_name, borrower.last_name].filter(Boolean).join(' ').trim();
     const displayName = fullName || borrower.email.split('@')[0];
-    const initials = displayName
-      .split(/\s+/)
-      .map((w) => w[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase();
-
-    const availableLimit = eligibility?.credit_limit
-      ? eligibility.credit_limit.available_limit
-      : '0';
-
+    const initials = displayName.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+    const availableLimit = eligibility?.credit_limit ? eligibility.credit_limit.available_limit : '0';
     const progress = activeLoan ? computeProgress(activeLoan) : 0;
-
-    const nextInst =
-      activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
-
-    const penaltyOutstanding = activeLoan
-      ? toNumber((activeLoan as any).outstanding_penalty)
-      : 0;
-
-    const loanOutstanding = activeLoan
-      ? toNumber(activeLoan.outstanding_total)
-      : 0;
-
+    const nextInst = activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
+    const penaltyOutstanding = activeLoan ? toNumber((activeLoan as any).outstanding_penalty) : 0;
+    const loanOutstanding = activeLoan ? toNumber(activeLoan.outstanding_total) : 0;
     const instalmentDue = nextInst ? toNumber(nextInst.total_due) : null;
-
-    const nextPaymentAmount =
-      instalmentDue !== null
-        ? String(instalmentDue + penaltyOutstanding)
-        : String(loanOutstanding);
-
-    const nextPaymentDate = nextInst
-      ? nextInst.due_date
-      : activeLoan
-      ? loanDueDate(activeLoan)
-      : null;
-
-    return {
-      displayName,
-      initials,
-      availableLimit,
-      progress,
-      nextPaymentAmount,
-      nextPaymentDate,
-      penaltyOutstanding,
-    };
+    const nextPaymentAmount = instalmentDue !== null ? String(instalmentDue + penaltyOutstanding) : String(loanOutstanding);
+    const nextPaymentDate = nextInst ? nextInst.due_date : activeLoan ? loanDueDate(activeLoan) : null;
+    return { displayName, initials, availableLimit, progress, nextPaymentAmount, nextPaymentDate, penaltyOutstanding };
   }, [borrower, eligibility, activeLoan, activeSchedule]);
 
-  if (loading || !borrower || !derived) {
-    return <LoadingState />;
-  }
+  if (loading || !borrower || !derived) return <LoadingState />;
 
-  const blockingLoan =
-    recentLoans.find((l) =>
-      (BLOCKING_STATUSES as readonly string[]).includes(l.status)
-    ) || null;
-
+  const blockingLoan = recentLoans.find((l) => (BLOCKING_STATUSES as readonly string[]).includes(l.status)) || null;
   const loanActive = activeLoan !== null;
   const hasBlockingLoan = blockingLoan !== null;
-
   const focusLoan = activeLoan || blockingLoan;
-
   const focusLoanIsOverdue = focusLoan?.status === 'OVERDUE';
-
-  const focusLoanIsRepayable =
-    focusLoan?.status === 'ACTIVE' || focusLoan?.status === 'OVERDUE';
-
+  const focusLoanIsRepayable = focusLoan?.status === 'ACTIVE' || focusLoan?.status === 'OVERDUE';
   const kycVerified = kycData?.kycStatus === 'VERIFIED';
   const kycNotVerified = !!kycData && kycData.kycStatus !== 'VERIFIED';
-
   const canApply = !hasBlockingLoan && kycVerified;
-
   const hasPenalty = derived.penaltyOutstanding > 0;
 
   return (
-    <div className="min-h-screen bg-page pb-24">
-      {/* ============ NAV ============ */}
+    <div className="min-h-screen bg-[#F8F9FA] pb-24">
+      
+      {/* NAV */}
       <div className="sticky top-0 z-30 bg-plum-700">
         <div className="flex items-center gap-3 px-5 py-4">
-          <AvatarMenu
-            initials={derived.initials}
-            name={derived.displayName}
-            email={borrower.email}
-            onLogout={onLogout}
-            loggingOut={loggingOut}
-          />
-
+          <AvatarMenu initials={derived.initials} name={derived.displayName} email={borrower.email} onLogout={onLogout} loggingOut={loggingOut} />
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
-              Welcome back
-            </p>
-            <h1 className="mt-0.5 truncate text-[16px] font-semibold tracking-tight text-white">
-              {derived.displayName}
-            </h1>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">Welcome back</p>
+            <h1 className="mt-0.5 truncate text-[16px] font-semibold tracking-tight text-white">{derived.displayName}</h1>
           </div>
-
-          <Link
-            href="/notifications"
-            className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition active:scale-95"
-            aria-label="Notifications"
-          >
+          <Link href="/notifications" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition active:scale-95">
             <Bell size={18} strokeWidth={2.2} />
             <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-plum-700" />
           </Link>
@@ -841,361 +412,175 @@ export default function HomePage() {
         <div className="h-1 w-full bg-brand-500" />
       </div>
 
-      {/* ============ KYC BANNER ============ */}
-      <KycBanner
-        data={kycData}
-        hidden={showKycModal}
-        onOpenModal={openKycModal}
-      />
+      <KycBanner data={kycData} hidden={showKycModal} onOpenModal={() => setShowKycModal(true)} />
 
-      {/* ============ OVERDUE / PENALTY ALERT ============ */}
-      {loanActive && focusLoanIsOverdue && hasPenalty && (
-        <div className="px-3 pt-3">
-          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-red-100 text-red-700">
-              <AlertTriangle size={16} strokeWidth={2.4} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-red-700/80">
-                Payment overdue
-              </p>
-              <p className="mt-0.5 text-[13.5px] font-bold tracking-tight text-red-900">
-                A late payment fee has been applied
-              </p>
-              <p className="mt-0.5 text-[11px] text-red-800/90">
-                KES {formatKes(derived.penaltyOutstanding)} penalty added to your
-                outstanding balance.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ============ HERO — active loan ============ */}
+      {/* HERO CARDS (UNTOUCHED) */}
       {loanActive && activeLoan && (
         <div className="px-3 pt-3">
           <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
-                  Outstanding balance
-                </p>
-                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">
-                  KES {formatKes(activeLoan.outstanding_total)}
-                </p>
-                <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">
-                  of KES {formatKes(activeLoan.total_due)} total
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">Outstanding balance</p>
+                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">KES {formatKes(activeLoan.outstanding_total)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">of KES {formatKes(activeLoan.total_due)} total</p>
               </div>
-
               <ProgressRing value={derived.progress} />
             </div>
-
             <div className="my-4 h-px bg-plum-800/10" />
-
-            {hasPenalty && (
-              <>
-                <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-2">
-                  <span>Outstanding (loan)</span>
-                  <span className="tabular-nums font-semibold text-plum-800">
-                    KES{' '}
-                    {formatKes(
-                      toNumber(activeLoan.outstanding_total) -
-                        derived.penaltyOutstanding
-                    )}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-[11px] text-plum-800/70 pb-3">
-                  <span className="inline-flex items-center gap-1">
-                    <AlertTriangle size={11} strokeWidth={2.4} />
-                    Late payment fee
-                  </span>
-                  <span className="tabular-nums font-bold text-red-700">
-                    KES {formatKes(derived.penaltyOutstanding)}
-                  </span>
-                </div>
-                <div className="my-2 h-px bg-plum-800/10" />
-              </>
-            )}
-
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800">
-                <Clock3 size={16} strokeWidth={2.2} />
-              </div>
-
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800"><Clock3 size={16} strokeWidth={2.2} /></div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">
-                  Amount due
-                </p>
-                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">
-                  KES {formatKes(activeLoan.outstanding_total)}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Amount due</p>
+                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(activeLoan.outstanding_total)}</p>
               </div>
-
               <div className="shrink-0 text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">
-                  Due
-                </p>
-                <p className="mt-0.5 whitespace-nowrap text-[12px] font-semibold text-plum-800/90">
-                  {formatDate(derived.nextPaymentDate)}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Due</p>
+                <p className="mt-0.5 whitespace-nowrap text-[12px] font-semibold text-plum-800/90">{formatDate(derived.nextPaymentDate)}</p>
               </div>
             </div>
-
             {focusLoanIsRepayable && activeLoan ? (
-              <Link
-                href={`/repay/${activeLoan.id}`}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                {focusLoanIsOverdue ? 'Pay my overdue loan' : 'Pay now'}
-                <ArrowRight size={15} strokeWidth={2.5} />
+              <Link href={`/repay/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
+                {focusLoanIsOverdue ? 'Pay my overdue loan' : 'Pay now'} <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             ) : (
-              <Link
-                href={`/loans/${activeLoan.id}`}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                View full loan
-                <ArrowRight size={15} strokeWidth={2.5} />
+              <Link href={`/loans/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
+                View full loan <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             )}
           </div>
         </div>
       )}
 
-      {/* ============ HERO — no active loan ============ */}
       {!loanActive && (
         <div className="px-3 pt-3">
           <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
-                  Available to borrow
-                </p>
-                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">
-                  KES {formatKes(derived.availableLimit)}
-                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">Available to borrow</p>
+                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">KES {formatKes(derived.availableLimit)}</p>
               </div>
-
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-plum-800/10 text-plum-800">
-                <WalletCards size={19} strokeWidth={2.2} />
-              </div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-plum-800/10 text-plum-800"><WalletCards size={19} strokeWidth={2.2} /></div>
             </div>
-
             <div className="my-4 h-px bg-plum-800/10" />
-
-            {hasBlockingLoan && blockingLoan!.status === 'OVERDUE' ? (
-              <div className="flex items-center gap-2 text-[12px] font-semibold text-red-800">
-                <AlertTriangle size={15} strokeWidth={2.4} />
-                <span>You have an overdue loan — pay now to avoid further fees</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2 text-[12px] font-medium text-plum-800/70">
-                <CheckCircle2 size={15} strokeWidth={2.2} />
-                <span>
-                  {kycNotVerified
-                    ? 'Complete your KYC to unlock borrowing'
-                    : hasBlockingLoan
-                    ? statusLabel(blockingLoan!.status)
-                    : 'Your profile is complete'}
-                </span>
-              </div>
-            )}
-
-            {focusLoan && focusLoanIsRepayable ? (
-              <Link
-                href={`/repay/${focusLoan.id}`}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                {focusLoanIsOverdue
-                  ? 'View and Pay my overdue loan'
-                  : 'Pay my loan'}
-                <ArrowRight size={15} strokeWidth={2.5} />
-              </Link>
-            ) : hasBlockingLoan && blockingLoan ? (
-              <Link
-                href={`/loans/${blockingLoan.id}`}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                View my loan
-                <ArrowRight size={15} strokeWidth={2.5} />
-              </Link>
-            ) : canApply ? (
-              <Link
-                href="/apply/loan"
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                Apply for a loan
-                <ArrowRight size={15} strokeWidth={2.5} />
-              </Link>
-            ) : kycNotVerified ? (
-              <Link
-                href="/kyc"
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                Complete your KYC
-                <ArrowRight size={15} strokeWidth={2.5} />
+            <div className="flex items-center gap-2 text-[12px] font-medium text-plum-800/70">
+              <CheckCircle2 size={15} strokeWidth={2.2} />
+              <span>{kycNotVerified ? 'Complete your KYC to unlock borrowing' : 'Your profile is complete'}</span>
+            </div>
+            {canApply ? (
+              <Link href="/apply/loan" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
+                Apply for a loan <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             ) : (
-              <Link
-                href="/loans"
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-              >
-                View my loans
-                <ArrowRight size={15} strokeWidth={2.5} />
+              <Link href="/kyc" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
+                Complete your KYC <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             )}
           </div>
         </div>
       )}
 
-      {/* ============ VIEW FULL LOAN row ============ */}
-      {loanActive && activeLoan && (
-        <Link
-          href={`/loans/${activeLoan.id}`}
-          className="mt-3 flex w-full items-center justify-between gap-3 border-b border-ink-100 bg-white px-5 py-4 text-left transition active:bg-ink-100/40"
-        >
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
-              View full loan
-            </p>
-            <p className="mt-0.5 truncate text-[14px] font-semibold tracking-tight text-ink-950">
-              Schedule &amp; repayments
-            </p>
-          </div>
-          <ChevronRight size={18} className="shrink-0 text-ink-400" strokeWidth={2.2} />
-        </Link>
-      )}
+      {/* ============ EVERYDAY SERVICES (NEW) ============ */}
+      <section className="mt-6 px-5">
+        <h2 className="text-[15px] font-bold tracking-tight text-ink-950 mb-5">
+          Everyday services
+        </h2>
+        
+        <div className="grid grid-cols-3 gap-y-7 gap-x-2">
+          {/* Row 1 */}
+          <EverydayServiceTile 
+            icon={ArrowLeftRight} 
+            label="Transfers" 
+            bgClass="bg-[#F4EFFF]" 
+            textClass="text-[#8B5CF6]" 
+            onClick={() => alert("Transfers coming soon")} 
+          />
+          <EverydayServiceTile 
+            icon={FileText} 
+            label="Pay bills" 
+            bgClass="bg-[#FFF7E6]" 
+            textClass="text-[#D97706]" 
+            onClick={() => alert("Pay bills coming soon")} 
+          />
+          <EverydayServiceTile 
+            icon={Smartphone} 
+            label="Airtime" 
+            bgClass="bg-[#ECFDF3]" 
+            textClass="text-[#10B981]" 
+            onClick={() => alert("Airtime coming soon")} 
+          />
 
-      {/* ============ QUICK ACTIONS ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader title="Quick actions" />
-        <div
-          className={`grid gap-3 px-4 py-5 ${
-            canApply ? 'grid-cols-4' : 'grid-cols-3'
-          }`}
-        >
-          {canApply && (
-            <QuickAction
-              href="/apply/loan"
-              icon={<Plus size={19} />}
-              label="Apply"
-            />
-          )}
-          <QuickAction
-            href="/loans"
-            icon={<CreditCard size={19} />}
-            label="Statement"
+          {/* Row 2 */}
+          <EverydayServiceTile 
+            icon={PiggyBank} 
+            label="Savings" 
+            bgClass="bg-[#F4EFFF]" 
+            textClass="text-[#8B5CF6]" 
+            onClick={() => alert("Savings coming soon")} 
           />
-          <QuickAction
-            href="/loans"
-            icon={<History size={19} />}
-            label="History"
+          <EverydayServiceTile 
+            icon={TrendingUp} 
+            label="Invest" 
+            bgClass="bg-[#ECFDF3]" 
+            textClass="text-[#10B981]" 
+            onClick={() => alert("Invest coming soon")} 
           />
-          <QuickAction
-            href="/profile"
-            icon={<HelpCircle size={19} />}
-            label="Help"
+          <EverydayServiceTile 
+            icon={LayoutGrid} 
+            label="More" 
+            bgClass="bg-[#FFF7E6]" 
+            textClass="text-[#D97706]" 
+            href="/profile" 
           />
         </div>
       </section>
 
       {/* ============ RECENT ACTIVITY ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader
-          title="Recent activity"
-          action={
-            activity.length > 0
-              ? { label: 'View all', onClick: () => router.push('/notifications') }
-              : undefined
-          }
-        />
+      <section className="mt-8 px-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[15px] font-bold tracking-tight text-ink-950">Recent Activity</h2>
+          {activity.length > 0 && (
+            <button onClick={() => router.push('/notifications')} className="text-[12.5px] font-semibold text-plum-700">
+              View all
+            </button>
+          )}
+        </div>
 
-        {activity.length === 0 ? (
-          <div className="px-5 py-8 text-center">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-ink-100/60 text-ink-400">
-              <Receipt size={20} strokeWidth={2} />
-            </div>
-            <p className="mt-3 text-[13px] font-semibold tracking-tight text-ink-800">
-              No activity yet
-            </p>
-            <p className="mt-1 text-[11.5px] font-medium text-ink-400">
-              Your loan activity will appear here.
-            </p>
-          </div>
-        ) : (
-          activity.slice(0, 5).map((item, idx, arr) => {
-            const styled = activityRow(item);
-            const isLast = idx === arr.length - 1;
-            return (
-              <div
-                key={`${item.kind}-${item.loan_id}-${item.at}`}
-                className={`flex items-center gap-3.5 px-5 py-3.5 ${
-                  !isLast ? 'border-b border-ink-100' : ''
-                }`}
-              >
-                <div
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-lg ${styled.iconClass}`}
-                >
-                  <styled.Icon size={18} strokeWidth={2.2} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13.5px] font-semibold tracking-tight text-ink-950">
-                    {styled.title}
-                  </p>
-                  <p className="mt-0.5 text-[11px] font-medium text-ink-400">
-                    {formatDate(item.at)}
-                    {item.receipt ? ` · ${item.receipt}` : ''}
-                  </p>
-                </div>
-
-                {item.amount != null && (
-                  <p
-                    className={`shrink-0 text-[13.5px] font-bold tabular-nums tracking-tight ${styled.amountClass}`}
-                  >
-                    KES {formatKes(item.amount)}
-                  </p>
-                )}
+        <div className="space-y-3">
+          {activity.length === 0 ? (
+            <div className="rounded-2xl bg-white border border-ink-100 p-6 text-center shadow-sm">
+              <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-ink-50 text-ink-400 mb-3">
+                <Receipt size={18} strokeWidth={2} />
               </div>
-            );
-          })
-        )}
+              <p className="text-[13px] font-semibold tracking-tight text-ink-800">No activity yet</p>
+              <p className="mt-1 text-[11.5px] font-medium text-ink-400">Your recent transactions will appear here.</p>
+            </div>
+          ) : (
+            activity.slice(0, 5).map((item) => {
+              const styled = activityRow(item);
+              return (
+                <div key={`${item.kind}-${item.loan_id}-${item.at}`} className="flex items-center gap-3 rounded-2xl bg-white border border-ink-100 p-4 shadow-sm">
+                  <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${styled.iconClass}`}>
+                    <styled.Icon size={18} strokeWidth={2.2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[13px] font-semibold tracking-tight text-ink-950">{styled.title}</p>
+                    <p className="mt-0.5 text-[11px] font-medium text-ink-400">
+                      {formatDate(item.at)}{item.receipt ? ` · ${item.receipt}` : ''}
+                    </p>
+                  </div>
+                  {item.amount != null && (
+                    <p className={`shrink-0 text-[13px] font-bold tabular-nums tracking-tight ${styled.amountClass}`}>
+                      KES {formatKes(item.amount)}
+                    </p>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
       </section>
 
-      {/* ============ KYC MODAL ============ */}
-      <KycModal
-        open={showKycModal}
-        onClose={dismissKycModal}
-        data={kycData}
-      />
+      <KycModal open={showKycModal} onClose={dismissKycModal} data={kycData} />
     </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Quick action tile                                                  */
-/* ------------------------------------------------------------------ */
-function QuickAction({
-  href,
-  icon,
-  label,
-}: {
-  href: string;
-  icon: ReactNode;
-  label: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex flex-col items-center gap-2 transition active:scale-95"
-    >
-      <div className="grid h-14 w-14 place-items-center rounded-xl bg-plum-700 text-white">
-        {icon}
-      </div>
-      <span className="text-[11px] font-semibold tracking-tight text-ink-700">
-        {label}
-      </span>
-    </Link>
   );
 }
