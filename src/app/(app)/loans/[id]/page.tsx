@@ -186,12 +186,12 @@ export default function LoanDetailPage({
         (s) =>
           s.status !== 'PAID' &&
           s.status !== 'WAIVED' &&
-          toNumber(s.paid_amount) < toNumber(s.total_due)
+          toNumber(s.total_paid) < toNumber(s.total_due)
       ) || null;
 
-    const nextInstOutstanding = nextInst
-      ? Math.max(0, toNumber(nextInst.total_due) - toNumber(nextInst.paid_amount))
-      : 0;
+const nextInstOutstanding = nextInst
+  ? Math.max(0, toNumber(nextInst.total_due) - toNumber(nextInst.total_paid))
+  : 0;
 
     const nextInstDue = nextInst
       ? nextInstOutstanding + outstandingPenalty
@@ -369,7 +369,7 @@ export default function LoanDetailPage({
           <div className="flex items-center justify-between px-5 py-4">
             <div>
               <p className="text-[13px] font-semibold text-ink-950">
-                Instalment {derived.nextInst.installment_number}
+                Instalment {derived.nextInst.installment_no}
               </p>
               <p className="text-[11px] text-ink-400 mt-0.5">
                 Due {formatDate(derived.nextInst.due_date)}
@@ -496,14 +496,14 @@ export default function LoanDetailPage({
           <div className="divide-y divide-ink-100">
             {schedule.map((row) => {
               const totalDue = toNumber(row.total_due);
-              const paid = toNumber(row.paid_amount);
+             const paid = toNumber(row.total_paid);
               const penaltyDue = toNumber(row.penalty_due);
               const outstandingOnRow = Math.max(0, totalDue - paid) + penaltyDue;
               const isPaid = row.status === 'PAID';
 
               return (
                 <div
-                  key={row.id || row.installment_number}
+                  key={row.id || row.installment_no}
                   className="px-5 py-3.5"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -518,12 +518,12 @@ export default function LoanDetailPage({
                         {isPaid ? (
                           <CheckCircle2 size={14} />
                         ) : (
-                          row.installment_number
+                          row.installment_no
                         )}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold text-ink-950">
-                          Instalment {row.installment_number}
+                          Instalment {row.installment_no}
                         </p>
                         <p className="text-[11px] text-ink-400 mt-0.5">
                           Due {formatDate(row.due_date)}
