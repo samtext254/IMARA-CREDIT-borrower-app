@@ -14,13 +14,15 @@ import {
   Shield,
   ShieldAlert,
   ShieldCheck,
+  TrendingUp,
   WalletCards,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
+import { loans as loansApi } from '@/lib/loans';
+import type { Eligibility } from '@/lib/loans';
 import {
   getKycStatus,
-  kycStatusLabel,
   type KycStatusResponse,
 } from '@/lib/kyc-api';
 
@@ -168,7 +170,6 @@ function KycCard({
 }) {
   const { kycStatus, progress, submittedAt, verifiedAt, rejectionReason } = kyc;
 
-  // ─── VERIFIED — yellow brand card ────────────────────────
   if (kycStatus === 'VERIFIED') {
     return (
       <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 py-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
@@ -198,7 +199,6 @@ function KycCard({
     );
   }
 
-  // ─── SUBMITTED — blue card ───────────────────────────────
   if (kycStatus === 'SUBMITTED') {
     return (
       <div className="overflow-hidden rounded-3xl border border-blue-200 bg-blue-50 px-5 py-5">
@@ -227,7 +227,6 @@ function KycCard({
     );
   }
 
-  // ─── REJECTED — red card ─────────────────────────────────
   if (kycStatus === 'REJECTED') {
     return (
       <div className="overflow-hidden rounded-3xl border border-red-200 bg-red-50 px-5 py-5">
@@ -259,7 +258,6 @@ function KycCard({
     );
   }
 
-  // ─── PENDING — amber card with progress ring ─────────────
   return (
     <div className="overflow-hidden rounded-3xl border border-amber-200 bg-amber-50 px-5 py-5">
       <div className="flex items-start gap-3">
@@ -315,6 +313,7 @@ export default function ProfilePage() {
 
   const [borrower, setBorrower] = useState<BorrowerProfile | null>(null);
   const [kyc, setKyc] = useState<KycStatusResponse | null>(null);
+  const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -323,9 +322,10 @@ export default function ProfilePage() {
 
     (async () => {
       try {
-        const [meRes, kycRes] = await Promise.allSettled([
+        const [meRes, kycRes, eligRes] = await Promise.allSettled([
           imara.me(),
           getKycStatus(),
+          loansApi.getEligibility(),
         ]);
 
         if (cancelled) return;
@@ -342,11 +342,10 @@ export default function ProfilePage() {
 
         if (kycRes.status === 'fulfilled') {
           setKyc(kycRes.value);
-        } else {
-          const err = kycRes.reason;
-          if (!(err instanceof ImaraApiError)) {
-            console.error('Failed to load KYC status:', err);
-          }
+        }
+
+        if (eligRes.status === 'fulfilled') {
+          setEligibility(eligRes.value.data);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -401,8 +400,12 @@ export default function ProfilePage() {
   }
 
   const kycVerified = kyc?.kycStatus === 'VERIFIED';
-  const maxLimit = kyc?.creditLimit?.maxLimit ?? 0;
-  const availableLimit = kyc?.creditLimit?.availableLimit ?? 0;
+  const maxLimit = eligibility?.credit_limit?.max_limit ? Number(eligibility.credit_limit.max_limit) : 0;
+  const availableLimit = eligibility?.credit_limit?.available_limit ? Number(eligibility.credit_limit.available_limit) : 0;
+  
+  // Credit score logic
+  const creditScore = eligibility?.credit_limit?.credit_score ?? 50;
+  const scoreBand = eligibility?.credit_limit?.score_band ?? 'C';
 
   return (
     <div className="min-h-screen bg-page pb-24">
@@ -452,6 +455,40 @@ export default function ProfilePage() {
         )}
       </div>
 
+      {/* ============ CREDIT SCORE CARD ============ */}
+      {eligibility?.credit_limit && (
+        <div className="px-3 pt-3">
+          <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <TrendingUp size={18} className="text-plum-700" />
+                <h2 className="text-[14px] font-bold text-ink-950 tracking-tight">Credit Score</h2>
+              </div>
+              <span className="text-[14px] font-black text-plum-800">
+                {creditScore}/100
+              </span>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="h-2 w-full bg-ink-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-leaf-500 rounded-full transition-all duration-1000 ease-out" 
+                style={{ width: `${creditScore}%` }}
+              />
+            </div>
+            
+            <div className="flex justify-between items-center mt-3">
+              <p className="text-[11px] font-medium text-ink-500">
+                Your score determines your borrowing limit.
+              </p>
+              <span className="text-[10px] font-bold px-2 py-1 bg-plum-50 text-plum-700 rounded-md">
+                Band {scoreBand}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ============ ACCOUNT SUMMARY ============ */}
       <section className="mt-3 bg-white">
         <SectionHeader title="Account" />
@@ -461,7 +498,7 @@ export default function ProfilePage() {
             label="Limit"
             value={
               maxLimit > 0
-                ? `KES ${(maxLimit / 1000).toFixed(maxLimit >= 1000 ? 0 : 1)}K`
+                ? `KES ${maxLimit.toLocaleString()}`
                 : 'KES 0'
             }
           />
@@ -469,7 +506,7 @@ export default function ProfilePage() {
             label="Available"
             value={
               availableLimit > 0
-                ? `KES ${(availableLimit / 1000).toFixed(availableLimit >= 1000 ? 0 : 1)}K`
+                ? `KES ${availableLimit.toLocaleString()}`
                 : 'KES 0'
             }
           />
