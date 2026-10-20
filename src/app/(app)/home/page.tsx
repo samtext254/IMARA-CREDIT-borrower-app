@@ -426,15 +426,6 @@ export default function HomePage() {
                 <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">of KES {formatKes(activeLoan.total_due)} total</p>
               </div>
               <ProgressRing value={derived.progress} />
-                            {/* ADD THIS BLOCK */}
-              {activeLoan.status === 'OVERDUE' && (
-                <div className="mt-3 flex items-center gap-2 rounded-lg bg-red-600/15 px-3 py-2 text-red-900">
-                  <AlertTriangle size={16} strokeWidth={2.5} />
-                  <span className="text-[11.5px] font-bold tracking-tight">
-                    Your loan is overdue. Please pay immediately to avoid additional penalties.
-                  </span>
-                </div>
-              )}
             </div>
             <div className="my-4 h-px bg-plum-800/10" />
             <div className="flex items-center gap-3">
