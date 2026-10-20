@@ -447,6 +447,28 @@ export default function HomePage() {
   const canApply = !hasBlockingLoan && kycVerified;
   const hasPenalty = derived.penaltyOutstanding > 0;
 
+  // 👇 👇 👇 PASTE IT HERE NOW 👇 👇 👇
+  function handleApplyClick(product: LoanProduct) {
+    if (blockingLoan) {
+      alert(`You already have an active loan (${blockingLoan.loan_reference}). Please repay it before applying for a new one.`);
+      return;
+    }
+    if (kycNotVerified) {
+      alert("Please complete your KYC profile before applying for a loan.");
+      router.push('/kyc');
+      return;
+    }
+    const userScore = eligibility?.credit_limit?.credit_score ?? 0;
+    const minScore = product.min_credit_score ?? 0;
+
+    if (userScore < minScore) {
+      alert(`You are not eligible for this product. Your credit score is ${userScore}, but this product requires a minimum of ${minScore}. Please check other products.`);
+      return;
+    }
+    router.push(`/apply/loan?productId=${product.id}`);
+  }
+  // 👆 👆 👆 END OF NEW FUNCTION 👆 👆 👆
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       
