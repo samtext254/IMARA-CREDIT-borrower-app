@@ -86,7 +86,11 @@ function computeProgress(loan: Loan): number {
 
 function nextInstallment(schedule: LoanScheduleEntry[]): LoanScheduleEntry | null {
   if (!Array.isArray(schedule) || schedule.length === 0) return null;
-  return schedule.find((s) => s.status !== 'PAID' && Number(s.paid_amount || 0) < Number(s.total_due || 0)) || null;
+  return schedule.find((s) => {
+    const totalPaid = Number(s.total_paid || 0);
+    const totalDue = Number(s.total_due || 0) + Number(s.penalty_due || 0);
+    return s.status !== 'PAID' && totalPaid < totalDue;
+  }) || null;
 }
 
 function statusLabel(status: string): string {
@@ -375,8 +379,13 @@ export default function HomePage() {
     const nextInst = activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
     const penaltyOutstanding = activeLoan ? toNumber((activeLoan as any).outstanding_penalty) : 0;
     const loanOutstanding = activeLoan ? toNumber(activeLoan.outstanding_total) : 0;
-    const instalmentDue = nextInst ? toNumber(nextInst.total_due) : null;
-    const nextPaymentAmount = instalmentDue !== null ? String(instalmentDue + penaltyOutstanding) : String(loanOutstanding);
+    let nextPaymentAmount = String(loanOutstanding);
+    if (nextInst) {
+      const due = Number(nextInst.total_due || 0);
+      const paid = Number(nextInst.total_paid || 0);
+      const penalty = Number(nextInst.penalty_due || 0);
+      nextPaymentAmount = String(Math.max(0, (due + penalty) - paid));
+    }
     const nextPaymentDate = nextInst ? nextInst.due_date : activeLoan ? loanDueDate(activeLoan) : null;
     return { displayName, initials, availableLimit, progress, nextPaymentAmount, nextPaymentDate, penaltyOutstanding };
   }, [borrower, eligibility, activeLoan, activeSchedule]);
@@ -432,7 +441,7 @@ export default function HomePage() {
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800"><Clock3 size={16} strokeWidth={2.2} /></div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Amount due</p>
-                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(activeLoan.outstanding_total)}</p>
+             <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(derived.nextPaymentAmount)}</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Due</p>

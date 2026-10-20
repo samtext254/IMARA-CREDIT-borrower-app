@@ -96,14 +96,20 @@ export interface Loan {
 export interface LoanScheduleEntry {
   id: string;
   loan_id: string;
-  installment_number: number;
+  installment_no: number;
   due_date: string;
   principal_due: string;
   interest_due: string;
   fees_due: string;
   penalty_due?: string | null;
   total_due: string;
-  paid_amount: string;
+  
+  principal_paid: string;
+  interest_paid: string;
+  fees_paid: string;
+  penalty_paid: string;
+  total_paid: string;
+
   status: string;
   penalty_applied?: boolean | null;
   penalty_applied_at?: string | null;
