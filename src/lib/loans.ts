@@ -32,6 +32,7 @@ export interface LoanProduct {
   repayment_frequency: string;
   allow_partial_prepay: boolean;
   allow_early_settlement: boolean;
+  min_credit_score?: number; // <-- ADDED THIS LINE
 }
 
 export type LoanStatus =
@@ -196,6 +197,10 @@ export const loans = {
 
   getProduct: () =>
     api.get<{ data: LoanProduct }>('/v1/imara/loans/product'),
+
+  // ADDED THIS BLOCK
+  getProducts: () =>
+    api.get<{ data: LoanProduct[] }>('/v1/imara/loans/products'),
 
   getLoans: (params?: { status?: LoanStatus; limit?: number; offset?: number }) => {
     const qs = new URLSearchParams();

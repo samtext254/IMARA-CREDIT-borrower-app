@@ -23,10 +23,16 @@ import {
   PiggyBank,      // For Savings
   TrendingUp,     // For Invest
   LayoutGrid,     // For More
+  Banknote,
+  Home as HomeIcon,
+  Car,
+  Briefcase,
+  Coins,
+  GraduationCap,
 } from 'lucide-react';
 import { imara, ImaraApiError } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
-import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
+import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry, LoanProduct } from '@/lib/loans';
 import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 import KycModal from '@/components/KycModal';
 
@@ -290,6 +296,42 @@ function EverydayServiceTile({
   return <button onClick={onClick} className="group flex flex-col items-center">{content}</button>;
 }
 
+function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: (p: LoanProduct) => void; }) {
+  let Icon = Banknote;
+  const nameUpper = product.name.toUpperCase();
+  if (nameUpper.includes('HOME')) Icon = HomeIcon;
+  if (nameUpper.includes('CAR')) Icon = Car;
+  if (nameUpper.includes('BUSINESS')) Icon = Briefcase;
+  if (nameUpper.includes('MICRO')) Icon = Coins;
+  if (nameUpper.includes('EDUCATION')) Icon = GraduationCap;
+
+  return (
+    <div className="flex flex-col justify-between rounded-3xl border border-ink-100 bg-white p-4 shadow-sm">
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-3 grid h-12 w-12 place-items-center rounded-xl bg-plum-50 text-plum-700">
+          <Icon size={24} strokeWidth={2} />
+        </div>
+        <h3 className="text-[13px] font-bold text-ink-950 leading-tight">{product.name}</h3>
+      </div>
+
+      <div className="mt-4 space-y-1.5 border-t border-ink-100 pt-3">
+        <div className="flex justify-between text-[11px]">
+          <span className="text-ink-500">Max Loan</span>
+          <span className="font-semibold text-ink-900">KES {Number(product.max_amount).toLocaleString()}</span>
+        </div>
+        <div className="flex justify-between text-[11px]">
+          <span className="text-ink-500">Term</span>
+          <span className="font-semibold text-ink-900">{product.min_term_days} - {product.max_term_days} days</span>
+        </div>
+      </div>
+
+      <button onClick={() => onApply(product)} className="mt-4 w-full rounded-lg bg-plum-800 px-3 py-2 text-[12px] font-bold text-white transition active:scale-[0.98]">
+        Apply Now
+      </button>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /*  Home page                                                          */
 /* ------------------------------------------------------------------ */
@@ -301,6 +343,7 @@ export default function HomePage() {
   const [activeSchedule, setActiveSchedule] = useState<LoanScheduleEntry[]>([]);
   const [recentLoans, setRecentLoans] = useState<Loan[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
+  const [products, setProducts] = useState<LoanProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
   const [kycData, setKycData] = useState<KycStatusResponse | null>(null);
@@ -310,8 +353,8 @@ export default function HomePage() {
     let cancelled = false;
     (async () => {
       try {
-        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes, activityRes] = await Promise.allSettled([
-          imara.me(), loansApi.getEligibility(), loansApi.getLoans({ limit: 5 }), loansApi.getLoans({ limit: 20 }), getKycStatus(), loansApi.getActivity({ limit: 20 }),
+        const [meRes, eligRes, activeLoansRes, recentLoansRes, kycRes, activityRes, prodRes] = await Promise.allSettled([
+          imara.me(), loansApi.getEligibility(), loansApi.getLoans({ limit: 5 }), loansApi.getLoans({ limit: 20 }), getKycStatus(), loansApi.getActivity({ limit: 20 }), loansApi.getProducts(),
         ]);
         if (cancelled) return;
 
@@ -329,6 +372,7 @@ export default function HomePage() {
         }
         if (recentLoansRes.status === 'fulfilled') setRecentLoans(recentLoansRes.value.data || []);
         if (activityRes.status === 'fulfilled') setActivity(activityRes.value.data || []);
+        if (prodRes.status === 'fulfilled') setProducts(prodRes.value.data || []);
 
         if (kycRes.status === 'fulfilled') {
           const kyc = kycRes.value;
@@ -542,6 +586,35 @@ export default function HomePage() {
             href="/profile" 
           />
         </div>
+      </section>
+
+            {/* ============ LOAN PRODUCTS (NEW) ============ */}
+      <section className="mt-6 px-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[15px] font-bold tracking-tight text-ink-950">Loan Products</h2>
+          {products.length > 4 && (
+            <button onClick={() => router.push('/products')} className="text-[12.5px] font-semibold text-plum-700">
+              View all
+            </button>
+          )}
+        </div>
+
+        {products.length === 0 ? (
+          <div className="rounded-2xl bg-white border border-ink-100 p-6 text-center shadow-sm">
+             <p className="text-[13px] font-semibold tracking-tight text-ink-800">No products available</p>
+             <p className="mt-1 text-[11.5px] font-medium text-ink-400">Check back later for loan products.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {products.slice(0, 4).map((product) => (
+              <LoanProductTile 
+                key={product.id} 
+                product={product} 
+                onApply={handleApplyClick} 
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* ============ RECENT ACTIVITY ============ */}
