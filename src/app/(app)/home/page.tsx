@@ -505,7 +505,7 @@ export default function HomePage() {
           <EverydayServiceTile icon={TrendingUp} label="Invest" bgClass="bg-[#ECFDF3]" textClass="text-[#10B981]" onClick={() => alert("Invest coming soon")} />
           
           {/* UPDATED MORE ICON TO OPEN MODAL */}
-          <EverydayServiceTile icon={LayoutGrid} label="More" bgClass="bg-[#FFF7E6]" textClass="text-[#D97706]" onClick={() => setShowMoreModal(true)} />
+         <EverydayServiceTile icon={Banknote} label="Loans" bgClass="bg-[#ECFDF3]" textClass="text-[#10B981]" href="/loans" />
         </div>
       </section>
 
