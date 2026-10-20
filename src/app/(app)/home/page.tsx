@@ -4,31 +4,10 @@ import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowRight,
-  Bell,
-  CheckCircle2,
-  ChevronRight,
-  Clock3,
-  HelpCircle,
-  LogOut,
-  Receipt,
-  Settings,
-  User,
-  WalletCards,
-  ShieldAlert,
-  AlertTriangle,
-  ArrowLeftRight, // For Transfers
-  FileText,       // For Pay Bills
-  Smartphone,     // For Airtime
-  PiggyBank,      // For Savings
-  TrendingUp,     // For Invest
-  LayoutGrid,     // For More
-  Banknote,
-  Home as HomeIcon,
-  Car,
-  Briefcase,
-  Coins,
-  GraduationCap,
+  ArrowRight, Bell, CheckCircle2, ChevronRight, Clock3, HelpCircle, LogOut,
+  Receipt, Settings, User, WalletCards, ShieldAlert, AlertTriangle,
+  ArrowLeftRight, FileText, Smartphone, PiggyBank, TrendingUp, LayoutGrid,
+  Banknote, Home as HomeIcon, Car, Briefcase, Coins, GraduationCap, X
 } from 'lucide-react';
 import { imara, ImaraApiError } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -40,15 +19,9 @@ import KycModal from '@/components/KycModal';
 /*  Types & Helpers                                                    */
 /* ------------------------------------------------------------------ */
 interface BorrowerProfile {
-  borrower_id: number;
-  merchant_id: number;
-  email: string;
-  first_name: string | null;
-  last_name: string | null;
-  phone: string | null;
-  status: string;
-  email_verified: boolean;
-  created_at: string;
+  borrower_id: number; merchant_id: number; email: string; first_name: string | null;
+  last_name: string | null; phone: string | null; status: string;
+  email_verified: boolean; created_at: string;
 }
 
 const BLOCKING_STATUSES = ['PENDING', 'APPROVED', 'DISBURSED', 'ACTIVE', 'OVERDUE'] as const;
@@ -56,23 +29,13 @@ const KYC_DISMISS_PREFIX = 'kyc-dismissed';
 
 function kycDismissKey(data: KycStatusResponse | null): string {
   if (!data) return KYC_DISMISS_PREFIX + '-unknown';
-  const stamp = data.submittedAt || 'na';
-  return `${KYC_DISMISS_PREFIX}-${data.kycStatus}-${stamp}`;
+  return `${KYC_DISMISS_PREFIX}-${data.kycStatus}-${data.submittedAt || 'na'}`;
 }
-
-function formatKes(amount: string | number | null | undefined): string {
+function formatKes(amount: any): string {
   if (amount === null || amount === undefined || amount === '') return '0';
   const n = typeof amount === 'string' ? parseFloat(amount) : amount;
-  if (isNaN(n)) return '0';
-  return Math.round(n).toLocaleString('en-KE');
+  return isNaN(n) ? '0' : Math.round(n).toLocaleString('en-KE');
 }
-
-function toNumber(v: string | number | null | undefined): number {
-  if (v === null || v === undefined || v === '') return 0;
-  const n = typeof v === 'string' ? parseFloat(v) : v;
-  return Number.isFinite(n) ? n : 0;
-}
-
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -80,25 +43,17 @@ function formatDate(iso: string | null | undefined): string {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
-
 function computeProgress(loan: Loan): number {
   const principal = parseFloat(loan.principal_amount || '0');
-  const outstandingPrincipal = parseFloat(loan.outstanding_principal || '0');
+  const outstanding = parseFloat(loan.outstanding_principal || '0');
   if (!principal || principal <= 0) return 0;
-  const repaid = Math.max(0, principal - outstandingPrincipal);
-  const pct = (repaid / principal) * 100;
+  const pct = ((principal - outstanding) / principal) * 100;
   return Math.max(0, Math.min(100, Math.round(pct)));
 }
-
 function nextInstallment(schedule: LoanScheduleEntry[]): LoanScheduleEntry | null {
   if (!Array.isArray(schedule) || schedule.length === 0) return null;
-  return schedule.find((s) => {
-    const totalPaid = Number(s.total_paid || 0);
-    const totalDue = Number(s.total_due || 0) + Number(s.penalty_due || 0);
-    return s.status !== 'PAID' && totalPaid < totalDue;
-  }) || null;
+  return schedule.find((s) => s.status !== 'PAID' && Number(s.total_paid || 0) < (Number(s.total_due || 0) + Number(s.penalty_due || 0))) || null;
 }
-
 function statusLabel(status: string): string {
   switch (status) {
     case 'PENDING': return 'Your application is under review';
@@ -109,10 +64,6 @@ function statusLabel(status: string): string {
     default: return 'Your profile is complete';
   }
 }
-
-/* ------------------------------------------------------------------ */
-/*  Activity row mapper                                                */
-/* ------------------------------------------------------------------ */
 function activityRow(item: ActivityItem): { title: string; Icon: typeof CheckCircle2; iconClass: string; amountClass: string; } {
   switch (item.kind) {
     case 'repayment_received': return { title: 'Repayment received', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
@@ -262,40 +213,24 @@ function LoadingState() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Everyday Service Tile (Matching the reference image)               */
+/*  Everyday Service Tile                                              */
 /* ------------------------------------------------------------------ */
-function EverydayServiceTile({ 
-  icon: Icon, 
-  label, 
-  bgClass, 
-  textClass, 
-  href, 
-  onClick 
-}: { 
-  icon: any; 
-  label: string; 
-  bgClass: string; 
-  textClass: string; 
-  href?: string; 
-  onClick?: () => void 
-}) {
+function EverydayServiceTile({ icon: Icon, label, bgClass, textClass, href, onClick }: { icon: any; label: string; bgClass: string; textClass: string; href?: string; onClick?: () => void }) {
   const content = (
     <>
       <div className={`grid h-14 w-14 place-items-center rounded-2xl ${bgClass} ${textClass} transition group-active:scale-95`}>
         <Icon size={24} strokeWidth={2} />
       </div>
-      <span className="text-[12px] font-semibold text-ink-900 mt-2">
-        {label}
-      </span>
+      <span className="text-[12px] font-semibold text-ink-900 mt-2">{label}</span>
     </>
   );
-
-  if (href) {
-    return <Link href={href} className="group flex flex-col items-center">{content}</Link>;
-  }
+  if (href) return <Link href={href} className="group flex flex-col items-center">{content}</Link>;
   return <button onClick={onClick} className="group flex flex-col items-center">{content}</button>;
 }
 
+/* ------------------------------------------------------------------ */
+/*  Loan Product Tile                                                  */
+/* ------------------------------------------------------------------ */
 function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: (p: LoanProduct) => void; }) {
   let Icon = Banknote;
   const nameUpper = product.name.toUpperCase();
@@ -313,7 +248,6 @@ function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: 
         </div>
         <h3 className="text-[13px] font-bold text-ink-950 leading-tight">{product.name}</h3>
       </div>
-
       <div className="mt-4 space-y-1.5 border-t border-ink-100 pt-3">
         <div className="flex justify-between text-[11px]">
           <span className="text-ink-500">Max Loan</span>
@@ -324,7 +258,6 @@ function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: 
           <span className="font-semibold text-ink-900">{product.min_term_days} - {product.max_term_days} days</span>
         </div>
       </div>
-
       <button onClick={() => onApply(product)} className="mt-4 w-full rounded-lg bg-plum-800 px-3 py-2 text-[12px] font-bold text-white transition active:scale-[0.98]">
         Apply Now
       </button>
@@ -348,6 +281,9 @@ export default function HomePage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [kycData, setKycData] = useState<KycStatusResponse | null>(null);
   const [showKycModal, setShowKycModal] = useState(false);
+  
+  // Modal State
+  const [showMoreModal, setShowMoreModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -357,16 +293,13 @@ export default function HomePage() {
           imara.me(), loansApi.getEligibility(), loansApi.getLoans({ limit: 5 }), loansApi.getLoans({ limit: 20 }), getKycStatus(), loansApi.getActivity({ limit: 20 }), loansApi.getProducts(),
         ]);
         if (cancelled) return;
-
         if (meRes.status === 'fulfilled') setBorrower(meRes.value.data);
         else { setLoading(false); return; }
-
         if (eligRes.status === 'fulfilled') setEligibility(eligRes.value.data);
         
         let active: Loan | null = null;
         if (activeLoansRes.status === 'fulfilled') {
           const list = activeLoansRes.value.data || [];
-          // Grab the first ACTIVE or OVERDUE loan
           active = list.find((l) => l.status === 'ACTIVE' || l.status === 'OVERDUE') || null;
           setActiveLoan(active);
         }
@@ -383,7 +316,6 @@ export default function HomePage() {
             if (!dismissed) setTimeout(() => { if (!cancelled) setShowKycModal(true); }, 400);
           }
         }
-
         if (active) {
           try {
             const detail = await loansApi.getLoan(active.id);
@@ -447,8 +379,8 @@ export default function HomePage() {
   const canApply = !hasBlockingLoan && kycVerified;
   const hasPenalty = derived.penaltyOutstanding > 0;
 
-  // 👇 👇 👇 PASTE IT HERE NOW 👇 👇 👇
   function handleApplyClick(product: LoanProduct) {
+    setShowMoreModal(false); // close modal
     if (blockingLoan) {
       alert(`You already have an active loan (${blockingLoan.loan_reference}). Please repay it before applying for a new one.`);
       return;
@@ -460,14 +392,18 @@ export default function HomePage() {
     }
     const userScore = eligibility?.credit_limit?.credit_score ?? 0;
     const minScore = product.min_credit_score ?? 0;
-
     if (userScore < minScore) {
       alert(`You are not eligible for this product. Your credit score is ${userScore}, but this product requires a minimum of ${minScore}. Please check other products.`);
       return;
     }
     router.push(`/apply/loan?productId=${product.id}`);
   }
-  // 👆 👆 👆 END OF NEW FUNCTION 👆 👆 👆
+
+  function toNumber(v: string | number | null | undefined): number {
+    if (v === null || v === undefined || v === '') return 0;
+    const n = typeof v === 'string' ? parseFloat(v) : v;
+    return Number.isFinite(n) ? n : 0;
+  }
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
@@ -490,7 +426,7 @@ export default function HomePage() {
 
       <KycBanner data={kycData} hidden={showKycModal} onOpenModal={() => setShowKycModal(true)} />
 
-      {/* HERO CARDS (UNTOUCHED) */}
+      {/* HERO CARDS */}
       {loanActive && activeLoan && (
         <div className="px-3 pt-3">
           <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
@@ -507,7 +443,7 @@ export default function HomePage() {
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800"><Clock3 size={16} strokeWidth={2.2} /></div>
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Amount due</p>
-             <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(derived.nextPaymentAmount)}</p>
+                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(derived.nextPaymentAmount)}</p>
               </div>
               <div className="shrink-0 text-right">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Due</p>
@@ -555,88 +491,22 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ============ EVERYDAY SERVICES (NEW) ============ */}
+      {/* ============ EVERYDAY SERVICES ============ */}
       <section className="mt-6 px-5">
         <h2 className="text-[15px] font-bold tracking-tight text-ink-950 mb-5">
           Everyday services
         </h2>
         
         <div className="grid grid-cols-3 gap-y-7 gap-x-2">
-          {/* Row 1 */}
-          <EverydayServiceTile 
-            icon={ArrowLeftRight} 
-            label="Transfers" 
-            bgClass="bg-[#F4EFFF]" 
-            textClass="text-[#8B5CF6]" 
-            onClick={() => alert("Transfers coming soon")} 
-          />
-          <EverydayServiceTile 
-            icon={FileText} 
-            label="Pay bills" 
-            bgClass="bg-[#FFF7E6]" 
-            textClass="text-[#D97706]" 
-            onClick={() => alert("Pay bills coming soon")} 
-          />
-          <EverydayServiceTile 
-            icon={Smartphone} 
-            label="Airtime" 
-            bgClass="bg-[#ECFDF3]" 
-            textClass="text-[#10B981]" 
-            onClick={() => alert("Airtime coming soon")} 
-          />
-
-          {/* Row 2 */}
-          <EverydayServiceTile 
-            icon={PiggyBank} 
-            label="Savings" 
-            bgClass="bg-[#F4EFFF]" 
-            textClass="text-[#8B5CF6]" 
-            onClick={() => alert("Savings coming soon")} 
-          />
-          <EverydayServiceTile 
-            icon={TrendingUp} 
-            label="Invest" 
-            bgClass="bg-[#ECFDF3]" 
-            textClass="text-[#10B981]" 
-            onClick={() => alert("Invest coming soon")} 
-          />
-          <EverydayServiceTile 
-            icon={LayoutGrid} 
-            label="More" 
-            bgClass="bg-[#FFF7E6]" 
-            textClass="text-[#D97706]" 
-            href="/profile" 
-          />
+          <EverydayServiceTile icon={ArrowLeftRight} label="Transfers" bgClass="bg-[#F4EFFF]" textClass="text-[#8B5CF6]" onClick={() => alert("Transfers coming soon")} />
+          <EverydayServiceTile icon={FileText} label="Pay bills" bgClass="bg-[#FFF7E6]" textClass="text-[#D97706]" onClick={() => alert("Pay bills coming soon")} />
+          <EverydayServiceTile icon={Smartphone} label="Airtime" bgClass="bg-[#ECFDF3]" textClass="text-[#10B981]" onClick={() => alert("Airtime coming soon")} />
+          <EverydayServiceTile icon={PiggyBank} label="Savings" bgClass="bg-[#F4EFFF]" textClass="text-[#8B5CF6]" onClick={() => alert("Savings coming soon")} />
+          <EverydayServiceTile icon={TrendingUp} label="Invest" bgClass="bg-[#ECFDF3]" textClass="text-[#10B981]" onClick={() => alert("Invest coming soon")} />
+          
+          {/* UPDATED MORE ICON TO OPEN MODAL */}
+          <EverydayServiceTile icon={LayoutGrid} label="More" bgClass="bg-[#FFF7E6]" textClass="text-[#D97706]" onClick={() => setShowMoreModal(true)} />
         </div>
-      </section>
-
-            {/* ============ LOAN PRODUCTS (NEW) ============ */}
-      <section className="mt-6 px-5 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[15px] font-bold tracking-tight text-ink-950">Loan Products</h2>
-          {products.length > 4 && (
-            <button onClick={() => router.push('/products')} className="text-[12.5px] font-semibold text-plum-700">
-              View all
-            </button>
-          )}
-        </div>
-
-        {products.length === 0 ? (
-          <div className="rounded-2xl bg-white border border-ink-100 p-6 text-center shadow-sm">
-             <p className="text-[13px] font-semibold tracking-tight text-ink-800">No products available</p>
-             <p className="mt-1 text-[11.5px] font-medium text-ink-400">Check back later for loan products.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {products.slice(0, 4).map((product) => (
-              <LoanProductTile 
-                key={product.id} 
-                product={product} 
-                onApply={handleApplyClick} 
-              />
-            ))}
-          </div>
-        )}
       </section>
 
       {/* ============ RECENT ACTIVITY ============ */}
@@ -684,6 +554,36 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* ============ MORE MODAL (BOTTOM SHEET) ============ */}
+      {showMoreModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <button
+            aria-label="Close"
+            onClick={() => setShowMoreModal(false)}
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          />
+          <div className="relative w-full max-w-md rounded-t-3xl bg-white shadow-2xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between border-b border-ink-100 px-5 py-4">
+              <h2 className="text-[16px] font-bold text-ink-950">More Services</h2>
+              <button onClick={() => setShowMoreModal(false)} className="grid h-8 w-8 place-items-center rounded-full bg-ink-100 text-ink-600">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="max-h-[70vh] overflow-y-auto p-4">
+              <div className="grid grid-cols-2 gap-3">
+                {products.map((product) => (
+                  <LoanProductTile 
+                    key={product.id} 
+                    product={product} 
+                    onApply={handleApplyClick} 
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <KycModal open={showKycModal} onClose={dismissKycModal} data={kycData} />
     </div>
