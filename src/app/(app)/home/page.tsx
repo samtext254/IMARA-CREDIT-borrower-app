@@ -70,7 +70,7 @@ function activityRow(item: ActivityItem): { title: string; Icon: typeof CheckCir
     case 'loan_submitted': return { title: 'Loan application', Icon: Receipt, iconClass: 'bg-ink-100/60 text-ink-500', amountClass: 'text-ink-900' };
     case 'loan_approved': return { title: 'Loan approved', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-ink-900' };
     case 'loan_rejected': return { title: 'Loan declined', Icon: Receipt, iconClass: 'bg-red-50 text-red-600', amountClass: 'text-red-600' };
-    case 'loan_disbursed': return { title: 'Loan disbursed', Icon: WalletCards, iconClass: 'bg-[#EEF3F8] text-[#17365D]', amountClass: 'text-ink-900' };
+    case 'loan_disbursed': return { title: 'Loan disbursed', Icon: WalletCards, iconClass: 'bg-plum-50 text-plum-700', amountClass: 'text-ink-900' };
     case 'loan_active': return { title: 'Loan active', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
     case 'loan_overdue': return { title: 'Loan overdue', Icon: AlertTriangle, iconClass: 'bg-red-50 text-red-600', amountClass: 'text-red-600' };
     case 'loan_paid': return { title: 'Loan fully repaid', Icon: CheckCircle2, iconClass: 'bg-leaf-50 text-leaf-600', amountClass: 'text-leaf-600' };
@@ -90,11 +90,11 @@ function ProgressRing({ value, size = 56, stroke = 6 }: { value: number; size?: 
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth={stroke} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#D6A83E" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(91,46,140,0.18)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#5b2e8c" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={offset} />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="text-[13px] font-bold leading-none tracking-tight text-[#D6A83E]">{value}%</span>
+        <span className="text-[13px] font-bold leading-none tracking-tight text-plum-800">{value}%</span>
       </div>
     </div>
   );
@@ -111,7 +111,7 @@ function KycBanner({ data, hidden, onOpenModal }: { data: KycStatusResponse | nu
       ? { bg: 'bg-red-50', border: 'border-red-200', iconBg: 'bg-red-100', iconColor: 'text-red-700', eyebrowColor: 'text-red-700/80', titleColor: 'text-red-900', bodyColor: 'text-red-800/90', ctaBg: 'bg-red-600', ctaText: 'text-white', icon: <ShieldAlert size={16} strokeWidth={2.4} />, eyebrow: 'Action needed', title: 'Your KYC was rejected', body: rejectionReason || 'Please review your details and submit again.', cta: 'Fix now' }
       : kycStatus === 'SUBMITTED'
       ? { bg: 'bg-blue-50', border: 'border-blue-200', iconBg: 'bg-blue-100', iconColor: 'text-blue-700', eyebrowColor: 'text-blue-700/80', titleColor: 'text-blue-900', bodyColor: 'text-blue-800/90', ctaBg: 'bg-white', ctaText: 'text-blue-800', icon: <Clock3 size={16} strokeWidth={2.4} />, eyebrow: 'Under review', title: 'Your KYC is being reviewed', body: 'We will notify you once it is approved.', cta: null }
-      : { bg: 'bg-brand-500/15', border: 'border-brand-500/40', iconBg: 'bg-brand-500/30', iconColor: 'text-[#0B1F3A]', eyebrowColor: 'text-[#0B1F3A]/70', titleColor: 'text-[#0B1F3A]', bodyColor: 'text-[#0B1F3A]/80', ctaBg: 'bg-[#102A4C]', ctaText: 'text-white', icon: <ShieldAlert size={16} strokeWidth={2.4} />, eyebrow: 'KYC required', title: 'Complete your KYC to unlock borrowing', body: `${progress.filled} of ${progress.total} fields done`, cta: 'Complete KYC' };
+      : { bg: 'bg-brand-500/15', border: 'border-brand-500/40', iconBg: 'bg-brand-500/30', iconColor: 'text-plum-800', eyebrowColor: 'text-plum-800/70', titleColor: 'text-plum-800', bodyColor: 'text-plum-800/80', ctaBg: 'bg-plum-800', ctaText: 'text-white', icon: <ShieldAlert size={16} strokeWidth={2.4} />, eyebrow: 'KYC required', title: 'Complete your KYC to unlock borrowing', body: `${progress.filled} of ${progress.total} fields done`, cta: 'Complete KYC' };
 
   const handleClick = () => {
     if (config.cta) window.location.href = '/kyc';
@@ -119,7 +119,7 @@ function KycBanner({ data, hidden, onOpenModal }: { data: KycStatusResponse | nu
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+    <div className="px-3 pt-3">
       <button type="button" onClick={handleClick} className={`flex w-full items-center gap-3 rounded-2xl border ${config.border} ${config.bg} px-4 py-3.5 text-left transition active:scale-[0.99]`}>
         <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${config.iconBg} ${config.iconColor}`}>{config.icon}</div>
         <div className="min-w-0 flex-1">
@@ -154,9 +154,9 @@ function AvatarMenu({ initials, name, email, onLogout, loggingOut }: { initials:
 
   return (
     <div ref={ref} className="relative shrink-0">
-      <button type="button" onClick={() => setOpen((v) => !v)} className="relative grid h-10 w-10 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/25 transition hover:bg-white/15 active:scale-95 sm:h-11 sm:w-11">
+      <button type="button" onClick={() => setOpen((v) => !v)} className="relative grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20 transition active:scale-95">
         {initials}
-        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-[#0B1F3A] bg-brand-500" />
+        <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full border-2 border-plum-800 bg-brand-500" />
       </button>
       {open && (
         <>
@@ -196,18 +196,18 @@ function AvatarMenu({ initials, name, email, onLogout, loggingOut }: { initials:
 function LoadingState() {
   return (
     <div className="min-h-screen bg-page">
-      <div className="sticky top-0 z-30 bg-[#0B1F3A]">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="sticky top-0 z-30 bg-plum-700">
+        <div className="flex items-center gap-3 px-5 py-4">
           <div className="h-11 w-11 shrink-0 animate-pulse rounded-full bg-white/10" />
           <div className="min-w-0 flex-1 space-y-2">
             <div className="h-2.5 w-20 animate-pulse rounded bg-white/10" />
             <div className="h-3.5 w-32 animate-pulse rounded bg-white/10" />
           </div>
         </div>
-        <div className="h-1 w-full bg-[#D6A83E]" />
+        <div className="h-1 w-full bg-brand-500" />
       </div>
-      <div className="mx-auto w-full max-w-7xl px-4 pt-3 sm:px-6 lg:px-8"><div className="h-16 animate-pulse rounded-2xl bg-ink-100/40" /></div>
-      <div className="mx-auto w-full max-w-7xl px-4 pt-3 sm:px-6 lg:px-8"><div className="h-44 animate-pulse rounded-3xl bg-ink-100/40" /></div>
+      <div className="px-3 pt-3"><div className="h-16 animate-pulse rounded-2xl bg-ink-100/40" /></div>
+      <div className="px-3 pt-3"><div className="h-44 animate-pulse rounded-3xl bg-ink-100/40" /></div>
     </div>
   );
 }
@@ -218,10 +218,10 @@ function LoadingState() {
 function EverydayServiceTile({ icon: Icon, label, bgClass, textClass, href, onClick }: { icon: any; label: string; bgClass: string; textClass: string; href?: string; onClick?: () => void }) {
   const content = (
     <>
-      <div className={`grid h-14 w-14 place-items-center rounded-2xl ring-1 ring-black/[0.03] transition group-hover:-translate-y-0.5 group-active:scale-95 sm:h-16 sm:w-16 ${bgClass} ${textClass}`}>
+      <div className={`grid h-14 w-14 place-items-center rounded-2xl ${bgClass} ${textClass} transition group-active:scale-95`}>
         <Icon size={24} strokeWidth={2} />
       </div>
-      <span className="mt-2 text-center text-[12px] font-semibold text-ink-900 sm:text-[13px]">{label}</span>
+      <span className="text-[12px] font-semibold text-ink-900 mt-2">{label}</span>
     </>
   );
   if (href) return <Link href={href} className="group flex flex-col items-center">{content}</Link>;
@@ -241,9 +241,9 @@ function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: 
   if (nameUpper.includes('EDUCATION')) Icon = GraduationCap;
 
   return (
-    <div className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_8px_24px_-18px_rgba(11,31,58,0.35)] transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+    <div className="flex flex-col justify-between rounded-3xl border border-ink-100 bg-white p-4 shadow-sm">
       <div className="flex flex-col items-center text-center">
-        <div className="mb-3 grid h-12 w-12 place-items-center rounded-xl bg-[#EEF3F8] text-[#17365D]">
+        <div className="mb-3 grid h-12 w-12 place-items-center rounded-xl bg-plum-50 text-plum-700">
           <Icon size={24} strokeWidth={2} />
         </div>
         <h3 className="text-[13px] font-bold text-ink-950 leading-tight">{product.name}</h3>
@@ -258,7 +258,7 @@ function LoanProductTile({ product, onApply }: { product: LoanProduct; onApply: 
           <span className="font-semibold text-ink-900">{product.min_term_days} - {product.max_term_days} days</span>
         </div>
       </div>
-      <button onClick={() => onApply(product)} className="mt-4 w-full rounded-xl bg-[#0B1F3A] px-3 py-2.5 text-[12px] font-bold text-white transition hover:bg-[#17365D] active:scale-[0.98]">
+      <button onClick={() => onApply(product)} className="mt-4 w-full rounded-lg bg-plum-800 px-3 py-2 text-[12px] font-bold text-white transition active:scale-[0.98]">
         Apply Now
       </button>
     </div>
@@ -406,56 +406,56 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[#F4F6F9] pb-24 text-[#102033]">
+    <div className="min-h-screen bg-[#F8F9FA] pb-24">
       
       {/* NAV */}
-      <div className="sticky top-0 z-30 bg-[#0B1F3A]">
-        <div className="mx-auto flex w-full max-w-7xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="sticky top-0 z-30 bg-plum-700">
+        <div className="flex items-center gap-3 px-5 py-4">
           <AvatarMenu initials={derived.initials} name={derived.displayName} email={borrower.email} onLogout={onLogout} loggingOut={loggingOut} />
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">Welcome back</p>
             <h1 className="mt-0.5 truncate text-[16px] font-semibold tracking-tight text-white">{derived.displayName}</h1>
           </div>
-          <Link href="/notifications" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/15 active:scale-95">
+          <Link href="/notifications" className="relative grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition active:scale-95">
             <Bell size={18} strokeWidth={2.2} />
-            <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-[#D6A83E] ring-2 ring-[#0B1F3A]" />
+            <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-plum-700" />
           </Link>
         </div>
-        <div className="h-1 w-full bg-[#D6A83E]" />
+        <div className="h-1 w-full bg-brand-500" />
       </div>
 
       <KycBanner data={kycData} hidden={showKycModal} onOpenModal={() => setShowKycModal(true)} />
 
       {/* HERO CARDS */}
       {loanActive && activeLoan && (
-        <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0B1F3A] via-[#102A4C] to-[#17365D] px-5 py-5 text-white shadow-[0_18px_40px_-22px_rgba(11,31,58,0.65)] sm:px-7 sm:py-7 lg:rounded-[2rem]">
+        <div className="px-3 pt-3">
+          <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">Outstanding balance</p>
-                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-white tabular-nums sm:text-3xl lg:text-4xl">KES {formatKes(activeLoan.outstanding_total)}</p>
-                <p className="mt-1.5 text-[11px] font-medium text-white/60">of KES {formatKes(activeLoan.total_due)} total</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">Outstanding balance</p>
+                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">KES {formatKes(activeLoan.outstanding_total)}</p>
+                <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">of KES {formatKes(activeLoan.total_due)} total</p>
               </div>
               <ProgressRing value={derived.progress} />
             </div>
-            <div className="my-5 h-px bg-white/15" />
+            <div className="my-4 h-px bg-plum-800/10" />
             <div className="flex items-center gap-3">
-              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/10 text-[#E4BC57]"><Clock3 size={16} strokeWidth={2.2} /></div>
+              <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-800/10 text-plum-800"><Clock3 size={16} strokeWidth={2.2} /></div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">Amount due</p>
-                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-white tabular-nums">KES {formatKes(derived.nextPaymentAmount)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Amount due</p>
+                <p className="mt-0.5 truncate text-[14px] font-bold tracking-tight text-plum-800 tabular-nums">KES {formatKes(derived.nextPaymentAmount)}</p>
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/55">Due</p>
-                <p className="mt-0.5 whitespace-nowrap text-[12px] font-semibold text-white/90">{formatDate(derived.nextPaymentDate)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-plum-800/60">Due</p>
+                <p className="mt-0.5 whitespace-nowrap text-[12px] font-semibold text-plum-800/90">{formatDate(derived.nextPaymentDate)}</p>
               </div>
             </div>
             {focusLoanIsRepayable && activeLoan ? (
-              <Link href={`/repay/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6A83E] px-4 py-3 text-[13.5px] font-bold tracking-tight text-[#0B1F3A] shadow-sm transition hover:bg-[#E4BC57] active:scale-[0.985]">
+              <Link href={`/repay/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
                 {focusLoanIsOverdue ? 'Pay my overdue loan' : 'Pay now'} <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             ) : (
-              <Link href={`/loans/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6A83E] px-4 py-3 text-[13.5px] font-bold tracking-tight text-[#0B1F3A] shadow-sm transition hover:bg-[#E4BC57] active:scale-[0.985]">
+              <Link href={`/loans/${activeLoan.id}`} className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
                 View full loan <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             )}
@@ -464,26 +464,26 @@ export default function HomePage() {
       )}
 
       {!loanActive && (
-        <div className="mx-auto w-full max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
-          <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#0B1F3A] via-[#102A4C] to-[#17365D] px-5 py-5 text-white shadow-[0_18px_40px_-22px_rgba(11,31,58,0.65)] sm:px-7 sm:py-7 lg:rounded-[2rem]">
+        <div className="px-3 pt-3">
+          <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/60">Available to borrow</p>
-                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-white tabular-nums sm:text-3xl lg:text-4xl">KES {formatKes(derived.availableLimit)}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">Available to borrow</p>
+                <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">KES {formatKes(derived.availableLimit)}</p>
               </div>
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#102A4C]/10 text-[#0B1F3A]"><WalletCards size={19} strokeWidth={2.2} /></div>
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-plum-800/10 text-plum-800"><WalletCards size={19} strokeWidth={2.2} /></div>
             </div>
-            <div className="my-5 h-px bg-white/15" />
-            <div className="flex items-center gap-2 text-[12px] font-medium text-white/75">
+            <div className="my-4 h-px bg-plum-800/10" />
+            <div className="flex items-center gap-2 text-[12px] font-medium text-plum-800/70">
               <CheckCircle2 size={15} strokeWidth={2.2} />
               <span>{kycNotVerified ? 'Complete your KYC to unlock borrowing' : 'Your profile is complete'}</span>
             </div>
             {canApply ? (
-              <Link href="/apply/loan" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6A83E] px-4 py-3 text-[13.5px] font-bold tracking-tight text-[#0B1F3A] shadow-sm transition hover:bg-[#E4BC57] active:scale-[0.985]">
+              <Link href="/apply/loan" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
                 Apply for a loan <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             ) : (
-              <Link href="/kyc" className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#D6A83E] px-4 py-3 text-[13.5px] font-bold tracking-tight text-[#0B1F3A] shadow-sm transition hover:bg-[#E4BC57] active:scale-[0.985]">
+              <Link href="/kyc" className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
                 Complete your KYC <ArrowRight size={15} strokeWidth={2.5} />
               </Link>
             )}
@@ -492,12 +492,12 @@ export default function HomePage() {
       )}
 
       {/* ============ EVERYDAY SERVICES ============ */}
-      <section className="mx-auto mt-8 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 className="mb-5 text-base font-bold tracking-tight text-[#0B1F3A] sm:text-lg">
+      <section className="mt-6 px-5">
+        <h2 className="text-[15px] font-bold tracking-tight text-ink-950 mb-5">
           Everyday services
         </h2>
         
-        <div className="grid grid-cols-3 gap-x-3 gap-y-7 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-6 lg:gap-6">
+        <div className="grid grid-cols-3 gap-y-7 gap-x-2">
           <EverydayServiceTile icon={ArrowLeftRight} label="Transfers" bgClass="bg-[#F4EFFF]" textClass="text-[#8B5CF6]" onClick={() => alert("Transfers coming soon")} />
           <EverydayServiceTile icon={FileText} label="Pay bills" bgClass="bg-[#FFF7E6]" textClass="text-[#D97706]" onClick={() => alert("Pay bills coming soon")} />
           <EverydayServiceTile icon={Smartphone} label="Airtime" bgClass="bg-[#ECFDF3]" textClass="text-[#10B981]" onClick={() => alert("Airtime coming soon")} />
@@ -510,19 +510,19 @@ export default function HomePage() {
       </section>
 
       {/* ============ RECENT ACTIVITY ============ */}
-      <section className="mx-auto mb-8 mt-10 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section className="mt-8 px-5 mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold tracking-tight text-[#0B1F3A] sm:text-lg">Recent Activity</h2>
+          <h2 className="text-[15px] font-bold tracking-tight text-ink-950">Recent Activity</h2>
           {activity.length > 0 && (
-            <button onClick={() => router.push('/notifications')} className="text-[12.5px] font-semibold text-[#17365D]">
+            <button onClick={() => router.push('/notifications')} className="text-[12.5px] font-semibold text-plum-700">
               View all
             </button>
           )}
         </div>
 
-        <div className="space-y-3 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
+        <div className="space-y-3">
           {activity.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-sm lg:col-span-2">
+            <div className="rounded-2xl bg-white border border-ink-100 p-6 text-center shadow-sm">
               <div className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-ink-50 text-ink-400 mb-3">
                 <Receipt size={18} strokeWidth={2} />
               </div>
@@ -533,7 +533,7 @@ export default function HomePage() {
             activity.slice(0, 5).map((item) => {
               const styled = activityRow(item);
               return (
-                <div key={`${item.kind}-${item.loan_id}-${item.at}`} className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:shadow-md">
+                <div key={`${item.kind}-${item.loan_id}-${item.at}`} className="flex items-center gap-3 rounded-2xl bg-white border border-ink-100 p-4 shadow-sm">
                   <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${styled.iconClass}`}>
                     <styled.Icon size={18} strokeWidth={2.2} />
                   </div>

@@ -81,7 +81,7 @@ function OtpBoxes({
   }
 
   return (
-    <div className="flex items-center justify-between gap-2">
+    <div className="mx-auto flex w-full max-w-md items-center justify-between gap-1.5 sm:gap-3">
       {digits.map((d, i) => (
         <input
           key={i}
@@ -98,10 +98,10 @@ function OtpBoxes({
           onKeyDown={(e) => onKeyDown(i, e)}
           onPaste={onPaste}
           onFocus={(e) => e.target.select()}
-          className={`h-14 w-12 rounded-xl border bg-white text-center text-[20px] font-bold tracking-tight text-ink-950 outline-none transition ${
+          className={`h-12 min-w-0 flex-1 max-w-[52px] rounded-xl border bg-white text-center text-[19px] font-bold tracking-tight text-[#0B1F3A] outline-none transition sm:h-14 sm:max-w-[60px] sm:text-[22px] ${
             error
               ? 'border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500/30'
-              : 'border-ink-100 focus:border-plum-700 focus:ring-2 focus:ring-plum-500/30'
+              : 'border-ink-100 focus:border-[#102B4E] focus:ring-2 focus:ring-[#D6A83E]/30'
           } disabled:opacity-60`}
           aria-label={`Digit ${i + 1}`}
         />
@@ -248,17 +248,17 @@ function VerifyForm() {
   const displayEmail = maskedEmail || emailFromUrl || 'your email';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F4F6F9] text-[#0B1F3A]">
       {/* ============ HERO HEADER ============ */}
-      <div className="relative overflow-hidden rounded-b-[32px] bg-plum-800 px-6 pt-8 pb-10">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-plum-700/60 blur-3xl" />
-        <div className="pointer-events-none absolute -left-24 top-20 h-48 w-48 rounded-full bg-plum-900/50 blur-3xl" />
+      <div className="relative mx-auto w-full max-w-6xl overflow-hidden rounded-b-[28px] bg-[#0B1F3A] px-5 pb-9 pt-6 shadow-sm sm:rounded-b-[36px] sm:px-8 sm:pb-12 sm:pt-8 lg:mt-6 lg:rounded-[28px] lg:px-12 lg:py-10">
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#102B4E]/60 blur-3xl" />
+        <div className="pointer-events-none absolute -left-24 top-20 h-48 w-48 rounded-full bg-[#071629]/50 blur-3xl" />
 
         <button
           type="button"
           onClick={() => router.back()}
           aria-label="Back"
-          className="relative grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition active:scale-95"
+          className="relative grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition hover:bg-white/15 active:scale-95"
         >
           <ArrowLeft size={17} strokeWidth={2.2} />
         </button>
@@ -268,15 +268,34 @@ function VerifyForm() {
         </h1>
         <p className="relative mt-2 max-w-[18rem] text-[12.5px] font-medium leading-snug text-white/70">
           We sent a 6-digit code to{' '}
-          <span className="font-semibold text-brand-500">{displayEmail}</span>.
+          <span className="font-semibold text-[#D6A83E]">{displayEmail}</span>.
         </p>
       </div>
 
       {/* ============ FORM ============ */}
-      <div className="px-6 pt-8 pb-10">
+      <div className="mx-auto w-full max-w-6xl px-5 pb-10 pt-7 sm:px-8 sm:pt-9 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] lg:items-start lg:gap-12 lg:px-12 lg:pb-12 lg:pt-10">
+        <div className="mb-8 hidden lg:block lg:pt-3">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#B58A2B]">IMARA CREDIT</p>
+          <h2 className="mt-4 max-w-md text-3xl font-bold leading-tight tracking-tight text-[#0B1F3A] xl:text-4xl">
+            Secure access to your financial account.
+          </h2>
+          <p className="mt-4 max-w-md text-sm leading-7 text-slate-600">
+            Confirm your email to continue to your dashboard and manage your financial services securely.
+          </p>
+          <div className="mt-8 flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#F4F6F9] text-[#0B1F3A]">
+              <Mail size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#0B1F3A]">Email verification</p>
+              <p className="mt-1 text-xs text-slate-500">A quick step to protect your account</p>
+            </div>
+          </div>
+        </div>
+        <div className="w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:rounded-3xl sm:p-8 lg:max-w-xl lg:justify-self-end">
         {/* Email preview chip */}
-        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-ink-100 bg-white px-4 py-3">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-50 text-plum-700">
+        <div className="mb-6 flex items-center gap-3 rounded-2xl border border-slate-200 bg-[#F8FAFC] px-4 py-3.5">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#F4F6F9] text-[#102B4E]">
             <Mail size={16} strokeWidth={2.2} />
           </div>
           <div className="min-w-0">
@@ -312,7 +331,7 @@ function VerifyForm() {
           )}
 
           {resent && (
-            <p className="mt-3 text-[11.5px] font-medium text-leaf-600">
+            <p className="mt-3 text-[11.5px] font-medium text-emerald-700">
               A new code has been sent.
             </p>
           )}
@@ -330,7 +349,7 @@ function VerifyForm() {
             className={`text-[12px] font-semibold transition ${
               secondsLeft > 0
                 ? 'text-ink-400'
-                : 'text-plum-700 active:opacity-70'
+                : 'text-[#102B4E] active:opacity-70'
             }`}
           >
             {secondsLeft > 0 ? `Resend in ${secondsLeft}s` : 'Resend code'}
@@ -343,11 +362,12 @@ function VerifyForm() {
             type="button"
             onClick={submit}
             disabled={submitting || !fullCode}
-            className="w-full"
+            className="w-full rounded-xl bg-[#0B1F3A] text-white shadow-sm transition hover:bg-[#102B4E] disabled:opacity-50"
             size="lg"
           >
             {submitting ? 'Verifying…' : 'Verify'}
           </Button>
+        </div>
         </div>
       </div>
     </div>
