@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
@@ -488,13 +487,12 @@ function LoginForm() {
                     </div>
                   )}
 
-                  {/* Submit — same login action */}
+                  {/* Submit — Updated to match thin pill style */}
                   <div className="pt-2">
                     <Button
                       type="submit"
                       disabled={busy || (retryAfter !== null && retryAfter > 0)}
-                      size="lg"
-                      className="flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-[#102F5E] text-sm font-extrabold text-white shadow-md shadow-[#102F5E]/15 transition hover:bg-[#173F78] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="flex h-10 w-full items-center justify-center gap-2 rounded-full bg-[#1E3A8A] text-sm font-medium text-white shadow-sm transition hover:bg-[#152c6e] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {busy ? (
                         <>
@@ -504,7 +502,7 @@ function LoginForm() {
                       ) : (
                         <>
                           Sign in to your account
-                          <ArrowRight size={18} />
+                          <ArrowRight size={16} />
                         </>
                       )}
                     </Button>
