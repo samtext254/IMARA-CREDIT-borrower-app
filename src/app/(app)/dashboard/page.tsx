@@ -86,7 +86,7 @@ function toNumber(v: string | number | null | undefined): number {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Circular progress ring (Used in the new Active Loan Card)          */
+/*  Circular progress ring                                             */
 /* ------------------------------------------------------------------ */
 function ProgressRing({ value, size = 56, stroke = 6 }: { value: number; size?: number; stroke?: number; }) {
   const r = (size - stroke) / 2;
@@ -189,8 +189,10 @@ function AvatarMenu({ initials, name, email, onLogout, loggingOut }: { initials:
 /* ------------------------------------------------------------------ */
 function LoadingState() {
   return (
-    <div className="min-h-screen bg-[#F4F6F8] flex flex-col items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
+    /* Added 'fixed inset-0 z-[9999]' to cover the purple bottom nav during initial load */
+    <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F6F8]">
+      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
+      <p className="mt-4 text-sm font-medium text-slate-500">Loading your dashboard...</p>
     </div>
   );
 }
@@ -546,53 +548,7 @@ export default function HomePage() {
 
           </div>
 
-          {/* ROW 3: RECENT TRANSACTIONS */}
-          <div className="mt-6 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-900">Recent Transactions</h3>
-              {activity.length > 0 && (
-                <Link href="/activity" className="text-sm font-semibold text-[#0077C8] hover:underline">
-                  View All
-                </Link>
-              )}
-            </div>
-            
-            <div className="space-y-3">
-              {activity.length === 0 ? (
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-8 text-center">
-                  <Receipt size={24} className="mx-auto text-slate-400 mb-2" />
-                  <p className="text-sm font-medium text-slate-500">No activity yet</p>
-                  <p className="mt-1 text-xs text-slate-400">Your recent transactions will appear here.</p>
-                </div>
-              ) : (
-                activity.slice(0, 4).map((item) => {
-                  const styled = activityRow(item);
-                  return (
-                    <div key={`${item.kind}-${item.loan_id}-${item.at}`} className="flex items-center justify-between rounded-lg border border-slate-100 p-4 transition hover:bg-slate-50">
-                      <div className="flex items-center gap-4">
-                        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${styled.iconClass}`}>
-                          <styled.Icon size={18} strokeWidth={2.2} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">{styled.title}</p>
-                          <p className="mt-0.5 text-xs font-medium text-slate-500">
-                            {formatDate(item.at)}{item.receipt ? ` · ${item.receipt}` : ''}
-                          </p>
-                        </div>
-                      </div>
-                      {item.amount != null && (
-                        <p className={`text-sm font-bold tabular-nums tracking-tight ${styled.amountClass}`}>
-                          KES {formatKes(item.amount)}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-
-          {/* ROW 4: EXPLORE PRODUCTS */}
+          {/* ROW 3: EXPLORE PRODUCTS */}
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">Explore Imara Products</h3>
