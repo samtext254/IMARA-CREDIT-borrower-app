@@ -79,7 +79,6 @@ function activityRow(item: ActivityItem): { title: string; Icon: typeof CheckCir
   }
 }
 
-// FIX: Added toNumber helper function back here
 function toNumber(v: string | number | null | undefined): number {
   if (v === null || v === undefined || v === '') return 0;
   const n = typeof v === 'string' ? parseFloat(v) : v;
@@ -491,22 +490,57 @@ export default function HomePage() {
             </div>
 
             {/* My Products */}
-            <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+            <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50 flex flex-col">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-slate-900">My Products</h3>
-                <button className="text-sm font-semibold text-[#0077C8] hover:underline">View All</button>
+                <Link href="/loans" className="text-sm font-semibold text-[#0077C8] hover:underline">View All</Link>
               </div>
               
-              <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded bg-green-100">
-                    <TrendingUp className="h-5 w-5 text-green-700" />
+              <div className="flex-1 space-y-3">
+                {recentLoans.length === 0 ? (
+                  <div className="flex h-full flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 py-8 text-center">
+                    <p className="text-sm font-medium text-slate-500">No loans found</p>
+                    <Link href="/apply/loan" className="mt-2 text-xs font-bold text-[#0077C8] hover:underline">Apply for your first loan</Link>
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Imara Money Market Fund</p>
-                    <p className="text-xs text-slate-500">Account No: BA100024799WP</p>
-                  </div>
-                </div>
+                ) : (
+                  recentLoans.slice(0, 3).map((loan) => {
+                    let badgeColor = 'bg-slate-100 text-slate-600';
+                    if (loan.status === 'ACTIVE') badgeColor = 'bg-blue-50 text-blue-700';
+                    if (loan.status === 'OVERDUE') badgeColor = 'bg-red-50 text-red-700';
+                    if (loan.status === 'PENDING' || loan.status === 'APPROVED' || loan.status === 'DISBURSED') badgeColor = 'bg-yellow-50 text-yellow-700';
+                    if (loan.status === 'PAID') badgeColor = 'bg-green-50 text-green-700';
+
+                    return (
+                      <div key={loan.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-4 transition hover:border-slate-300">
+                        <div className="flex items-center gap-4">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+                            loan.status === 'ACTIVE' ? 'bg-blue-50 text-blue-600' : 
+                            loan.status === 'OVERDUE' ? 'bg-red-50 text-red-600' : 
+                            'bg-slate-100 text-slate-600'
+                          }`}>
+                            <Banknote size={20} />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-slate-900">
+                              {loan.loan_reference || `Loan #${loan.id}`}
+                            </p>
+                            <p className="text-xs font-medium text-slate-500 mt-0.5">
+                              KES {formatKes(loan.principal_amount)} principal
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${badgeColor}`}>
+                            {loan.status}
+                          </span>
+                          <Link href={`/loans/${loan.id}`} className="text-xs font-semibold text-[#0077C8] hover:underline">
+                            View
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
 
