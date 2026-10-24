@@ -388,7 +388,7 @@ export default function HomePage() {
             <p className="mt-1 text-sm text-slate-500">Welcome back to your dashboard.</p>
           </div>
 
-          {/* THE TWO CARDS LAYOUT */}
+          {/* ROW 1: THE TWO CARDS LAYOUT */}
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             
             {/* CARD 1: ACTIVE LOAN */}
@@ -461,7 +461,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* QUICK ACTIONS & MY PRODUCTS */}
+          {/* ROW 2: QUICK ACTIONS & MY PRODUCTS */}
           <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
              
              <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
@@ -546,7 +546,53 @@ export default function HomePage() {
 
           </div>
 
-          {/* EXPLORE PRODUCTS */}
+          {/* ROW 3: RECENT TRANSACTIONS */}
+          <div className="mt-6 rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Recent Transactions</h3>
+              {activity.length > 0 && (
+                <Link href="/activity" className="text-sm font-semibold text-[#0077C8] hover:underline">
+                  View All
+                </Link>
+              )}
+            </div>
+            
+            <div className="space-y-3">
+              {activity.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 py-8 text-center">
+                  <Receipt size={24} className="mx-auto text-slate-400 mb-2" />
+                  <p className="text-sm font-medium text-slate-500">No activity yet</p>
+                  <p className="mt-1 text-xs text-slate-400">Your recent transactions will appear here.</p>
+                </div>
+              ) : (
+                activity.slice(0, 4).map((item) => {
+                  const styled = activityRow(item);
+                  return (
+                    <div key={`${item.kind}-${item.loan_id}-${item.at}`} className="flex items-center justify-between rounded-lg border border-slate-100 p-4 transition hover:bg-slate-50">
+                      <div className="flex items-center gap-4">
+                        <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${styled.iconClass}`}>
+                          <styled.Icon size={18} strokeWidth={2.2} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">{styled.title}</p>
+                          <p className="mt-0.5 text-xs font-medium text-slate-500">
+                            {formatDate(item.at)}{item.receipt ? ` · ${item.receipt}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {item.amount != null && (
+                        <p className={`text-sm font-bold tabular-nums tracking-tight ${styled.amountClass}`}>
+                          KES {formatKes(item.amount)}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* ROW 4: EXPLORE PRODUCTS */}
           <div className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-900">Explore Imara Products</h3>
