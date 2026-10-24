@@ -3,20 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
-  Phone,
-  Smartphone,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
-  X,
-  HelpCircle,
-  ChevronRight,
-  Loader2,
-  Download,
-  Share2,
-  Check,
-  WifiOff,
+  ArrowLeft, Phone, Smartphone, AlertCircle, CheckCircle, XCircle, 
+  X, HelpCircle, ChevronRight, Loader2, Download, Share2, Check, WifiOff,
+  Home, Shield, Compass, FileText, LogOut, Menu, Clock3, CheckCircle2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,79 +41,30 @@ function formatDate(iso: string | null | undefined): string {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Small UI bits                                                      */
-/* ------------------------------------------------------------------ */
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="bg-white">
-      <div className="border-b border-ink-100 px-4 py-3">
-        <h2 className="text-[13px] font-bold tracking-tight text-ink-950">{title}</h2>
-      </div>
-      <div className="space-y-3 px-4 py-4">{children}</div>
-    </section>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-400">
-      {children}
-    </span>
-  );
-}
-
-function FieldError({ children }: { children: React.ReactNode }) {
-  return <p className="mt-1 text-[11px] font-medium text-red-600">{children}</p>;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Paybill sheet — reads the loan's repayment_account_number          */
+/*  Paybill sheet                                                      */
 /* ------------------------------------------------------------------ */
 const PAYBILL_NUMBER = '4049263';
 
-function PaybillSheet({
-  open,
-  onClose,
-  accountNumber,
-}: {
-  open: boolean;
-  onClose: () => void;
-  accountNumber: string;
-}) {
+function PaybillSheet({ open, onClose, accountNumber }: { open: boolean; onClose: () => void; accountNumber: string; }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center">
-      <button
-        aria-label="Close"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-      />
-      <div className="relative w-full max-w-[28rem] rounded-t-3xl bg-white shadow-2xl">
-        <div className="flex justify-center pt-3">
-          <div className="h-1 w-10 rounded-full bg-ink-200" />
+    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+      <button aria-label="Close" onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="relative w-full max-w-md rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl">
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="h-1 w-10 rounded-full bg-slate-200" />
         </div>
-        <div className="flex items-start justify-between gap-3 px-5 pt-3 pb-4">
+        <div className="flex items-start justify-between gap-3 px-6 pt-4 pb-4 border-b border-slate-100">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-              Alternative payment
-            </p>
-            <h2 className="mt-0.5 text-[17px] font-bold tracking-tight text-ink-950">
-              Pay with Paybill
-            </h2>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alternative payment</p>
+            <h2 className="mt-0.5 text-xl font-bold text-slate-900">Pay with Paybill</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ink-100/70 text-ink-700 transition active:scale-95"
-            aria-label="Close"
-          >
-            <X size={17} strokeWidth={2.4} />
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+            <X size={18} strokeWidth={2.4} />
           </button>
         </div>
-        <div className="max-h-[75vh] overflow-y-auto px-5 pb-8">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            How to pay
-          </p>
-          <ol className="mt-3 space-y-3">
+        <div className="max-h-[75vh] overflow-y-auto px-6 pb-8 pt-5">
+          <ol className="space-y-4">
             {[
               'Open M-Pesa on your phone',
               'Select Lipa na M-Pesa → Pay Bill',
@@ -133,14 +73,14 @@ function PaybillSheet({
               'Enter amount and your M-Pesa PIN',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-3">
-                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-plum-50 text-[11px] font-bold text-plum-700">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-bold text-[#0077C8]">
                   {i + 1}
                 </span>
-                <span className="pt-0.5 text-[12.5px] leading-snug text-ink-700">{step}</span>
+                <span className="pt-0.5 text-sm leading-6 text-slate-700">{step}</span>
               </li>
             ))}
           </ol>
-          <p className="mt-5 text-center text-[10.5px] leading-snug text-ink-400">
+          <p className="mt-6 text-center text-xs text-slate-400">
             Your repayment will be applied automatically within a minute of the M-Pesa confirmation SMS.
           </p>
         </div>
@@ -155,7 +95,7 @@ function PaybillSheet({
 type FlowState = 'idle' | 'processing' | 'pending' | 'success' | 'error';
 
 const POLL_INTERVAL_MS = 2500;
-const POLL_MAX_ATTEMPTS = 40; // ~100s
+const POLL_MAX_ATTEMPTS = 40;
 
 export default function RepayPage() {
   const router = useRouter();
@@ -171,21 +111,17 @@ export default function RepayPage() {
   const [amountInput, setAmountInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [showPaybill, setShowPaybill] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [flow, setFlow] = useState<FlowState>('idle');
   const [intentId, setIntentId] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successData, setSuccessData] = useState<{
-    amount: number;
-    receipt: string | null;
-    newOutstanding: number | null;
-  } | null>(null);
+  const [successData, setSuccessData] = useState<{ amount: number; receipt: string | null; newOutstanding: number | null; } | null>(null);
 
   const [pollCount, setPollCount] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const redirectRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // ─── Fetch the loan ────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -212,19 +148,13 @@ export default function RepayPage() {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [loanId]);
 
-  // ─── Cleanup on unmount ────────────────────────────────────
-  useEffect(
-    () => () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-      if (redirectRef.current) clearTimeout(redirectRef.current);
-    },
-    []
-  );
+  useEffect(() => () => {
+    if (pollRef.current) clearInterval(pollRef.current);
+    if (redirectRef.current) clearTimeout(redirectRef.current);
+  }, []);
 
   const outstanding = useMemo(() => (loan ? parseFloat(loan.outstanding_total || '0') : 0), [loan]);
   const normalizedPhone = useMemo(() => normalizeKenyanPhone(phone), [phone]);
@@ -236,7 +166,6 @@ export default function RepayPage() {
   const phoneError = submitted && !normalizedPhone;
   const amountError = submitted && (amount <= 0 || amount > outstanding);
 
-  // ─── Poller ────────────────────────────────────────────────
   function startPolling(id: string) {
     setPollCount(0);
     if (pollRef.current) clearInterval(pollRef.current);
@@ -255,10 +184,7 @@ export default function RepayPage() {
         const res = await loansApi.getRepaymentStatus(loanId, id);
         const d = res.data;
         if (d.status === 'SUCCESS') {
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
           setSuccessData({
             amount: d.amount,
             receipt: d.mpesa_receipt,
@@ -267,65 +193,40 @@ export default function RepayPage() {
           setFlow('success');
           redirectRef.current = setTimeout(() => router.push(`/loans/${loanId}`), 4000);
         } else if (d.status === 'FAILED') {
-          if (pollRef.current) {
-            clearInterval(pollRef.current);
-            pollRef.current = null;
-          }
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
           setFlow('error');
           setErrorMsg(d.result_desc || 'Payment failed. Please try again.');
         }
       } catch {
-        // transient — keep polling until attempt limit
+        // transient
       }
     }, POLL_INTERVAL_MS);
   }
 
-  // ─── Submit ────────────────────────────────────────────────
   async function onRequestStk() {
     setSubmitted(true);
     setErrorMsg(null);
-    if (!normalizedPhone) {
-      setErrorMsg('Enter a valid M-Pesa number');
-      return;
-    }
-    if (amount <= 0 || amount > outstanding) {
-      setErrorMsg('Enter a valid amount');
-      return;
-    }
-    if (!loan) {
-      setErrorMsg('Loan not loaded');
-      return;
-    }
+    if (!normalizedPhone) { setErrorMsg('Enter a valid M-Pesa number'); return; }
+    if (amount <= 0 || amount > outstanding) { setErrorMsg('Enter a valid amount'); return; }
+    if (!loan) { setErrorMsg('Loan not loaded'); return; }
 
     setFlow('processing');
     try {
-      const res = await loansApi.repay(loan.id, {
-        amount: Math.round(amount),
-        phone_number: normalizedPhone,
-      });
+      const res = await loansApi.repay(loan.id, { amount: Math.round(amount), phone_number: normalizedPhone });
       const id = res.data.repayment_id;
       setIntentId(id);
       setFlow('pending');
       startPolling(id);
     } catch (err) {
       setFlow('error');
-      if (err instanceof ImaraApiError) {
-        setErrorMsg(err.message || 'Could not process the repayment.');
-      } else {
-        setErrorMsg('Something went wrong. Please try again.');
-      }
+      if (err instanceof ImaraApiError) setErrorMsg(err.message || 'Could not process the repayment.');
+      else setErrorMsg('Something went wrong. Please try again.');
     }
   }
 
   function resetToIdle() {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-    if (redirectRef.current) {
-      clearTimeout(redirectRef.current);
-      redirectRef.current = null;
-    }
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    if (redirectRef.current) { clearTimeout(redirectRef.current); redirectRef.current = null; }
     setFlow('idle');
     setIntentId(null);
     setErrorMsg(null);
@@ -334,7 +235,6 @@ export default function RepayPage() {
     setPollCount(0);
   }
 
-  // ─── Receipt helpers ───────────────────────────────────────
   function drawReceiptCanvas(): HTMLCanvasElement {
     const scale = 2;
     const width = 480;
@@ -377,11 +277,7 @@ export default function RepayPage() {
     const paid = successData?.amount ?? amount;
     ctx.fillStyle = '#111827';
     ctx.font = '700 30px Arial';
-    ctx.fillText(
-      `KES ${paid.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      width / 2,
-      165
-    );
+    ctx.fillText(`KES ${paid.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, width / 2, 165);
 
     ctx.strokeStyle = '#e5e7eb';
     ctx.lineWidth = 1;
@@ -446,9 +342,7 @@ export default function RepayPage() {
     try {
       const canvas = drawReceiptCanvas();
       const blob: Blob | null = await new Promise((r) => canvas.toBlob(r, 'image/png'));
-      const text = `Repayment of KES ${(successData?.amount ?? amount).toLocaleString('en-KE')} — ${
-        successData?.receipt || intentId || ''
-      }`;
+      const text = `Repayment of KES ${(successData?.amount ?? amount).toLocaleString('en-KE')} — ${successData?.receipt || intentId || ''}`;
       if (typeof navigator !== 'undefined' && (navigator as any).share) {
         if (blob) {
           const file = new File([blob], `receipt.png`, { type: 'image/png' });
@@ -461,375 +355,323 @@ export default function RepayPage() {
         return;
       }
       if (navigator.clipboard) await navigator.clipboard.writeText(text);
-    } catch {
-      /* user cancelled */
-    }
+    } catch {}
   }
 
-  /* ─── Loading / load error ─────────────────────────────── */
+  /* ─── Loading / Load Error ─────────────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-page">
-        <div className="sticky top-0 z-30 bg-plum-800">
-          <div className="flex items-center gap-3 px-4 py-2.5">
-            <div className="h-9 w-9 animate-pulse rounded-full bg-white/10" />
-            <div className="h-4 w-32 animate-pulse rounded bg-white/10" />
-          </div>
-          <div className="h-1 w-full bg-brand-500" />
-        </div>
-        <div className="px-3 pt-3">
-          <div className="h-56 animate-pulse rounded-2xl bg-ink-100/40" />
-        </div>
+      <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F6F8]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading repayment details...</p>
       </div>
     );
   }
 
   if (loadError || !loan) {
     return (
-      <div className="min-h-screen bg-page pb-24">
-        <div className="sticky top-0 z-30 bg-plum-800">
-          <div className="flex items-center gap-3 px-4 py-2.5">
-            <button
-              onClick={() => router.back()}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition active:scale-95"
-              aria-label="Back"
-            >
-              <ArrowLeft size={17} strokeWidth={2.2} />
+      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+        <div className="flex flex-1 flex-col items-center justify-center p-8">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/50">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
+              <AlertCircle size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-900">Not available</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-500">{loadError || 'Loan not found.'}</p>
+            <button onClick={() => router.back()} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#0077C8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0060a3]">
+              Go Back
             </button>
-            <h1 className="text-[15px] font-semibold tracking-tight text-white">Repayment</h1>
           </div>
-          <div className="h-1 w-full bg-brand-500" />
-        </div>
-        <div className="px-6 pt-12 text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-ink-100/60 text-ink-400">
-            <AlertCircle size={24} strokeWidth={2} />
-          </div>
-          <p className="mt-4 text-[14px] font-semibold text-ink-800">Not available</p>
-          <p className="mt-2 text-[12px] text-ink-500">{loadError || 'Loan not found.'}</p>
         </div>
       </div>
     );
   }
 
-  const repayable =
-    loan.status === 'ACTIVE' || loan.status === 'OVERDUE' || loan.status === 'DISBURSED';
+  const repayable = loan.status === 'ACTIVE' || loan.status === 'OVERDUE' || loan.status === 'DISBURSED';
   const displayReference = loan.loan_reference;
   const dueDate = loanDueDate(loan);
   const accountNumber = loan.repayment_account_number || '—';
 
-  /* ─── Success card ─────────────────────────────────────── */
+  /* ─── SUCCESS STATE ────────────────────────────────────── */
   if (flow === 'success' && successData) {
     return (
-      <div className="min-h-screen bg-page pb-24">
-        <div className="sticky top-0 z-30 bg-plum-800">
-          <div className="flex items-center gap-3 px-4 py-2.5">
-            <button
-              onClick={() => {
-                if (redirectRef.current) clearTimeout(redirectRef.current);
-                router.push(`/loans/${loanId}`);
-              }}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition active:scale-95"
-              aria-label="Back"
-            >
-              <ArrowLeft size={17} strokeWidth={2.2} />
-            </button>
-            <h1 className="text-[15px] font-semibold tracking-tight text-white">Repayment</h1>
-          </div>
-          <div className="h-1 w-full bg-brand-500" />
-        </div>
+      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+        <main className="flex-1 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-8">
+            <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-slate-200/50">
+              <div className="bg-emerald-500 px-8 py-10 text-center">
+                <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm">
+                  <CheckCircle size={40} strokeWidth={2.4} />
+                </div>
+                <h1 className="text-2xl font-extrabold tracking-tight text-white">Payment Successful</h1>
+                <p className="mt-2 text-sm text-emerald-50">KES {formatKes(successData.amount)} paid toward {displayReference}</p>
+                {successData.receipt && <p className="mt-1 font-mono text-xs text-emerald-100">Receipt: {successData.receipt}</p>}
+              </div>
+              
+              <div className="p-6">
+                {successData.newOutstanding != null && (
+                  <div className="mb-6 flex items-center justify-between rounded-xl bg-slate-50 p-4 ring-1 ring-slate-100">
+                    <span className="text-sm font-medium text-slate-500">New Outstanding Balance</span>
+                    <span className="text-lg font-bold text-slate-900">KES {formatKes(successData.newOutstanding)}</span>
+                  </div>
+                )}
+                
+                <div className="flex gap-3">
+                  <button onClick={downloadReceipt} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-bold text-slate-700 transition hover:bg-slate-50">
+                    <Download size={16} /> Receipt
+                  </button>
+                  <button onClick={shareReceipt} className="flex h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition hover:bg-emerald-700">
+                    <Share2 size={16} /> Share
+                  </button>
+                </div>
 
-        <div className="px-3 pt-6">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-100">
-              <CheckCircle size={28} className="text-emerald-600" strokeWidth={2.4} />
+                <div className="mt-6 text-center">
+                  <p className="text-xs text-slate-400">Taking you to your loan details…</p>
+                  <button onClick={() => { if (redirectRef.current) clearTimeout(redirectRef.current); router.push(`/loans/${loanId}`); }} className="mt-2 text-sm font-bold text-[#0077C8] hover:underline">
+                    Go now
+                  </button>
+                </div>
+              </div>
             </div>
-            <p className="mt-3 text-[17px] font-bold text-emerald-900">Payment Successful</p>
-            <p className="mt-1.5 text-[12.5px] text-emerald-700">
-              KES {formatKes(successData.amount)} paid toward {displayReference}
-            </p>
-            {successData.receipt && (
-              <p className="mt-1 text-[11px] font-mono text-emerald-700">
-                Receipt: {successData.receipt}
-              </p>
-            )}
-            {successData.newOutstanding != null && (
-              <p className="mt-2 text-[12px] text-emerald-800">
-                New outstanding:{' '}
-                <span className="font-bold">KES {formatKes(successData.newOutstanding)}</span>
-              </p>
-            )}
-
-            <div className="mt-5 flex items-center gap-2">
-              <button
-                onClick={downloadReceipt}
-                className="flex-1 h-10 rounded-lg border border-emerald-300 bg-white text-[13px] font-medium text-emerald-800 hover:bg-emerald-50 flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" /> Download
-              </button>
-              <button
-                onClick={shareReceipt}
-                className="flex-1 h-10 rounded-lg bg-emerald-700 text-white text-[13px] font-semibold hover:bg-emerald-800 flex items-center justify-center gap-1.5 transition-colors"
-              >
-                <Share2 className="w-3.5 h-3.5" /> Share
-              </button>
-            </div>
-
-            <p className="mt-4 text-[10.5px] text-emerald-700">
-              Taking you to your loan details…
-            </p>
-            <button
-              onClick={() => {
-                if (redirectRef.current) clearTimeout(redirectRef.current);
-                router.push(`/loans/${loanId}`);
-              }}
-              className="mt-2 text-[12px] font-semibold text-emerald-800 underline underline-offset-2"
-            >
-              Go now
-            </button>
           </div>
-        </div>
+        </main>
       </div>
     );
   }
 
-  /* ─── Main repay UI ────────────────────────────────────── */
+  /* ─── MAIN LAYOUT ─────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-page pb-24">
-      {/* NAV */}
-      <div className="sticky top-0 z-30 bg-plum-800">
-        <div className="flex items-center gap-3 px-4 py-2.5">
-          <button
-            onClick={() => router.back()}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/20 transition active:scale-95"
-            aria-label="Back"
-          >
-            <ArrowLeft size={17} strokeWidth={2.2} />
+    <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+      
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden w-64 flex-col bg-[#0077C8] text-white md:flex shrink-0">
+        <div className="flex h-24 items-center px-8">
+          <button onClick={() => router.push('/dashboard')} className="leading-tight text-left">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Imara</h1>
+            <p className="text-[10px] font-medium text-white/80">With you every step of the way</p>
           </button>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/60">
-              Repayment
-            </p>
-            <h1 className="truncate text-[15px] font-semibold tracking-tight text-white">
-              Pay {displayReference}
-            </h1>
+        </div>
+        <nav className="flex-1 space-y-1 px-4">
+          <button onClick={() => router.push('/dashboard')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Home size={20} className="text-white/70" /> Dashboard
+          </button>
+          <button onClick={() => router.push('/products')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Shield size={20} className="text-white/70" /> Products
+          </button>
+          <button onClick={() => router.push('/discover')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Compass size={20} className="text-white/70" /> Discover
+          </button>
+          <button onClick={() => router.push('/activity')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <FileText size={20} className="text-white/70" /> Activity
+          </button>
+          <button onClick={() => router.push('/help')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <HelpCircle size={20} className="text-white/70" /> Help
+          </button>
+        </nav>
+        <div className="p-6">
+          <button onClick={() => router.push('/login')} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-[#0077C8] shadow-sm transition hover:bg-slate-50">
+            <LogOut size={18} /> Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        
+        <header className="flex h-[72px] shrink-0 items-center justify-between bg-white px-4 sm:px-8 border-b border-slate-200">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden">
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => router.back()} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Repayment</p>
+                <h1 className="text-lg font-bold text-slate-900 leading-tight">Pay {displayReference}</h1>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="h-1 w-full bg-brand-500" />
-      </div>
-
-      {/* SUMMARY */}
-      <div className="px-3 pt-3">
-        <div className="rounded-2xl border border-ink-100 bg-white px-4 py-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
-            Outstanding balance
-          </p>
-          <p className="mt-1.5 text-[24px] font-bold leading-none tracking-[-0.02em] text-ink-950 tabular-nums">
-            KES {formatKes(loan.outstanding_total)}
-          </p>
-          <p className="mt-1 text-[11px] font-medium text-ink-400">Due {formatDate(dueDate)}</p>
-        </div>
-      </div>
-
-      {!repayable && (
-        <div className="px-3 pt-3">
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[12px] font-medium text-red-700">
-            This loan cannot be repaid right now (status: {loan.status}).
-          </div>
-        </div>
-      )}
-
-      {repayable && flow !== 'pending' && (
-        <div className="pt-3">
-          <SectionCard title="Pay with M-Pesa">
-            <label className="block">
-              <FieldLabel>M-Pesa number</FieldLabel>
-              <div className="relative mt-1">
-                <Phone
-                  size={16}
-                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-400"
-                />
-                <Input
-                  className="pl-9"
-                  inputMode="tel"
-                  placeholder="07XX XXX XXX"
-                  value={phone}
-                  onChange={(e) => {
-                    setErrorMsg(null);
-                    setPhone(e.target.value);
-                  }}
-                  disabled={flow === 'processing'}
-                />
-              </div>
-              {phoneError && <FieldError>Enter a valid M-Pesa number</FieldError>}
-            </label>
-
-            <label className="block">
-              <FieldLabel>Amount</FieldLabel>
-              <div className="relative mt-1">
-                <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-ink-400">
-                  KES
-                </span>
-                <Input
-                  className="pl-12"
-                  inputMode="numeric"
-                  placeholder={String(Math.round(outstanding))}
-                  value={amountInput}
-                  onChange={(e) => {
-                    setErrorMsg(null);
-                    setAmountInput(e.target.value.replace(/\D/g, ''));
-                  }}
-                  disabled={flow === 'processing'}
-                />
-              </div>
-              {amountError && (
-                <FieldError>
-                  {amount <= 0 ? 'Enter an amount' : `Maximum is KES ${formatKes(outstanding)}`}
-                </FieldError>
-              )}
-            </label>
-
-            {flow === 'error' && errorMsg && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-3">
-                <div className="flex items-start gap-2">
-                  <XCircle size={15} className="mt-0.5 shrink-0 text-red-600" strokeWidth={2.4} />
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-bold text-red-800">Payment Failed</p>
-                    <p className="mt-0.5 text-[11px] leading-snug text-red-700">{errorMsg}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={resetToIdle}
-                  className="mt-3 h-9 rounded-lg bg-red-600 px-4 text-[12px] font-semibold text-white hover:bg-red-700"
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {flow === 'idle' && errorMsg && (
-              <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
-                <AlertCircle
-                  size={14}
-                  className="mt-0.5 shrink-0 text-red-600"
-                  strokeWidth={2.4}
-                />
-                <p className="text-[11.5px] font-medium text-red-700">{errorMsg}</p>
-              </div>
-            )}
-
-            <Button
-              type="button"
-              onClick={onRequestStk}
-              disabled={flow === 'processing'}
-              className="w-full"
-              size="md"
-            >
-              {flow === 'processing' ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending…
-                </>
-              ) : (
-                'Send M-Pesa request'
-              )}
-            </Button>
-          </SectionCard>
-        </div>
-      )}
-
-      {repayable && flow === 'pending' && (
-        <div className="pt-3">
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-6 text-center">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white ring-4 ring-amber-200">
-              <Smartphone className="h-7 w-7 animate-pulse text-amber-600" />
-            </div>
-            <p className="mt-4 text-[15px] font-bold text-amber-900">Waiting for confirmation</p>
-            <p className="mt-1 text-[11.5px] text-amber-700">
-              Check your phone and enter your M-Pesa PIN for KES {formatKes(amount)}.
-            </p>
-            <p className="mt-2 text-[11px] text-amber-700/80">
-              {((pollCount * POLL_INTERVAL_MS) / 1000).toFixed(0)}s elapsed
-            </p>
-
-            <div className="mt-5 space-y-2.5 text-left">
-              {['Request sent to your phone', 'Enter your PIN', 'Confirming with M-Pesa'].map(
-                (label, idx) => {
-                  const active = pollCount < 1 ? 0 : pollCount < 3 ? 1 : 2;
-                  const done = idx < active;
-                  const current = idx === active;
-                  return (
-                    <div key={label} className="flex items-center gap-2.5">
-                      <div
-                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full ${
-                          done ? 'bg-emerald-500' : current ? 'bg-amber-500' : 'bg-amber-200'
-                        }`}
-                      >
-                        {done ? (
-                          <Check className="h-3 w-3 text-white" />
-                        ) : current ? (
-                          <Loader2 className="h-3 w-3 animate-spin text-white" />
-                        ) : null}
-                      </div>
-                      <span
-                        className={`text-[12.5px] ${
-                          idx <= active ? 'font-medium text-amber-900' : 'text-amber-700/70'
-                        }`}
-                      >
-                        {label}
-                      </span>
-                    </div>
-                  );
-                }
-              )}
-            </div>
-
-            <div className="mt-4 flex items-center justify-center gap-1.5 border-t border-amber-200 pt-3">
-              <WifiOff className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-[11px] text-amber-700">Checking status automatically</span>
-            </div>
-
-            <button
-              onClick={resetToIdle}
-              className="mt-4 text-[11.5px] font-medium text-amber-800 underline underline-offset-2"
-            >
-              I didn&apos;t receive a prompt — start over
+          <div className="flex items-center gap-4">
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF8A65] text-sm font-bold text-white ring-2 ring-white">
+              SC
             </button>
           </div>
-        </div>
-      )}
+        </header>
 
-      {/* PAYBILL */}
-      {repayable && flow !== 'pending' && (
-        <button
-          type="button"
-          onClick={() => setShowPaybill(true)}
-          className="mt-3 flex w-full items-center gap-3.5 border-b border-ink-100 bg-white px-5 py-4 text-left transition active:bg-ink-100/40"
-        >
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-50 text-plum-700">
-            <HelpCircle size={17} strokeWidth={2.2} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13.5px] font-semibold tracking-tight text-ink-950">
-              Having trouble?
-            </p>
-            <p className="mt-0.5 text-[11px] font-medium text-ink-400">
-              Pay with Paybill instead
-            </p>
-          </div>
-          <ChevronRight size={16} className="shrink-0 text-ink-400" strokeWidth={2.2} />
-        </button>
-      )}
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="mx-auto max-w-[1000px] p-4 sm:p-8">
+            
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
+              
+              {/* LEFT COLUMN: PAYMENT FORM */}
+              <div className="space-y-6">
+                
+                {!repayable && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-bold text-red-700">
+                    This loan cannot be repaid right now (status: {loan.status}).
+                  </div>
+                )}
 
-      <div className="px-8 pb-6 pt-4 text-center">
-        <p className="text-[10px] font-medium tracking-wide text-ink-400/80">
-          Trouble paying? Contact support from your profile.
-        </p>
+                {repayable && flow === 'pending' && (
+                  <div className="rounded-xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/50">
+                    <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-blue-50 ring-8 ring-blue-50/50">
+                      <Smartphone className="h-8 w-8 animate-pulse text-[#0077C8]" />
+                    </div>
+                    <h3 className="mt-6 text-xl font-bold text-slate-900">Waiting for confirmation</h3>
+                    <p className="mt-2 text-sm text-slate-500">
+                      Check your phone and enter your M-Pesa PIN for <strong className="text-slate-900">KES {formatKes(amount)}</strong>.
+                    </p>
+                    
+                    <div className="mt-6 space-y-4 text-left max-w-xs mx-auto">
+                      {['Request sent to your phone', 'Enter your PIN', 'Confirming with M-Pesa'].map((label, idx) => {
+                        const active = pollCount < 1 ? 0 : pollCount < 3 ? 1 : 2;
+                        const done = idx < active;
+                        const current = idx === active;
+                        return (
+                          <div key={label} className="flex items-center gap-3">
+                            <div className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${done ? 'bg-emerald-500' : current ? 'bg-[#0077C8]' : 'bg-slate-100'}`}>
+                              {done ? <Check className="h-3.5 w-3.5 text-white" /> : current ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : null}
+                            </div>
+                            <span className={`text-sm ${idx <= active ? 'font-bold text-slate-900' : 'text-slate-400'}`}>{label}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-slate-50 py-2 text-xs font-medium text-slate-500">
+                      <WifiOff className="h-3.5 w-3.5" /> Checking status automatically...
+                    </div>
+
+                    <button onClick={resetToIdle} className="mt-6 text-xs font-bold text-[#0077C8] underline hover:text-blue-800">
+                      I didn't receive a prompt — start over
+                    </button>
+                  </div>
+                )}
+
+                {repayable && flow !== 'pending' && (
+                  <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+                    <h3 className="mb-5 text-lg font-bold text-slate-900">Pay with M-Pesa</h3>
+                    
+                    <div className="space-y-5">
+                      <label className="block">
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">M-Pesa Number</span>
+                        <div className="relative mt-2">
+                          <Phone size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <Input
+                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 text-base font-medium focus-visible:ring-[#0077C8]/40"
+                            inputMode="tel"
+                            placeholder="07XX XXX XXX"
+                            value={phone}
+                            onChange={(e) => { setErrorMsg(null); setPhone(e.target.value); }}
+                            disabled={flow === 'processing'}
+                          />
+                        </div>
+                        {phoneError && <p className="mt-2 text-xs font-medium text-red-600">Enter a valid M-Pesa number</p>}
+                      </label>
+
+                      <label className="block">
+                        <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">Amount (KES)</span>
+                        <div className="relative mt-2">
+                          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">KES</span>
+                          <Input
+                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-12 text-base font-bold focus-visible:ring-[#0077C8]/40"
+                            inputMode="numeric"
+                            placeholder={String(Math.round(outstanding))}
+                            value={amountInput}
+                            onChange={(e) => { setErrorMsg(null); setAmountInput(e.target.value.replace(/\D/g, '')); }}
+                            disabled={flow === 'processing'}
+                          />
+                        </div>
+                        {amountError && (
+                          <p className="mt-2 text-xs font-medium text-red-600">
+                            {amount <= 0 ? 'Enter an amount' : `Maximum is KES ${formatKes(outstanding)}`}
+                          </p>
+                        )}
+                      </label>
+
+                      {flow === 'error' && errorMsg && (
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                          <div className="flex items-start gap-3">
+                            <XCircle size={18} className="mt-0.5 shrink-0 text-red-600" />
+                            <div>
+                              <p className="text-sm font-bold text-red-800">Payment Failed</p>
+                              <p className="mt-1 text-xs text-red-700">{errorMsg}</p>
+                            </div>
+                          </div>
+                          <button onClick={resetToIdle} className="mt-3 rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white hover:bg-red-700">
+                            Try Again
+                          </button>
+                        </div>
+                      )}
+
+                      {flow === 'idle' && errorMsg && (
+                        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+                          <AlertCircle size={18} className="mt-0.5 shrink-0 text-red-600" />
+                          <p className="text-sm font-medium text-red-700">{errorMsg}</p>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={onRequestStk}
+                        disabled={flow === 'processing'}
+                        className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0077C8] text-sm font-bold text-white shadow-sm hover:bg-[#0060a3] disabled:opacity-60"
+                      >
+                        {flow === 'processing' ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : 'Send M-Pesa request'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {repayable && flow !== 'pending' && (
+                  <button onClick={() => setShowPaybill(true)} className="flex w-full items-center gap-4 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200/50 transition hover:bg-slate-50">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#0077C8]">
+                      <HelpCircle size={20} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-slate-900">Having trouble?</p>
+                      <p className="mt-0.5 text-xs font-medium text-slate-500">Pay via Paybill instead</p>
+                    </div>
+                    <ChevronRight size={18} className="text-slate-400" />
+                  </button>
+                )}
+
+              </div>
+
+              {/* RIGHT COLUMN: SUMMARY */}
+              <div className="lg:sticky lg:top-6 h-fit">
+                <div className="rounded-xl bg-[#0077C8] p-6 text-white shadow-lg">
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-200">Outstanding Balance</p>
+                  <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">KES {formatKes(loan.outstanding_total)}</p>
+                  <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-sm font-medium text-blue-100">
+                    <Clock3 size={16} /> Due {formatDate(dueDate)}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </main>
       </div>
 
-      <PaybillSheet
-        open={showPaybill}
-        onClose={() => setShowPaybill(false)}
-        accountNumber={accountNumber}
-      />
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-slate-200 bg-white px-2 py-3 md:hidden">
+        <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <Home size={22} /><span className="text-[10px] font-medium">Home</span>
+        </button>
+        <button onClick={() => router.push('/apply')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <Compass size={22} /><span className="text-[10px] font-medium">Apply</span>
+        </button>
+        <button onClick={() => router.push('/loans')} className="flex flex-col items-center gap-1 text-[#0077C8]">
+          <FileText size={22} /><span className="text-[10px] font-bold">Loans</span>
+        </button>
+        <button onClick={() => router.push('/profile')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <HelpCircle size={22} /><span className="text-[10px] font-medium">Profile</span>
+        </button>
+      </nav>
+
+      <PaybillSheet open={showPaybill} onClose={() => setShowPaybill(false)} accountNumber={accountNumber} />
     </div>
   );
 }
