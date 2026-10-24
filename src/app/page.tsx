@@ -86,9 +86,8 @@ function LandingContent() {
   const [year, setYear] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   
-  // Dropdown States
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null); // Desktop
-  const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null); // Mobile
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     setYear(new Date().getFullYear());
@@ -220,7 +219,7 @@ function LandingContent() {
 
         {/* MOBILE NAV */}
         {mobileMenuOpen && (
-          <nav className="flex flex-col border-t border-slate-100 bg-white px-6 py-4 lg:hidden h-[calc(100vh-80px)] overflow-y-auto">
+          <nav className="flex flex-col border-t border-slate-100 bg-white px-6 py-4 lg:hidden">
             {NAV_ITEMS.map((item) => (
               <div key={item.label} className="flex flex-col border-b border-slate-50 last:border-0 pb-1 mb-1">
                 {item.dropdown ? (
