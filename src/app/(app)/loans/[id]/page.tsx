@@ -1,18 +1,11 @@
-// src/app/loans/[id]/page.tsx
 'use client';
 
 import { use, useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  ArrowLeft,
-  ArrowRight,
-  AlertTriangle,
-  CheckCircle2,
-  Clock3,
-  Loader2,
-  Receipt,
-  ShieldAlert,
+  ArrowLeft, ArrowRight, AlertTriangle, CheckCircle2, Clock3, Loader2, Receipt, ShieldAlert,
+  Home, Shield, Compass, FileText, HelpCircle, LogOut, Menu, X
 } from 'lucide-react';
 import { loans as loansApi } from '@/lib/loans';
 import type { Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -35,10 +28,7 @@ function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return '—';
-  const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
 }
 
@@ -59,43 +49,13 @@ function statusLabel(status: string): string {
 
 function statusTone(status: string) {
   switch (status) {
-    case 'ACTIVE':
-      return {
-        bg: 'bg-emerald-50',
-        border: 'border-emerald-200',
-        text: 'text-emerald-800',
-        icon: <CheckCircle2 size={14} strokeWidth={2.4} />,
-      };
-    case 'OVERDUE':
-      return {
-        bg: 'bg-red-50',
-        border: 'border-red-200',
-        text: 'text-red-800',
-        icon: <AlertTriangle size={14} strokeWidth={2.4} />,
-      };
-    case 'PAID':
-      return {
-        bg: 'bg-blue-50',
-        border: 'border-blue-200',
-        text: 'text-blue-800',
-        icon: <CheckCircle2 size={14} strokeWidth={2.4} />,
-      };
+    case 'ACTIVE': return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', icon: <CheckCircle2 size={18} strokeWidth={2.4} /> };
+    case 'OVERDUE': return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', icon: <AlertTriangle size={18} strokeWidth={2.4} /> };
+    case 'PAID': return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', icon: <CheckCircle2 size={18} strokeWidth={2.4} /> };
     case 'PENDING':
     case 'APPROVED':
-    case 'DISBURSED':
-      return {
-        bg: 'bg-amber-50',
-        border: 'border-amber-200',
-        text: 'text-amber-800',
-        icon: <Clock3 size={14} strokeWidth={2.4} />,
-      };
-    default:
-      return {
-        bg: 'bg-ink-100/60',
-        border: 'border-ink-100',
-        text: 'text-ink-700',
-        icon: <Receipt size={14} strokeWidth={2.4} />,
-      };
+    case 'DISBURSED': return { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', icon: <Clock3 size={18} strokeWidth={2.4} /> };
+    default: return { bg: 'bg-slate-100', border: 'border-slate-200', text: 'text-slate-700', icon: <Receipt size={18} strokeWidth={2.4} /> };
   }
 }
 
@@ -112,28 +72,29 @@ function instalmentStatusLabel(status: string): string {
 
 function instalmentStatusTone(status: string): string {
   switch (status) {
-    case 'PAID':
-      return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-    case 'PARTIAL':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
-    case 'OVERDUE':
-      return 'bg-red-50 text-red-700 border-red-200';
-    case 'WAIVED':
-      return 'bg-ink-100/60 text-ink-600 border-ink-100';
-    case 'PENDING':
-    default:
-      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'PAID': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    case 'PARTIAL': return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'OVERDUE': return 'bg-red-50 text-red-700 border-red-200';
+    case 'WAIVED': return 'bg-slate-100 text-slate-600 border-slate-200';
+    default: return 'bg-blue-50 text-blue-700 border-blue-200';
   }
+}
+
+function BreakdownRow({ label, value, emphasize }: { label: string; value: string; emphasize?: 'bold' | 'red'; }) {
+  const labelClass = emphasize === 'bold' ? 'text-sm font-bold text-slate-900' : 'text-sm text-slate-500';
+  const valueClass = emphasize === 'bold' ? 'text-sm font-bold text-slate-900 tabular-nums' : emphasize === 'red' ? 'text-sm font-bold text-red-600 tabular-nums' : 'text-sm font-semibold text-slate-700 tabular-nums';
+  return (
+    <div className="flex items-center justify-between py-3">
+      <span className={labelClass}>{label}</span>
+      <span className={valueClass}>{value}</span>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
-export default function LoanDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
 
@@ -141,6 +102,7 @@ export default function LoanDetailPage({
   const [schedule, setSchedule] = useState<LoanScheduleEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -159,12 +121,9 @@ export default function LoanDetailPage({
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [id]);
 
-  /* ---------------------------- Derived --------------------------- */
   const derived = useMemo(() => {
     if (!loan) return null;
 
@@ -176,87 +135,40 @@ export default function LoanDetailPage({
 
     const principal = toNumber(loan.principal_amount);
     const repaid = Math.max(0, principal - outstandingPrincipal);
-    const progressPct =
-      principal > 0
-        ? Math.min(100, Math.max(0, Math.round((repaid / principal) * 100)))
-        : 0;
+    const progressPct = principal > 0 ? Math.min(100, Math.max(0, Math.round((repaid / principal) * 100))) : 0;
 
-    const nextInst =
-      schedule.find(
-        (s) =>
-          s.status !== 'PAID' &&
-          s.status !== 'WAIVED' &&
-          toNumber(s.total_paid) < toNumber(s.total_due)
-      ) || null;
-
-const nextInstOutstanding = nextInst
-  ? Math.max(0, toNumber(nextInst.total_due) - toNumber(nextInst.total_paid))
-  : 0;
-
-    const nextInstDue = nextInst
-      ? nextInstOutstanding + outstandingPenalty
-      : outstandingTotal;
+    const nextInst = schedule.find((s) => s.status !== 'PAID' && s.status !== 'WAIVED' && toNumber(s.total_paid) < toNumber(s.total_due)) || null;
+    const nextInstOutstanding = nextInst ? Math.max(0, toNumber(nextInst.total_due) - toNumber(nextInst.total_paid)) : 0;
+    const nextInstDue = nextInst ? nextInstOutstanding + outstandingPenalty : outstandingTotal;
 
     return {
-      outstandingPrincipal,
-      outstandingInterest,
-      outstandingFees,
-      outstandingPenalty,
-      outstandingTotal,
-      progressPct,
-      nextInst,
-      nextInstDue,
-      hasPenalty: outstandingPenalty > 0,
+      outstandingPrincipal, outstandingInterest, outstandingFees, outstandingPenalty, outstandingTotal,
+      progressPct, nextInst, nextInstDue, hasPenalty: outstandingPenalty > 0,
     };
   }, [loan, schedule]);
 
-  /* ---------------------------- Loading --------------------------- */
   if (loading) {
     return (
-      <div className="min-h-screen bg-page grid place-items-center">
-        <Loader2 className="animate-spin text-plum-800" size={28} />
+      <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F6F8]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading loan details...</p>
       </div>
     );
   }
 
-  /* ---------------------------- Error ----------------------------- */
   if (error || !loan || !derived) {
     return (
-      <div className="min-h-screen bg-page">
-        <div className="sticky top-0 z-20 bg-plum-800">
-          <div className="flex items-center gap-3 px-4 py-3">
-            <button
-              type="button"
-              onClick={() => router.back()}
-              aria-label="Back"
-              className="grid h-9 w-9 place-items-center rounded-full text-white transition active:scale-95"
-            >
-              <ArrowLeft size={18} strokeWidth={2.4} />
-            </button>
-            <h1 className="text-[16px] font-semibold tracking-tight text-white">
-              Loan details
-            </h1>
-          </div>
-          <div className="h-1 w-full bg-brand-500" />
-        </div>
-        <div className="p-6">
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-[13px] text-red-800">
-            <div className="flex items-start gap-2">
-              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold">Could not load this loan</p>
-                <p className="mt-1 text-red-700/90">
-                  {error || 'Loan not found.'}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => router.push('/home')}
-                  className="mt-3 rounded-lg bg-white px-3 py-1.5 text-[12px] font-semibold text-red-800 ring-1 ring-red-200"
-                >
-                  Back to home
-                </button>
-              </div>
+      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+        <div className="flex flex-1 flex-col items-center justify-center p-8">
+          <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/50">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
+              <AlertTriangle size={32} />
             </div>
+            <h2 className="text-xl font-bold text-slate-900">Could not load loan</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-500">{error || 'Loan not found.'}</p>
+            <button onClick={() => router.push('/dashboard')} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#0077C8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0060a3]">
+              Back to Dashboard
+            </button>
           </div>
         </div>
       </div>
@@ -267,355 +179,285 @@ const nextInstOutstanding = nextInst
   const canRepay = loan.status === 'ACTIVE' || loan.status === 'OVERDUE';
 
   return (
-    <div className={`min-h-screen bg-page ${canRepay ? 'pb-24' : 'pb-6'}`}>
-      {/* ============ NAV ============ */}
-      <div className="sticky top-0 z-20 bg-plum-800">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            aria-label="Back"
-            className="grid h-9 w-9 place-items-center rounded-full text-white transition active:scale-95"
-          >
-            <ArrowLeft size={18} strokeWidth={2.4} />
+    <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+      
+      {/* DESKTOP SIDEBAR */}
+      <aside className="hidden w-64 flex-col bg-[#0077C8] text-white md:flex shrink-0">
+        <div className="flex h-24 items-center px-8">
+          <button onClick={() => router.push('/dashboard')} className="leading-tight text-left">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Imara</h1>
+            <p className="text-[10px] font-medium text-white/80">With you every step of the way</p>
           </button>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/50">
-              Loan
-            </p>
-            <h1 className="mt-0.5 truncate text-[15px] font-semibold tracking-tight text-white font-mono">
-              {loan.loan_reference}
-            </h1>
-          </div>
         </div>
-        <div className="h-1 w-full bg-brand-500" />
-      </div>
-
-      {/* ============ STATUS BANNER ============ */}
-      <div className="px-3 pt-3">
-        <div
-          className={`flex items-center gap-2 rounded-2xl border ${tone.border} ${tone.bg} px-4 py-3`}
-        >
-          <div className={`shrink-0 ${tone.text}`}>{tone.icon}</div>
-          <div className="min-w-0 flex-1">
-            <p
-              className={`text-[10px] font-semibold uppercase tracking-[0.16em] ${tone.text}`}
-            >
-              {loan.status}
-            </p>
-            <p className={`mt-0.5 text-[13px] font-semibold ${tone.text}`}>
-              {statusLabel(loan.status)}
-            </p>
-          </div>
+        <nav className="flex-1 space-y-1 px-4">
+          <button onClick={() => router.push('/dashboard')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Home size={20} className="text-white/70" /> Dashboard
+          </button>
+          <button onClick={() => router.push('/products')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Shield size={20} className="text-white/70" /> Products
+          </button>
+          <button onClick={() => router.push('/discover')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <Compass size={20} className="text-white/70" /> Discover
+          </button>
+          <button onClick={() => router.push('/activity')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <FileText size={20} className="text-white/70" /> Activity
+          </button>
+          <button onClick={() => router.push('/help')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <HelpCircle size={20} className="text-white/70" /> Help
+          </button>
+        </nav>
+        <div className="p-6">
+          <button onClick={() => router.push('/login')} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-[#0077C8] shadow-sm transition hover:bg-slate-50">
+            <LogOut size={18} /> Logout
+          </button>
         </div>
-      </div>
+      </aside>
 
-      {/* ============ PENALTY ALERT ============ */}
-      {derived.hasPenalty && (
-        <div className="px-3 pt-3">
-          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3.5">
-            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-red-100 text-red-700">
-              <ShieldAlert size={16} strokeWidth={2.4} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-red-700/80">
-                Late payment fee
-              </p>
-              <p className="mt-0.5 text-[13.5px] font-bold tracking-tight text-red-900">
-                KES {formatKes(derived.outstandingPenalty)} penalty applied
-              </p>
-              <p className="mt-0.5 text-[11px] text-red-800/90">
-                This fee was added because an instalment was paid late. It has
-                been included in the outstanding balance below.
-              </p>
+      {/* MAIN CONTENT */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        
+        <header className="flex h-[72px] shrink-0 items-center justify-between bg-white px-4 sm:px-8 border-b border-slate-200">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden">
+              <Menu size={24} />
+            </button>
+            <div className="flex items-center gap-3">
+              <button onClick={() => router.back()} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+                <ArrowLeft size={18} />
+              </button>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Loan Details</p>
+                <h1 className="text-lg font-bold text-slate-900 leading-tight font-mono">{loan.loan_reference}</h1>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ============ HERO ============ */}
-      <div className="px-3 pt-3">
-        <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
-              Total outstanding
-            </p>
-            <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">
-              KES {formatKes(derived.outstandingTotal)}
-            </p>
-            <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">
-              {derived.progressPct}% repaid of KES{' '}
-              {formatKes(loan.principal_amount)} principal
-            </p>
+          <div className="flex items-center gap-4">
+            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF8A65] text-sm font-bold text-white ring-2 ring-white">
+              SC
+            </button>
           </div>
+        </header>
 
-          <div className="mt-4 h-1.5 w-full rounded-full bg-plum-800/10">
-            <div
-              className="h-full rounded-full bg-plum-800 transition-all"
-              style={{ width: `${derived.progressPct}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ============ NEXT PAYMENT ============ */}
-      {derived.nextInst && (
-        <section className="mt-3 bg-white">
-          <div className="border-b border-ink-100 px-5 py-3">
-            <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-              Next payment
-            </h2>
-          </div>
-          <div className="flex items-center justify-between px-5 py-4">
-            <div>
-              <p className="text-[13px] font-semibold text-ink-950">
-                Instalment {derived.nextInst.installment_no}
-              </p>
-              <p className="text-[11px] text-ink-400 mt-0.5">
-                Due {formatDate(derived.nextInst.due_date)}
-              </p>
+        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+          <div className="mx-auto max-w-[1200px] p-4 sm:p-8">
+            
+            {/* STATUS BANNER */}
+            <div className={`mb-6 flex items-center gap-3 rounded-xl border ${tone.border} ${tone.bg} px-5 py-4`}>
+              <div className={`shrink-0 ${tone.text}`}>{tone.icon}</div>
+              <div>
+                <p className={`text-xs font-bold uppercase tracking-wider ${tone.text}`}>{loan.status}</p>
+                <p className={`mt-0.5 text-base font-bold ${tone.text}`}>{statusLabel(loan.status)}</p>
+              </div>
             </div>
-            <p className="text-[18px] font-bold text-ink-950 tabular-nums">
-              KES {formatKes(derived.nextInstDue)}
-            </p>
-          </div>
-        </section>
-      )}
 
-      {/* ============ BREAKDOWN ============ */}
-      <section className="mt-3 bg-white">
-        <div className="border-b border-ink-100 px-5 py-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            Breakdown
-          </h2>
-        </div>
-        <div className="divide-y divide-ink-100">
-          <BreakdownRow
-            label="Principal outstanding"
-            value={`KES ${formatKes(derived.outstandingPrincipal)}`}
-          />
-          <BreakdownRow
-            label="Interest outstanding"
-            value={`KES ${formatKes(derived.outstandingInterest)}`}
-          />
-          {derived.outstandingFees > 0 && (
-            <BreakdownRow
-              label="Fees outstanding"
-              value={`KES ${formatKes(derived.outstandingFees)}`}
-            />
-          )}
-          {derived.hasPenalty && (
-            <BreakdownRow
-              label="Late payment fee"
-              value={`KES ${formatKes(derived.outstandingPenalty)}`}
-              emphasize="red"
-            />
-          )}
-          <BreakdownRow
-            label="Total due"
-            value={`KES ${formatKes(derived.outstandingTotal)}`}
-            emphasize="bold"
-          />
-        </div>
-      </section>
+            {/* PENALTY ALERT */}
+            {derived.hasPenalty && (
+              <div className="mb-6 flex items-start gap-4 rounded-xl border border-red-200 bg-red-50 p-5">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                  <ShieldAlert size={20} strokeWidth={2.4} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-red-700/80">Late payment fee</p>
+                  <p className="mt-1 text-base font-bold text-red-900">KES {formatKes(derived.outstandingPenalty)} penalty applied</p>
+                  <p className="mt-1 text-sm text-red-800/90">This fee was added because an instalment was paid late. It has been included in the outstanding balance below.</p>
+                </div>
+              </div>
+            )}
 
-      {/* ============ TERMS ============ */}
-      <section className="mt-3 bg-white">
-        <div className="border-b border-ink-100 px-5 py-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            Terms
-          </h2>
-        </div>
-        <div className="divide-y divide-ink-100">
-          <BreakdownRow
-            label="Principal"
-            value={`KES ${formatKes(loan.principal_amount)}`}
-          />
-          <BreakdownRow
-            label="Interest"
-            value={`KES ${formatKes(loan.interest_amount)}`}
-          />
-          <BreakdownRow
-            label="Total to repay"
-            value={`KES ${formatKes(loan.total_due)}`}
-          />
-          <BreakdownRow label="Term" value={`${loan.term_days} days`} />
-          <BreakdownRow
-            label="Frequency"
-            value={loan.repayment_frequency || '—'}
-          />
-          <BreakdownRow
-            label="Interest rate"
-            value={`${loan.interest_rate}% ${(loan.interest_period || '').toLowerCase()}`}
-          />
-        </div>
-      </section>
-
-      {/* ============ TIMELINE ============ */}
-      <section className="mt-3 bg-white">
-        <div className="border-b border-ink-100 px-5 py-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            Timeline
-          </h2>
-        </div>
-        <div className="divide-y divide-ink-100">
-          <BreakdownRow label="Requested" value={formatDate(loan.requested_at)} />
-          <BreakdownRow label="Approved"  value={formatDate(loan.approved_at)} />
-          <BreakdownRow label="Disbursed" value={formatDate(loan.disbursed_at)} />
-          <BreakdownRow
-            label="First due date"
-            value={formatDate(loan.first_due_date)}
-          />
-          <BreakdownRow
-            label="Maturity"
-            value={formatDate(loan.maturity_date)}
-          />
-          <BreakdownRow label="Closed" value={formatDate(loan.closed_at)} />
-        </div>
-      </section>
-
-      {/* ============ SCHEDULE ============ */}
-      <section className="mt-3 bg-white">
-        <div className="flex items-center justify-between border-b border-ink-100 px-5 py-3">
-          <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
-            Repayment schedule
-          </h2>
-          {schedule.length > 0 && (
-            <span className="text-[10px] text-ink-400">
-              {schedule.filter((s) => s.status === 'PAID').length}/
-              {schedule.length} paid
-            </span>
-          )}
-        </div>
-
-        {schedule.length === 0 ? (
-          <div className="px-5 py-8 text-center text-[12px] text-ink-400">
-            No repayment schedule yet.
-          </div>
-        ) : (
-          <div className="divide-y divide-ink-100">
-            {schedule.map((row) => {
-              const totalDue = toNumber(row.total_due);
-             const paid = toNumber(row.total_paid);
-              const penaltyDue = toNumber(row.penalty_due);
-              const outstandingOnRow = Math.max(0, totalDue - paid) + penaltyDue;
-              const isPaid = row.status === 'PAID';
-
-              return (
-                <div
-                  key={row.id || row.installment_no}
-                  className="px-5 py-3.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div
-                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-[11px] font-bold ${
-                          isPaid
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'bg-plum-50 text-plum-700'
-                        }`}
-                      >
-                        {isPaid ? (
-                          <CheckCircle2 size={14} />
-                        ) : (
-                          row.installment_no
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-semibold text-ink-950">
-                          Instalment {row.installment_no}
-                        </p>
-                        <p className="text-[11px] text-ink-400 mt-0.5">
-                          Due {formatDate(row.due_date)}
-                        </p>
-                        {penaltyDue > 0 && (
-                          <p className="text-[10px] text-red-700 mt-1 inline-flex items-center gap-1">
-                            <AlertTriangle size={10} strokeWidth={2.6} />
-                            Includes KES {formatKes(penaltyDue)} late fee
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="shrink-0 text-right">
-                      <p className="text-[13px] font-bold text-ink-950 tabular-nums">
-                        KES {formatKes(outstandingOnRow)}
-                      </p>
-                      <p
-                        className={`mt-0.5 text-[10px] tabular-nums ${
-                          isPaid ? 'text-emerald-700' : 'text-ink-400'
-                        }`}
-                      >
-                        Paid KES {formatKes(paid)}
-                      </p>
-                      <span
-                        className={`mt-1.5 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider border rounded-full ${instalmentStatusTone(
-                          row.status
-                        )}`}
-                      >
-                        {instalmentStatusLabel(row.status)}
-                      </span>
-                    </div>
+            {/* HERO CARD */}
+            <div className="mb-6 overflow-hidden rounded-2xl bg-[#0077C8] p-8 text-white shadow-lg">
+              <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-blue-200">Total Outstanding</p>
+                  <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">KES {formatKes(derived.outstandingTotal)}</p>
+                  <p className="mt-2 text-sm font-medium text-blue-100">{derived.progressPct}% repaid of KES {formatKes(loan.principal_amount)} principal</p>
+                </div>
+                <div className="w-full max-w-[200px] sm:w-1/3">
+                  <div className="h-2 w-full rounded-full bg-white/20">
+                    <div className="h-full rounded-full bg-[#E9B63F] transition-all" style={{ width: `${derived.progressPct}%` }} />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+              </div>
+            </div>
 
-      {/* ============ FOOTER ============ */}
-      <div className="px-8 pb-8 pt-6 text-center">
-        <p className="text-[10px] font-medium tracking-wide text-ink-400/80">
-          IMARA CREDIT · {loan.currency}
-        </p>
+            {/* DESKTOP GRID */}
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              
+              {/* LEFT COLUMN */}
+              <div className="space-y-6">
+                
+                {/* NEXT PAYMENT */}
+                {derived.nextInst && (
+                  <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+                    <h3 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-400">Next Payment</h3>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-base font-bold text-slate-900">Instalment {derived.nextInst.installment_no}</p>
+                        <p className="mt-1 text-sm text-slate-500">Due {formatDate(derived.nextInst.due_date)}</p>
+                      </div>
+                      <p className="text-2xl font-extrabold text-slate-900 tabular-nums">KES {formatKes(derived.nextInstDue)}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* BREAKDOWN */}
+                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Breakdown</h3>
+                  <div className="divide-y divide-slate-100">
+                    <BreakdownRow label="Principal outstanding" value={`KES ${formatKes(derived.outstandingPrincipal)}`} />
+                    <BreakdownRow label="Interest outstanding" value={`KES ${formatKes(derived.outstandingInterest)}`} />
+                    {derived.outstandingFees > 0 && <BreakdownRow label="Fees outstanding" value={`KES ${formatKes(derived.outstandingFees)}`} />}
+                    {derived.hasPenalty && <BreakdownRow label="Late payment fee" value={`KES ${formatKes(derived.outstandingPenalty)}`} emphasize="red" />}
+                    <BreakdownRow label="Total due" value={`KES ${formatKes(derived.outstandingTotal)}`} emphasize="bold" />
+                  </div>
+                </div>
+
+                {/* TERMS */}
+                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Terms</h3>
+                  <div className="divide-y divide-slate-100">
+                    <BreakdownRow label="Principal" value={`KES ${formatKes(loan.principal_amount)}`} />
+                    <BreakdownRow label="Interest" value={`KES ${formatKes(loan.interest_amount)}`} />
+                    <BreakdownRow label="Total to repay" value={`KES ${formatKes(loan.total_due)}`} />
+                    <BreakdownRow label="Term" value={`${loan.term_days} days`} />
+                    <BreakdownRow label="Frequency" value={loan.repayment_frequency || '—'} />
+                    <BreakdownRow label="Interest rate" value={`${loan.interest_rate}% ${(loan.interest_period || '').toLowerCase()}`} />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN */}
+              <div className="space-y-6">
+                
+                {/* TIMELINE */}
+                <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200/50">
+                  <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Timeline</h3>
+                  <div className="divide-y divide-slate-100">
+                    <BreakdownRow label="Requested" value={formatDate(loan.requested_at)} />
+                    <BreakdownRow label="Approved" value={formatDate(loan.approved_at)} />
+                    <BreakdownRow label="Disbursed" value={formatDate(loan.disbursed_at)} />
+                    <BreakdownRow label="First due date" value={formatDate(loan.first_due_date)} />
+                    <BreakdownRow label="Maturity" value={formatDate(loan.maturity_date)} />
+                    <BreakdownRow label="Closed" value={formatDate(loan.closed_at)} />
+                  </div>
+                </div>
+
+                {/* SCHEDULE */}
+                <div className="rounded-xl bg-white shadow-sm ring-1 ring-slate-200/50 overflow-hidden">
+                  <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-3">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">Repayment Schedule</h3>
+                    {schedule.length > 0 && (
+                      <span className="text-xs font-bold text-slate-500">
+                        {schedule.filter((s) => s.status === 'PAID').length}/{schedule.length} paid
+                      </span>
+                    )}
+                  </div>
+
+                  {schedule.length === 0 ? (
+                    <div className="px-6 py-10 text-center text-sm text-slate-500">No repayment schedule yet.</div>
+                  ) : (
+                    <div className="divide-y divide-slate-100 max-h-[400px] overflow-y-auto">
+                      {schedule.map((row) => {
+                        const totalDue = toNumber(row.total_due);
+                        const paid = toNumber(row.total_paid);
+                        const penaltyDue = toNumber(row.penalty_due);
+                        const outstandingOnRow = Math.max(0, totalDue - paid) + penaltyDue;
+                        const isPaid = row.status === 'PAID';
+
+                        return (
+                          <div key={row.id || row.installment_no} className="p-5 transition hover:bg-slate-50">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-3">
+                                <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-full text-sm font-bold ${isPaid ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-[#0077C8]'}`}>
+                                  {isPaid ? <CheckCircle2 size={18} /> : row.installment_no}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-bold text-slate-900">Instalment {row.installment_no}</p>
+                                  <p className="text-xs text-slate-500 mt-0.5">Due {formatDate(row.due_date)}</p>
+                                  {penaltyDue > 0 && (
+                                    <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-red-600">
+                                      <AlertTriangle size={12} /> Includes KES {formatKes(penaltyDue)} late fee
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-slate-900 tabular-nums">KES {formatKes(outstandingOnRow)}</p>
+                                <p className={`mt-1 text-xs tabular-nums ${isPaid ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                                  Paid KES {formatKes(paid)}
+                                </p>
+                                <span className={`mt-2 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${instalmentStatusTone(row.status)}`}>
+                                  {instalmentStatusLabel(row.status)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+            <div className="mt-12 text-center text-xs font-medium text-slate-400">
+              IMARA CREDIT · {loan.currency}
+            </div>
+
+          </div>
+        </main>
       </div>
 
-      {/* ============ REPAY CTA ============ */}
+      {/* MOBILE STICKY CTA */}
       {canRepay && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-ink-100 bg-white/95 backdrop-blur">
-          <div className="mx-auto max-w-md px-4 py-3">
-            <Link
-              href={`/repay/${loan.id}`}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-plum-800 px-5 py-3.5 text-[14px] font-bold tracking-tight text-white transition active:scale-[0.985]"
-            >
-              Repay now
-              <ArrowRight size={16} strokeWidth={2.6} />
-            </Link>
-          </div>
+        <div className="fixed bottom-[64px] left-0 z-40 w-full border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
+          <Link href={`/repay/${loan.id}`} className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0077C8] text-sm font-bold text-white shadow-sm transition hover:bg-[#0060a3]">
+            Repay Now <ArrowRight size={16} />
+          </Link>
         </div>
       )}
-    </div>
-  );
-}
 
-/* ------------------------------------------------------------------ */
-/*  Breakdown row helper                                               */
-/* ------------------------------------------------------------------ */
-function BreakdownRow({
-  label,
-  value,
-  emphasize,
-}: {
-  label: string;
-  value: string;
-  emphasize?: 'bold' | 'red';
-}) {
-  const labelClass =
-    emphasize === 'bold'
-      ? 'text-[13px] font-semibold text-ink-950'
-      : 'text-[12.5px] text-ink-500';
-  const valueClass =
-    emphasize === 'bold'
-      ? 'text-[13px] font-bold text-ink-950 tabular-nums'
-      : emphasize === 'red'
-      ? 'text-[13px] font-bold text-red-700 tabular-nums'
-      : 'text-[13px] font-semibold text-ink-900 tabular-nums';
+      {/* MOBILE BOTTOM NAVIGATION */}
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-slate-200 bg-white px-2 py-3 md:hidden">
+        <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <Home size={22} /><span className="text-[10px] font-medium">Home</span>
+        </button>
+        <button onClick={() => router.push('/apply')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <Compass size={22} /><span className="text-[10px] font-medium">Apply</span>
+        </button>
+        <button onClick={() => router.push('/loans')} className="flex flex-col items-center gap-1 text-[#0077C8]">
+          <FileText size={22} /><span className="text-[10px] font-bold">Loans</span>
+        </button>
+        <button onClick={() => router.push('/profile')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
+          <HelpCircle size={22} /><span className="text-[10px] font-medium">Profile</span>
+        </button>
+      </nav>
 
-  return (
-    <div className="flex items-center justify-between px-5 py-3">
-      <span className={labelClass}>{label}</span>
-      <span className={valueClass}>{value}</span>
+      {/* MOBILE SIDEBAR OVERLAY */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-[10000] md:hidden">
+          <button className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col bg-[#0077C8] text-white shadow-2xl transition-transform">
+            <div className="flex h-20 items-center justify-between px-6">
+              <button onClick={() => router.push('/dashboard')} className="leading-tight text-left">
+                <h1 className="text-2xl font-bold tracking-tight text-white">Imara</h1>
+              </button>
+              <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+            <nav className="flex-1 space-y-1 px-4 mt-4">
+              <button onClick={() => router.push('/dashboard')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80">
+                <Home size={20} /> Dashboard
+              </button>
+            </nav>
+          </aside>
+        </div>
+      )}
+
     </div>
   );
 }
