@@ -85,7 +85,10 @@ function LandingContent() {
   
   const [year, setYear] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  
+  // Dropdown States
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null); // Desktop
+  const [activeMobileDropdown, setActiveMobileDropdown] = useState<string | null>(null); // Mobile
 
   useEffect(() => {
     setYear(new Date().getFullYear());
@@ -169,7 +172,7 @@ function LandingContent() {
                   )}
                 </a>
 
-                {/* DROPDOWN MENU (Sibling to the <a>) */}
+                {/* DROPDOWN MENU */}
                 {item.dropdown && (
                   <div
                     className={`absolute left-0 top-full w-56 pt-2 transition-all duration-200 ${
@@ -217,33 +220,79 @@ function LandingContent() {
 
         {/* MOBILE NAV */}
         {mobileMenuOpen && (
-          <nav className="flex flex-col border-t border-slate-100 bg-white px-6 py-4 lg:hidden">
+          <nav className="flex flex-col border-t border-slate-100 bg-white px-6 py-4 lg:hidden h-[calc(100vh-80px)] overflow-y-auto">
             {NAV_ITEMS.map((item) => (
-              <div key={item.label} className="flex flex-col">
-                <a
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold hover:bg-slate-50"
-                >
-                  {item.label}
-                </a>
-                {item.dropdown && (
-                  <div className="mb-2 ml-4 flex flex-col gap-1 border-l-2 border-slate-100 pl-3">
-                    {item.dropdown.map((subItem) => (
-                      <a
-                        key={subItem.label}
-                        href={subItem.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className="rounded-lg px-3 py-2 text-sm text-slate-500 hover:text-[#102F5E]"
+              <div key={item.label} className="flex flex-col border-b border-slate-50 last:border-0 pb-1 mb-1">
+                {item.dropdown ? (
+                  <>
+                    {/* Mobile Parent with Dropdown */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setActiveMobileDropdown(
+                          activeMobileDropdown === item.label ? null : item.label
+                        )
+                      }
+                      className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold hover:bg-slate-50"
+                    >
+                      {item.label}
+                      <svg
+                        className={`h-4 w-4 transition-transform duration-200 ${
+                          activeMobileDropdown === item.label ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        {subItem.label}
-                      </a>
-                    ))}
-                  </div>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    
+                    {/* Mobile Dropdown Items */}
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        activeMobileDropdown === item.label
+                          ? 'max-h-[400px] opacity-100 mb-2'
+                          : 'max-h-0 opacity-0'
+                      }`}
+                    >
+                      <div className="ml-4 flex flex-col gap-1 border-l-2 border-slate-100 pl-3 pt-1">
+                        {item.dropdown.map((subItem) => (
+                          <a
+                            key={subItem.label}
+                            href={subItem.href}
+                            onClick={() => {
+                              setMobileMenuOpen(false);
+                              setActiveMobileDropdown(null);
+                            }}
+                            className="rounded-lg px-3 py-2 text-sm text-slate-500 hover:text-[#102F5E]"
+                          >
+                            {subItem.label}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  /* Mobile Parent without Dropdown */
+                  <a
+                    href={item.href}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setActiveMobileDropdown(null);
+                    }}
+                    className="flex items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold hover:bg-slate-50"
+                  >
+                    {item.label}
+                  </a>
                 )}
               </div>
             ))}
-            <Link href={loginUrl} className="mt-2 rounded-xl bg-[#E9B63F] px-4 py-3 text-center font-bold">
+            <Link 
+              href={loginUrl} 
+              onClick={() => setMobileMenuOpen(false)}
+              className="mt-4 rounded-xl bg-[#E9B63F] px-4 py-3 text-center font-bold"
+            >
               Apply for a Loan
             </Link>
           </nav>
@@ -522,7 +571,6 @@ function LandingContent() {
 export default function LandingPage() {
   return (
     <>
-      {/* FIX: Use dangerouslySetInnerHTML to prevent the CSS string hydration mismatch */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
