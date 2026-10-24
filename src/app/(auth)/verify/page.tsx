@@ -185,7 +185,8 @@ function VerifyForm() {
         return;
       }
 
-      router.push('/home');
+      // UPDATED: Redirect to /dashboard instead of /home
+      router.push('/dashboard');
     } catch (err) {
       if (err instanceof ImaraApiError) {
         switch (err.code) {
