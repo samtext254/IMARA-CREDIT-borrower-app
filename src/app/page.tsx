@@ -197,11 +197,17 @@ function LandingContent() {
             ))}
           </nav>
 
+          {/* UPDATED DESKTOP LOGIN BUTTON (YELLOW) */}
           <Link
             href={loginUrl}
-            className="hidden rounded-xl bg-[#E9B63F] px-5 py-3 text-sm font-extrabold text-[#102F5E] shadow-sm transition hover:bg-[#F3CB68] sm:inline-flex"
+            className="hidden items-center gap-2 rounded-xl bg-[#E9B63F] px-5 py-3 text-sm font-extrabold text-[#102F5E] shadow-sm transition hover:bg-[#F3CB68] sm:inline-flex"
           >
-            Apply for a Loan
+            Login
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
+            </svg>
           </Link>
 
           <button
@@ -287,12 +293,19 @@ function LandingContent() {
                 )}
               </div>
             ))}
+            
+            {/* UPDATED MOBILE LOGIN BUTTON (YELLOW) */}
             <Link 
               href={loginUrl} 
               onClick={() => setMobileMenuOpen(false)}
-              className="mt-4 rounded-xl bg-[#E9B63F] px-4 py-3 text-center font-bold"
+              className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-[#E9B63F] px-4 py-3 text-center font-bold text-[#102F5E] shadow-sm transition hover:bg-[#F3CB68]"
             >
-              Apply for a Loan
+              Login
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
             </Link>
           </nav>
         )}
@@ -325,9 +338,20 @@ function LandingContent() {
               Explore financial solutions designed around your goals. Whether you need support for personal plans or your business, take the first step with Imara Capital Kenya.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href={loginUrl} className="inline-flex min-h-14 items-center justify-center gap-3 rounded-xl bg-[#E9B63F] px-7 py-4 font-extrabold text-[#102F5E] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#F4CD71]">
-                Apply for a Loan <span aria-hidden="true">→</span>
+              
+              {/* UPDATED HERO LOGIN BUTTON (YELLOW) */}
+              <Link 
+                href={loginUrl} 
+                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#E9B63F] px-7 py-4 font-extrabold text-[#102F5E] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#F4CD71]"
+              >
+                Login
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
               </Link>
+
               <a href="#services" className="inline-flex min-h-14 items-center justify-center rounded-xl border border-white/60 px-7 py-4 font-bold text-white transition hover:bg-white/10">
                 How It Works
               </a>
@@ -359,8 +383,15 @@ function LandingContent() {
               <p className="text-sm font-bold uppercase tracking-[0.15em] text-[#F3C34F]">Your goals. Our support.</p>
               <h2 className="mt-3 text-3xl font-extrabold leading-tight">Take a confident step towards your plans.</h2>
               <p className="mt-4 leading-7 text-white/80">Start your application online and follow the steps to submit your request for review.</p>
-              <Link href={loginUrl} className="mt-7 inline-flex font-bold text-[#F3C34F] hover:text-white">
-                Get started <span className="ml-2">→</span>
+              
+              {/* UPDATED HERO CARD LINK */}
+              <Link href={loginUrl} className="mt-7 inline-flex items-center gap-1 font-bold text-[#F3C34F] hover:text-white">
+                Login 
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
               </Link>
             </div>
           </div>
@@ -534,7 +565,20 @@ function LandingContent() {
             <p className="mt-3 leading-7 text-white/80">Start your application online or contact us for assistance.</p>
           </div>
           <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-            <Link href={loginUrl} className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#E9B63F] px-6 py-4 font-extrabold text-[#102F5E] hover:bg-[#F3CB68]">Apply for a Loan <span>→</span></Link>
+            
+            {/* UPDATED CONTACT LOGIN BUTTON (YELLOW) */}
+            <Link 
+              href={loginUrl} 
+              className="inline-flex min-h-14 items-center justify-center gap-2 rounded-xl bg-[#E9B63F] px-6 py-4 font-extrabold text-[#102F5E] shadow-sm transition hover:bg-[#F3CB68]"
+            >
+              Login
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+            </Link>
+
             <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-14 items-center justify-center gap-3 rounded-xl border border-white/40 px-6 py-4 font-bold text-white transition hover:bg-white/10">
               <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.8 9.8 0 0 0-8.39 14.86L2.3 22l5.27-1.38A9.93 9.93 0 0 0 12.04 22h.01A10 10 0 0 0 12.04 2Zm0 18.18a8.2 8.2 0 0 1-4.18-1.14l-.3-.18-3.13.82.84-3.05-.2-.31a8.16 8.16 0 1 1 6.97 3.86Zm4.48-6.12c-.25-.12-1.47-.72-1.7-.8-.23-.09-.39-.12-.56.12-.16.25-.64.8-.78.96-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-.1-.74-.67-1.24-1.5-1.39-1.75-.15-.25-.02-.38.11-.5.11-.11.25-.29.37-.43.12-.15.16-.25.25-.42.08-.16.04-.31-.02-.43-.06-.12-.56-1.35-.77-1.85-.2-.48-.41-.41-.56-.42h-.48c-.16 0-.43.06-.66.31-.23.25-.87.85-.87 2.08 0 1.22.89 2.4 1.02 2.57.12.16 1.75 2.67 4.25 3.74.59.25 1.06.4 1.42.51.6.19 1.15.16 1.58.1.48-.07 1.47-.6 1.68-1.19.21-.59.21-1.1.15-1.2-.06-.1-.23-.16-.48-.28Z" /></svg>
               Chat on WhatsApp
