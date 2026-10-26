@@ -2,41 +2,44 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  Loader2, 
-  Banknote, 
-  Home as HomeIcon, 
-  Car, 
-  Briefcase, 
-  Coins, 
-  GraduationCap,
-  ArrowRight
-} from 'lucide-react';
+import { ArrowLeft, Loader2, ArrowRight } from 'lucide-react';
 import { loans as loansApi } from '@/lib/loans';
 import type { LoanProduct, Loan, Eligibility } from '@/lib/loans';
 import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 
-// Helper to pick icons and colors based on product name
-function getProductStyle(name: string) {
+// Helper to get the right image and CTA text based on product name
+function getProductVisuals(name: string) {
   const upper = name.toUpperCase();
+  
   if (upper.includes('HOME')) {
-    return { icon: HomeIcon, bg: 'bg-[#FFF7E6]', text: 'text-[#D97706]' }; // Amber
+    return {
+      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600',
+      ctaText: 'Build Now'
+    };
   }
   if (upper.includes('CAR')) {
-    return { icon: Car, bg: 'bg-[#E8F4FF]', text: 'text-[#3B82F6]' }; // Blue
+    return {
+      image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=600',
+      ctaText: 'Drive Now'
+    };
   }
   if (upper.includes('BUSINESS')) {
-    return { icon: Briefcase, bg: 'bg-[#ECFDF3]', text: 'text-[#10B981]' }; // Green
-  }
-  if (upper.includes('MICRO')) {
-    return { icon: Coins, bg: 'bg-[#F4EFFF]', text: 'text-[#8B5CF6]' }; // Purple
+    return {
+      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=600',
+      ctaText: 'Grow Now'
+    };
   }
   if (upper.includes('EDUCATION')) {
-    return { icon: GraduationCap, bg: 'bg-[#FFEDED]', text: 'text-[#EF4444]' }; // Red
+    return {
+      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=600',
+      ctaText: 'Learn Now'
+    };
   }
-  // Default: Personal Loan
-  return { icon: Banknote, bg: 'bg-[#F4EFFF]', text: 'text-[#8B5CF6]' }; // Purple
+  // Default / Personal
+  return {
+    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
+    ctaText: 'Apply Now'
+  };
 }
 
 export default function LoanProductsPage() {
@@ -105,10 +108,6 @@ export default function LoanProductsPage() {
     return <div className="min-h-screen bg-[#F8F9FA] grid place-items-center"><Loader2 className="animate-spin text-plum-800" size={28} /></div>;
   }
 
-  // Separate the main product (Personal Loan) from the rest
-  const mainProduct = products.find(p => p.name.toUpperCase().includes('PERSONAL')) || products[0];
-  const otherProducts = products.filter(p => p.id !== mainProduct?.id);
-
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
       {/* NAV */}
@@ -117,7 +116,7 @@ export default function LoanProductsPage() {
           <button onClick={() => router.back()} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition active:scale-95">
             <ArrowLeft size={18} strokeWidth={2.2} />
           </button>
-          <h1 className="text-[16px] font-semibold tracking-tight text-white">Explore Loans</h1>
+          <h1 className="text-[16px] font-semibold tracking-tight text-white">Loan Products</h1>
         </div>
         <div className="h-1 w-full bg-brand-500" />
       </div>
@@ -127,75 +126,71 @@ export default function LoanProductsPage() {
       ) : products.length === 0 ? (
         <div className="p-6 text-center text-ink-500">No products available at the moment.</div>
       ) : (
-        <div className="px-4 pt-4 space-y-6">
-          
-          {/* FEATURED PRODUCT (Yellow Hero Card) */}
-          {mainProduct && (
-            <section>
-              <h2 className="text-[13px] font-bold text-ink-950 mb-3 uppercase tracking-wider">Featured Loan</h2>
-              <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 pt-5 pb-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
-                      {mainProduct.name}
-                    </p>
-                    <p className="mt-2 text-[28px] font-bold leading-none tracking-[-0.02em] text-plum-800 tabular-nums">
-                      KES {Number(mainProduct.max_amount).toLocaleString()}
-                    </p>
-                    <p className="mt-1.5 text-[11px] font-medium text-plum-800/60">
-                      Up to {mainProduct.max_term_days} days · {mainProduct.interest_rate}% interest
-                    </p>
-                  </div>
-                  <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/30 text-plum-800">
-                    <Banknote size={24} strokeWidth={2} />
-                  </div>
-                </div>
-                
-                <div className="my-4 h-px bg-plum-800/10" />
-                
-                <div className="flex justify-between text-[11px] text-plum-800/70 mb-4">
-                  <span>Available limit: <strong className="font-bold text-plum-800">KES {eligibility?.credit_limit?.available_limit || '0'}</strong></span>
-                  <span>Term: <strong className="font-bold text-plum-800">{mainProduct.min_term_days}-{mainProduct.max_term_days} days</strong></span>
-                </div>
+        
+        /* HORIZONTAL SCROLLING CAROUSEL */
+        <div className="mt-4">
+          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scroll-bar gap-4 px-5 pb-8 pt-2">
+            {products.map((p) => {
+              const visuals = getProductVisuals(p.name);
 
-                <button onClick={() => handleApplyClick(mainProduct)} className="flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13.5px] font-bold tracking-tight text-white transition active:scale-[0.985]">
-                  Apply Now <ArrowRight size={15} strokeWidth={2.5} />
-                </button>
-              </div>
-            </section>
-          )}
-
-          {/* OTHER PRODUCTS */}
-          {otherProducts.length > 0 && (
-            <section>
-              <h2 className="text-[13px] font-bold text-ink-950 mb-3 uppercase tracking-wider">More Options</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {otherProducts.map((p) => {
-                  const style = getProductStyle(p.name);
-                  const Icon = style.icon;
-
-                  return (
-                    <div key={p.id} className="flex flex-col justify-between rounded-3xl border border-ink-100 bg-white p-4 shadow-sm">
-                      <div className="flex flex-col items-start text-left">
-                        <div className={`mb-3 grid h-10 w-10 place-items-center rounded-xl ${style.bg} ${style.text}`}>
-                          <Icon size={20} strokeWidth={2} />
-                        </div>
-                        <h3 className="text-[12px] font-bold text-ink-950 leading-tight">{p.name}</h3>
-                        <p className="text-[10px] text-ink-500 mt-1">Up to KES {Number(p.max_amount).toLocaleString()}</p>
-                      </div>
-
-                      <button onClick={() => handleApplyClick(p)} className="mt-4 w-full rounded-lg border border-plum-200 bg-plum-50 py-2 text-[11px] font-bold text-plum-800 transition active:scale-[0.98]">
-                        View Details
-                      </button>
+              return (
+                <div 
+                  key={p.id} 
+                  className="snap-center shrink-0 w-[280px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
+                >
+                  {/* Image Header */}
+                  <div className="h-[140px] w-full relative">
+                    <img 
+                      src={visuals.image} 
+                      alt={p.name} 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-plum-800">
+                      Up to KES {Number(p.max_amount).toLocaleString()}
                     </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
+                  </div>
 
+                  {/* Content */}
+                  <div className="p-4 flex flex-col flex-1">
+                    <h3 className="text-[15px] font-bold text-[#0a2540]">
+                      {p.name}
+                    </h3>
+                    <p className="mt-1 text-[12px] text-ink-500 leading-relaxed flex-1">
+                      Flexible terms from {p.min_term_days} to {p.max_term_days} days. 
+                      Get funded instantly to your M-Pesa.
+                    </p>
+                    
+                    {/* CTA */}
+                    <button 
+                      onClick={() => handleApplyClick(p)}
+                      className="mt-4 flex items-center gap-1 text-[12px] font-bold text-[#D32F2F] transition active:opacity-60"
+                    >
+                      {visuals.ctaText}
+                      <ArrowRight size={14} strokeWidth={2.5} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="px-5 text-center mt-2">
+            <p className="text-[11px] text-ink-400 font-medium">Swipe left to see more options</p>
+          </div>
         </div>
       )}
+      
+      {/* Hide scrollbar utility style */}
+      <style jsx global>{`
+        .hide-scroll-bar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scroll-bar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
