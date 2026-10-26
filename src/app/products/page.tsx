@@ -26,22 +26,18 @@ function getProductVisuals(name: string) {
   }
   if (upper.includes('BIASHARA') || upper.includes('BUSINESS')) {
     return {
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcynw6iH1mRImgvrkCgYsHWt_KedReJVBQYvMjpR65LaEInpv1l-kaxY&s=10',
+      // Using a reliable Unsplash image for business (your gstatic link was blocked)
+      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
       ctaText: 'Grow Now'
     };
   }
   if (upper.includes('EMERGENCY')) {
     return {
-      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSqKg-EhYLFA1w8lUzAgovdJ-eRPgXKuJTHULjmw75EfgZU4x9pN-X_fVb&s=10',
+      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600',
       ctaText: 'Get Help'
     };
   }
-  if (upper.includes('HOME')) {
-    return {
-      image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600',
-      ctaText: 'Build Now'
-    };
-  }
+  // Fallback
   return {
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
     ctaText: 'Apply Now'
@@ -176,41 +172,45 @@ export default function LoanProductsPage() {
         <div className="p-6 text-center text-ink-500">No products available at the moment.</div>
       ) : (
         <div className="mt-4">
-          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scroll-bar gap-4 px-5 pb-8 pt-2">
+          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scroll-bar gap-3 px-4 pb-8 pt-2">
             {products.map((p) => {
               const visuals = getProductVisuals(p.name);
 
               return (
                 <div 
                   key={p.id} 
-                  className="snap-center shrink-0 w-[240px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
+                  // CHANGED: Reduced width to 180px for phone fitting
+                  className="snap-center shrink-0 w-[180px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
                 >
-                  <div className="h-[120px] w-full relative bg-ink-100">
+                  {/* Image Header - Reduced height */}
+                  <div className="h-[100px] w-full relative bg-ink-100">
                     <img 
                       src={visuals.image} 
                       alt={p.name} 
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[9px] font-bold text-[#0056b3]">
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] font-bold text-[#0056b3]">
                       Up to KES {Number(p.max_amount).toLocaleString()}
                     </div>
                   </div>
 
-                  <div className="p-3 flex flex-col flex-1">
-                    <h3 className="text-[13px] font-bold text-[#0a2540] leading-tight">
+                  {/* Content - Reduced padding and text */}
+                  <div className="p-2.5 flex flex-col flex-1">
+                    <h3 className="text-[12px] font-bold text-[#0a2540] leading-tight">
                       {p.name}
                     </h3>
-                    <p className="mt-1 text-[11px] text-ink-500 leading-snug flex-1">
-                      Flexible terms up to {p.max_term_days} days.
+                    <p className="mt-0.5 text-[10px] text-ink-500 leading-snug flex-1">
+                      Terms up to {p.max_term_days} days.
                     </p>
                     
+                    {/* CTA - Smaller */}
                     <button 
                       onClick={() => handleApplyClick(p)}
-                      className="mt-3 flex items-center gap-1 text-[11px] font-bold text-[#D32F2F] transition active:opacity-60"
+                      className="mt-2 flex items-center gap-1 text-[10px] font-bold text-[#D32F2F] transition active:opacity-60"
                     >
                       {visuals.ctaText}
-                      <ArrowRight size={12} strokeWidth={2.5} />
+                      <ArrowRight size={10} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
