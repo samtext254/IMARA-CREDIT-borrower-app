@@ -318,7 +318,7 @@ export default function HomePage() {
       <aside className="hidden w-64 flex-col bg-[#0077C8] text-white md:flex shrink-0">
         <div className="flex h-24 items-center px-8">
           <Link href="/dashboard" className="leading-tight">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Imara</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white">Imara Credit</h1>
             <p className="text-[10px] font-medium text-white/80">With you every step of the way</p>
           </Link>
         </div>
