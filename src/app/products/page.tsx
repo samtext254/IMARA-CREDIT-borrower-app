@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, ArrowRight, Menu, X, Home, Wallet, FileText, Settings, LogOut } from 'lucide-react';
+import { ArrowRight, Loader2, Menu, X, Home, Wallet, FileText, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { loans as loansApi } from '@/lib/loans';
 import type { LoanProduct, Loan, Eligibility } from '@/lib/loans';
@@ -12,6 +12,18 @@ import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 function getProductVisuals(name: string) {
   const upper = name.toUpperCase();
   
+  if (upper.includes('SALARY')) {
+    return {
+      image: 'https://mintcredit.co.ke/wp-content/uploads/2024/11/Understanding-Salary-Advance-e1730705618168.jpg',
+      ctaText: 'Get Advance'
+    };
+  }
+  if (upper.includes('PERSONAL')) {
+    return {
+      image: 'https://rafikibank.co.ke/wp-content/uploads/2026/01/Family-with-tablet.jpg',
+      ctaText: 'Apply Now'
+    };
+  }
   if (upper.includes('HOME')) {
     return {
       image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600',
@@ -36,7 +48,7 @@ function getProductVisuals(name: string) {
       ctaText: 'Learn Now'
     };
   }
-  // Default / Personal
+  // Default / Fallback
   return {
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
     ctaText: 'Apply Now'
@@ -163,7 +175,6 @@ export default function LoanProductsPage() {
       {/* NAV */}
       <div className="sticky top-0 z-30 bg-[#0056b3]">
         <div className="flex items-center gap-3 px-5 py-4">
-          {/* Changed ArrowLeft to Menu Hamburger */}
           <button onClick={() => setIsMenuOpen(true)} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition active:scale-95">
             <Menu size={20} strokeWidth={2.2} />
           </button>
@@ -190,7 +201,7 @@ export default function LoanProductsPage() {
                   className="snap-center shrink-0 w-[280px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
                 >
                   {/* Image Header */}
-                  <div className="h-[140px] w-full relative">
+                  <div className="h-[140px] w-full relative bg-ink-100">
                     <img 
                       src={visuals.image} 
                       alt={p.name} 
@@ -225,8 +236,6 @@ export default function LoanProductsPage() {
               );
             })}
           </div>
-          
-          {/* REMOVED: Swipe left text */}
         </div>
       )}
       
