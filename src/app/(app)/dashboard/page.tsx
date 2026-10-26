@@ -319,7 +319,7 @@ export default function HomePage() {
         <div className="flex h-24 items-center px-8">
           <Link href="/dashboard" className="leading-tight">
             <h1 className="text-3xl font-bold tracking-tight text-white">Imara Credit</h1>
-            <p className="text-[10px] font-medium text-white/80">With you every step of the way</p>
+            <p className="text-[10px] font-medium text-white/80">Your goals. Our support</p>
           </Link>
         </div>
 
