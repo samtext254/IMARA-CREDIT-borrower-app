@@ -24,31 +24,24 @@ function getProductVisuals(name: string) {
       ctaText: 'Apply Now'
     };
   }
+  if (upper.includes('BIASHARA') || upper.includes('BUSINESS')) {
+    return {
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRcynw6iH1mRImgvrkCgYsHWt_KedReJVBQYvMjpR65LaEInpv1l-kaxY&s=10',
+      ctaText: 'Grow Now'
+    };
+  }
+  if (upper.includes('EMERGENCY')) {
+    return {
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSqKg-EhYLFA1w8lUzAgovdJ-eRPgXKuJTHULjmw75EfgZU4x9pN-X_fVb&s=10',
+      ctaText: 'Get Help'
+    };
+  }
   if (upper.includes('HOME')) {
     return {
       image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=600',
       ctaText: 'Build Now'
     };
   }
-  if (upper.includes('CAR')) {
-    return {
-      image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?auto=format&fit=crop&q=80&w=600',
-      ctaText: 'Drive Now'
-    };
-  }
-  if (upper.includes('BUSINESS')) {
-    return {
-      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=600',
-      ctaText: 'Grow Now'
-    };
-  }
-  if (upper.includes('EDUCATION')) {
-    return {
-      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=600',
-      ctaText: 'Learn Now'
-    };
-  }
-  // Default / Fallback
   return {
     image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
     ctaText: 'Apply Now'
@@ -64,7 +57,6 @@ export default function LoanProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Side Drawer State
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -127,13 +119,10 @@ export default function LoanProductsPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24 relative overflow-hidden">
       
-      {/* ============ SIDE DRAWER (MENU) ============ */}
+      {/* SIDE DRAWER */}
       {isMenuOpen && (
         <div className="fixed inset-0 z-50 flex">
-          {/* Backdrop */}
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-          
-          {/* Drawer Panel */}
           <div className="relative w-72 bg-[#0056b3] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
             <div className="flex items-center justify-between p-5 border-b border-white/10">
               <div>
@@ -144,7 +133,6 @@ export default function LoanProductsPage() {
                 <X size={24} />
               </button>
             </div>
-
             <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
               <Link href="/home" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
                 <Home size={18} /> Dashboard
@@ -162,7 +150,6 @@ export default function LoanProductsPage() {
                 <Settings size={18} /> Settings
               </Link>
             </div>
-
             <div className="p-4 border-t border-white/10">
               <button onClick={() => router.push('/login')} className="flex w-full items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-red-500/20 hover:text-red-300 transition">
                 <LogOut size={18} /> Logout
@@ -188,8 +175,6 @@ export default function LoanProductsPage() {
       ) : products.length === 0 ? (
         <div className="p-6 text-center text-ink-500">No products available at the moment.</div>
       ) : (
-        
-        /* HORIZONTAL SCROLLING CAROUSEL */
         <div className="mt-4">
           <div className="flex overflow-x-auto snap-x snap-mandatory hide-scroll-bar gap-4 px-5 pb-8 pt-2">
             {products.map((p) => {
@@ -198,38 +183,34 @@ export default function LoanProductsPage() {
               return (
                 <div 
                   key={p.id} 
-                  className="snap-center shrink-0 w-[280px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
+                  className="snap-center shrink-0 w-[240px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
                 >
-                  {/* Image Header */}
-                  <div className="h-[140px] w-full relative bg-ink-100">
+                  <div className="h-[120px] w-full relative bg-ink-100">
                     <img 
                       src={visuals.image} 
                       alt={p.name} 
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#0056b3]">
+                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[9px] font-bold text-[#0056b3]">
                       Up to KES {Number(p.max_amount).toLocaleString()}
                     </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="p-4 flex flex-col flex-1">
-                    <h3 className="text-[15px] font-bold text-[#0a2540]">
+                  <div className="p-3 flex flex-col flex-1">
+                    <h3 className="text-[13px] font-bold text-[#0a2540] leading-tight">
                       {p.name}
                     </h3>
-                    <p className="mt-1 text-[12px] text-ink-500 leading-relaxed flex-1">
-                      Flexible terms from {p.min_term_days} to {p.max_term_days} days. 
-                      Get funded instantly to your M-Pesa.
+                    <p className="mt-1 text-[11px] text-ink-500 leading-snug flex-1">
+                      Flexible terms up to {p.max_term_days} days.
                     </p>
                     
-                    {/* CTA */}
                     <button 
                       onClick={() => handleApplyClick(p)}
-                      className="mt-4 flex items-center gap-1 text-[12px] font-bold text-[#D32F2F] transition active:opacity-60"
+                      className="mt-3 flex items-center gap-1 text-[11px] font-bold text-[#D32F2F] transition active:opacity-60"
                     >
                       {visuals.ctaText}
-                      <ArrowRight size={14} strokeWidth={2.5} />
+                      <ArrowRight size={12} strokeWidth={2.5} />
                     </button>
                   </div>
                 </div>
@@ -239,21 +220,14 @@ export default function LoanProductsPage() {
         </div>
       )}
       
-      {/* Hide scrollbar utility style */}
       <style jsx global>{`
-        .hide-scroll-bar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scroll-bar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .hide-scroll-bar::-webkit-scrollbar { display: none; }
+        .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
 }
 
-// Extra icon used in the drawer
 function ClockIcon({ size, ...props }: any) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
