@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Loader2, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Loader2, ArrowRight, Menu, X, Home, Wallet, FileText, Settings, LogOut } from 'lucide-react';
+import Link from 'next/link';
 import { loans as loansApi } from '@/lib/loans';
 import type { LoanProduct, Loan, Eligibility } from '@/lib/loans';
 import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
@@ -50,6 +51,9 @@ export default function LoanProductsPage() {
   const [kycData, setKycData] = useState<KycStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Side Drawer State
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,16 +109,63 @@ export default function LoanProductsPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-[#F8F9FA] grid place-items-center"><Loader2 className="animate-spin text-plum-800" size={28} /></div>;
+    return <div className="min-h-screen bg-[#F8F9FA] grid place-items-center"><Loader2 className="animate-spin text-[#0056b3]" size={28} /></div>;
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24">
+    <div className="min-h-screen bg-[#F8F9FA] pb-24 relative overflow-hidden">
+      
+      {/* ============ SIDE DRAWER (MENU) ============ */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
+          
+          {/* Drawer Panel */}
+          <div className="relative w-72 bg-[#0056b3] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
+            <div className="flex items-center justify-between p-5 border-b border-white/10">
+              <div>
+                <h2 className="text-[18px] font-bold text-white tracking-tight">Imara Credit</h2>
+                <p className="text-[11px] text-white/70">Your goals. Our support.</p>
+              </div>
+              <button onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-white">
+                <X size={24} />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+              <Link href="/home" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
+                <Home size={18} /> Dashboard
+              </Link>
+              <Link href="/products" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg bg-white/20 text-white font-bold transition">
+                <Wallet size={18} /> Products
+              </Link>
+              <Link href="/loans" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
+                <FileText size={18} /> My Loans
+              </Link>
+              <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
+                <ClockIcon size={18} /> Activity
+              </Link>
+              <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
+                <Settings size={18} /> Settings
+              </Link>
+            </div>
+
+            <div className="p-4 border-t border-white/10">
+              <button onClick={() => router.push('/login')} className="flex w-full items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-red-500/20 hover:text-red-300 transition">
+                <LogOut size={18} /> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* NAV */}
-      <div className="sticky top-0 z-30 bg-plum-700">
+      <div className="sticky top-0 z-30 bg-[#0056b3]">
         <div className="flex items-center gap-3 px-5 py-4">
-          <button onClick={() => router.back()} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition active:scale-95">
-            <ArrowLeft size={18} strokeWidth={2.2} />
+          {/* Changed ArrowLeft to Menu Hamburger */}
+          <button onClick={() => setIsMenuOpen(true)} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition active:scale-95">
+            <Menu size={20} strokeWidth={2.2} />
           </button>
           <h1 className="text-[16px] font-semibold tracking-tight text-white">Loan Products</h1>
         </div>
@@ -146,7 +197,7 @@ export default function LoanProductsPage() {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-plum-800">
+                    <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-bold text-[#0056b3]">
                       Up to KES {Number(p.max_amount).toLocaleString()}
                     </div>
                   </div>
@@ -175,9 +226,7 @@ export default function LoanProductsPage() {
             })}
           </div>
           
-          <div className="px-5 text-center mt-2">
-            <p className="text-[11px] text-ink-400 font-medium">Swipe left to see more options</p>
-          </div>
+          {/* REMOVED: Swipe left text */}
         </div>
       )}
       
@@ -192,5 +241,15 @@ export default function LoanProductsPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+// Extra icon used in the drawer
+function ClockIcon({ size, ...props }: any) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
   );
 }
