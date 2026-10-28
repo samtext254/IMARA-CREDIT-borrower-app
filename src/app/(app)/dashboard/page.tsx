@@ -462,7 +462,7 @@ export default function HomePage() {
                 label="Loan Balance" 
                 value={formatKes2(loanActive ? derived.loanOutstanding : 0)} 
                 sub={`of KES ${formatKes(loanActive ? derived.totalDue : 0)} total`} 
-                href="/loans" 
+                href={loanActive ? `/repay/${activeLoan.id}` : "/loans"} 
                 cta="Repay My Loan" 
               />
             </section>
@@ -494,7 +494,7 @@ export default function HomePage() {
               <section className="rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_2px_12px_rgba(15,41,77,0.05)] sm:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-[15px] font-bold text-[#0f2f66]">Loan Summary</h3>
-                  <Link href="/loans" className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">
+                  <Link href={loanActive ? `/repay/${activeLoan.id}` : "/loans"} className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">
                     View details <ArrowRight size={12} />
                   </Link>
                 </div>
