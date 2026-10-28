@@ -335,7 +335,7 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
+   <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
 
       {/* ==================== DESKTOP SIDEBAR ==================== */}
       <aside className="hidden w-[250px] shrink-0 flex-col bg-gradient-to-b from-[#0b2a57] to-[#0a2247] text-white lg:flex">
