@@ -5,9 +5,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   ArrowRight, Bell, Check, CheckCircle2, ChevronDown, HelpCircle, LogOut, Receipt, User,
-  WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Banknote, Home, Shield,
+  WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Home, Shield,
   Calendar, Send, Briefcase, Leaf, Search, X, Landmark, MoreHorizontal, Lightbulb, Info,
-  ClipboardList,
+  ClipboardList, AlertTriangle
 } from 'lucide-react';
 import { imara } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -70,13 +70,23 @@ function greeting(): string {
   return 'Good evening';
 }
 
-/* ------------------------------------------------------------------ */
-/*  Static placeholders (replace with real API data when available)    */
-/* ------------------------------------------------------------------ */
-const ACCOUNT_BALANCE = 12450;
-const SAVINGS_BALANCE = 3200;
-const MPESA_BALANCE = 2480;
+function activityRow(item: ActivityItem): { title: string; Icon: any; iconClass: string; amountClass: string; } {
+  switch (item.kind) {
+    case 'repayment_received': return { title: 'Repayment received', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600' };
+    case 'loan_submitted': return { title: 'Loan application', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900' };
+    case 'loan_approved': return { title: 'Loan approved', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-slate-900' };
+    case 'loan_rejected': return { title: 'Loan declined', Icon: Receipt, iconClass: 'bg-rose-500', amountClass: 'text-rose-600' };
+    case 'loan_disbursed': return { title: 'Loan disbursed', Icon: WalletCards, iconClass: 'bg-blue-600', amountClass: 'text-slate-900' };
+    case 'loan_active': return { title: 'Loan active', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600' };
+    case 'loan_overdue': return { title: 'Loan overdue', Icon: AlertTriangle, iconClass: 'bg-rose-500', amountClass: 'text-rose-600' };
+    case 'loan_paid': return { title: 'Loan fully repaid', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600' };
+    default: return { title: 'Loan update', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900' };
+  }
+}
 
+/* ------------------------------------------------------------------ */
+/*  Static placeholders                                                */
+/* ------------------------------------------------------------------ */
 const NAV = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/loans', label: 'Loans', icon: WalletCards },
@@ -103,13 +113,6 @@ const QUICK_ACTIONS = [
   { icon: ArrowLeftRight, label: 'Transfers', href: '/transactions', color: 'bg-violet-500' },
   { icon: PiggyBank, label: 'Save Money', href: '/savings', color: 'bg-emerald-500' },
   { icon: ClipboardList, label: 'Apply for Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
-];
-
-const TRANSACTIONS = [
-  { title: 'M-PESA Deposit', date: '12 Oct 2026 • 10:24 AM', amount: '+ KES 1,000', type: 'in', icon: ArrowLeftRight, tile: 'bg-emerald-500' },
-  { title: 'Loan Repayment', date: '10 Oct 2026 • 04:12 PM', amount: '- KES 500', type: 'out', icon: WalletCards, tile: 'bg-blue-600' },
-  { title: 'Airtime Purchase', date: '08 Oct 2026 • 09:22 AM', amount: '- KES 200', type: 'out', icon: Smartphone, tile: 'bg-orange-500' },
-  { title: 'KPLC Bill Payment', date: '05 Oct 2026 • 11:05 AM', amount: '- KES 1,250', type: 'out', icon: FileText, tile: 'bg-blue-500' },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -304,7 +307,7 @@ export default function HomePage() {
     if (rawScore >= 700) { creditStatus = 'Excellent'; pill = 'bg-emerald-50 text-emerald-600'; }
     else if (rawScore >= 500) { creditStatus = 'Good'; pill = 'bg-blue-50 text-blue-600'; }
     else if (rawScore >= 300) { creditStatus = 'Fair'; pill = 'bg-amber-50 text-amber-600'; }
-    // Supports both 0-100 and 300-850 style scores
+    
     const scoreMax = rawScore > 100 ? 850 : 100;
     const scorePct = Math.min(100, Math.max(0, (rawScore / scoreMax) * 100));
 
@@ -319,7 +322,7 @@ export default function HomePage() {
   const ringPct = loanActive ? derived.progress : 0;
   const gaugeLen = Math.PI * 40;
 
-  /* ---------- Profile dropdown (shared desktop / mobile) ---------- */
+  /* ---------- Profile dropdown ---------- */
   const profileMenu = isProfileOpen && (
     <div className="absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-xl border border-slate-100 bg-white p-2 shadow-xl">
       <button type="button" onClick={() => router.push('/profile')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50">
@@ -442,12 +445,26 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* SUMMARY CARDS */}
-            <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 xl:col-start-1">
-              <SummaryCard icon={Landmark} tile="bg-[#1565d8]" label="Account Balance" value={formatKes2(ACCOUNT_BALANCE)} sub="Available funds" href="/wallet" cta="View details" />
-              <SummaryCard icon={PiggyBank} tile="bg-emerald-500" label="Savings" value={formatKes2(SAVINGS_BALANCE)} sub="Your savings balance" href="/savings" cta="View savings" />
-              <SummaryCard icon={WalletCards} tile="bg-violet-500" label="Loan Balance" value={formatKes2(loanActive ? derived.loanOutstanding : 0)} sub={`of KES ${formatKes(loanActive ? derived.totalDue : 0)} total`} href="/loans" cta="View loan" />
-              <SummaryCard icon={Smartphone} tile="bg-emerald-500" label="M-PESA Balance" value={formatKes2(MPESA_BALANCE)} sub="Your M-PESA wallet" href="/m-pesa" cta="Send money" />
+            {/* SUMMARY CARDS (2 columns) */}
+            <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:col-start-1">
+              <SummaryCard 
+                icon={Landmark} 
+                tile="bg-[#1565d8]" 
+                label="Account Balance" 
+                value="0.00" 
+                sub="Available funds" 
+                href="/wallet" 
+                cta="Top Up Account" 
+              />
+              <SummaryCard 
+                icon={WalletCards} 
+                tile="bg-violet-500" 
+                label="Loan Balance" 
+                value={formatKes2(loanActive ? derived.loanOutstanding : 0)} 
+                sub={`of KES ${formatKes(loanActive ? derived.totalDue : 0)} total`} 
+                href="/loans" 
+                cta="Repay My Loan" 
+              />
             </section>
 
             {/* QUICK ACTIONS */}
@@ -470,7 +487,7 @@ export default function HomePage() {
               </div>
             </section>
 
-            {/* RIGHT COLUMN (below quick actions on mobile, side column on xl) */}
+            {/* RIGHT COLUMN */}
             <div className="space-y-4 sm:space-y-5 xl:col-start-2 xl:row-span-4 xl:row-start-1">
 
               {/* LOAN SUMMARY */}
@@ -502,7 +519,7 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="mb-4 space-y-3.5">
+                <div className="space-y-3.5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5 text-slate-500">
                       <Calendar size={16} />
@@ -528,13 +545,6 @@ export default function HomePage() {
                     )}
                   </div>
                 </div>
-
-                <Link
-                  href={activeLoan ? `/repay/${activeLoan.id}` : '/apply/loan'}
-                  className="flex w-full items-center justify-center rounded-xl bg-[#0a5cbe] py-3 text-sm font-bold text-white transition hover:bg-blue-800"
-                >
-                  {activeLoan ? 'Make a Repayment' : 'Apply for a Loan'}
-                </Link>
               </section>
 
               {/* CREDIT SCORE */}
@@ -604,23 +614,39 @@ export default function HomePage() {
                 </Link>
               </div>
               <div>
-                {TRANSACTIONS.map((tx, i) => (
-                  <div key={i} className="flex items-center justify-between border-b border-slate-100 py-3.5 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white ${tx.tile}`}>
-                        <tx.icon size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-bold text-slate-900">{tx.title}</p>
-                        <p className="text-[11px] text-slate-500">{tx.date}</p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <p className={`text-[13px] font-extrabold ${tx.type === 'in' ? 'text-emerald-600' : 'text-slate-900'}`}>{tx.amount}</p>
-                      <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">Success</span>
-                    </div>
+                {activity.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-slate-500">
+                    No recent transactions found.
                   </div>
-                ))}
+                ) : (
+                  activity.slice(0, 5).map((item: any, i) => {
+                    const row = activityRow(item);
+                    // Safely fallback to whatever date property the API returns
+                    const dateString = item.created_at || item.occurred_at || item.date || new Date().toISOString();
+                    
+                    return (
+                      <div key={i} className="flex items-center justify-between border-b border-slate-100 py-3.5 last:border-0">
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white ${row.iconClass}`}>
+                            <row.Icon size={18} />
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-bold text-slate-900">{row.title}</p>
+                            <p className="text-[11px] text-slate-500">
+                              {formatDate(dateString)} • {new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <p className={`text-[13px] font-extrabold ${row.amountClass}`}>
+                            {item.amount ? `KES ${formatKes(item.amount)}` : '—'}
+                          </p>
+                          <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">Success</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </section>
           </div>
