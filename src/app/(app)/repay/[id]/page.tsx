@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft, Phone, Smartphone, AlertCircle, CheckCircle, XCircle, 
   X, HelpCircle, ChevronRight, Loader2, Download, Share2, Check, WifiOff,
-  Home, Shield, Compass, FileText, LogOut, Menu, Clock3, CheckCircle2
+  Home, Shield, Compass, FileText, LogOut, Menu, Clock3, CheckCircle2,
+  WalletCards, Receipt, PiggyBank, Briefcase, Leaf, Search, Bell, ChevronDown, User
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +39,27 @@ function formatDate(iso: string | null | undefined): string {
   if (isNaN(d.getTime())) return '—';
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Shared Components                                                  */
+/* ------------------------------------------------------------------ */
+function Logo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className="flex items-center gap-2.5">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15">
+        <Leaf size={24} className="text-emerald-500" fill="currentColor" />
+      </div>
+      <div className="leading-tight">
+        <p className={`text-[20px] tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
+          <span className="font-extrabold">Imara</span> <span className="font-medium">Credit</span>
+        </p>
+        <p className={`text-[8px] font-medium ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
+          Loans • Payments • Financial Growth
+        </p>
+      </div>
+    </div>
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -361,8 +383,8 @@ export default function RepayPage() {
   /* ─── Loading / Load Error ─────────────────────────────── */
   if (loading) {
     return (
-      <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F6F8]">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
+      <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F7FB]">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0a5cbe] border-t-transparent" />
         <p className="mt-4 text-sm font-medium text-slate-500">Loading repayment details...</p>
       </div>
     );
@@ -370,7 +392,7 @@ export default function RepayPage() {
 
   if (loadError || !loan) {
     return (
-      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
         <div className="flex flex-1 flex-col items-center justify-center p-8">
           <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/50">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-500">
@@ -378,7 +400,7 @@ export default function RepayPage() {
             </div>
             <h2 className="text-xl font-bold text-slate-900">Not available</h2>
             <p className="mt-3 text-sm leading-6 text-slate-500">{loadError || 'Loan not found.'}</p>
-            <button onClick={() => router.back()} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#0077C8] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#0060a3]">
+            <button onClick={() => router.back()} className="mt-8 inline-flex items-center gap-2 rounded-lg bg-[#0a5cbe] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#084a99]">
               Go Back
             </button>
           </div>
@@ -395,7 +417,7 @@ export default function RepayPage() {
   /* ─── SUCCESS STATE ────────────────────────────────────── */
   if (flow === 'success' && successData) {
     return (
-      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+      <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
         <main className="flex-1 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 sm:p-8">
             <div className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-slate-200/50">
@@ -427,7 +449,7 @@ export default function RepayPage() {
 
                 <div className="mt-6 text-center">
                   <p className="text-xs text-slate-400">Taking you to your loan details…</p>
-                  <button onClick={() => { if (redirectRef.current) clearTimeout(redirectRef.current); router.push(`/loans/${loanId}`); }} className="mt-2 text-sm font-bold text-[#0077C8] hover:underline">
+                  <button onClick={() => { if (redirectRef.current) clearTimeout(redirectRef.current); router.push(`/loans/${loanId}`); }} className="mt-2 text-sm font-bold text-[#0a5cbe] hover:underline">
                     Go now
                   </button>
                 </div>
@@ -441,50 +463,74 @@ export default function RepayPage() {
 
   /* ─── MAIN LAYOUT ─────────────────────────────────────── */
   return (
-    <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F6F8] font-sans text-slate-800">
+    <div className="fixed inset-0 z-[9999] flex h-screen w-full overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
       
-      {/* DESKTOP SIDEBAR */}
-      <aside className="hidden w-64 flex-col bg-[#0077C8] text-white md:flex shrink-0">
-        <div className="flex h-24 items-center px-8">
-          <button onClick={() => router.push('/dashboard')} className="leading-tight text-left">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Imara</h1>
-            <p className="text-[10px] font-medium text-white/80">With you every step of the way</p>
-          </button>
+      {/* ==================== DESKTOP SIDEBAR ==================== */}
+      <aside className="hidden w-[250px] shrink-0 flex-col bg-gradient-to-b from-[#0b2a57] to-[#0a2247] text-white lg:flex">
+        <div className="px-5 pb-2 pt-7">
+          <Logo dark />
         </div>
-        <nav className="flex-1 space-y-1 px-4">
-          <button onClick={() => router.push('/dashboard')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
-            <Home size={20} className="text-white/70" /> Dashboard
+
+        <nav className="mt-6 flex-1 space-y-1 overflow-y-auto px-4">
+          <button onClick={() => router.push('/dashboard')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Home size={19} strokeWidth={1.8} className="text-slate-300" /> Home
           </button>
-          <button onClick={() => router.push('/products')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
-            <Shield size={20} className="text-white/70" /> Products
+          <button onClick={() => router.push('/loans')} className="flex w-full items-center gap-3.5 rounded-xl bg-[#1565d8] px-4 py-3 text-[14px] font-medium text-white shadow-lg shadow-blue-900/30">
+            <WalletCards size={19} strokeWidth={1.8} className="text-white" /> Loans
           </button>
-          <button onClick={() => router.push('/discover')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
-            <Compass size={20} className="text-white/70" /> Discover
+          <button onClick={() => router.push('/payments')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Receipt size={19} strokeWidth={1.8} className="text-slate-300" /> Payments
           </button>
-          <button onClick={() => router.push('/activity')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
-            <FileText size={20} className="text-white/70" /> Activity
+          <button onClick={() => router.push('/m-pesa')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Smartphone size={19} strokeWidth={1.8} className="text-slate-300" /> M-PESA Services
           </button>
-          <button onClick={() => router.push('/help')} className="flex w-full items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
-            <HelpCircle size={20} className="text-white/70" /> Help
+          <button onClick={() => router.push('/savings')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <PiggyBank size={19} strokeWidth={1.8} className="text-slate-300" /> Savings
+          </button>
+          <button onClick={() => router.push('/credit-score')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Shield size={19} strokeWidth={1.8} className="text-slate-300" /> Credit Score
+          </button>
+          <button onClick={() => router.push('/transactions')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Compass size={19} strokeWidth={1.8} className="text-slate-300" /> Transactions
+          </button>
+          <button onClick={() => router.push('/products')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <Briefcase size={19} strokeWidth={1.8} className="text-slate-300" /> Products
+          </button>
+          <button onClick={() => router.push('/support')} className="flex w-full items-center gap-3.5 rounded-xl px-4 py-3 text-[14px] font-medium text-slate-200 transition-colors hover:bg-white/5 hover:text-white">
+            <HelpCircle size={19} strokeWidth={1.8} className="text-slate-300" /> Support
           </button>
         </nav>
-        <div className="p-6">
-          <button onClick={() => router.push('/login')} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3.5 text-sm font-semibold text-[#0077C8] shadow-sm transition hover:bg-slate-50">
-            <LogOut size={18} /> Logout
-          </button>
+
+        {/* Promo footer */}
+        <div className="relative m-4 overflow-hidden rounded-2xl bg-white/[0.06] p-5">
+          <svg className="pointer-events-none absolute -bottom-2 -right-2 h-32 w-48" viewBox="0 0 200 130" fill="none">
+            <path d="M0 130 C 60 110, 120 70, 200 0 L200 130 Z" fill="url(#sw1)" opacity="0.9" />
+            <path d="M20 130 C 80 120, 140 90, 200 40 L200 130 Z" fill="#0a5cbe" opacity="0.7" />
+            <defs>
+              <linearGradient id="sw1" x1="0" y1="1" x2="1" y2="0">
+                <stop offset="0" stopColor="#16a34a" />
+                <stop offset="1" stopColor="#34d399" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <Leaf size={24} className="relative mb-3 text-emerald-400" fill="currentColor" />
+          <p className="relative text-[15px] font-bold leading-snug">Your financial<br />journey, made easier.</p>
+          <p className="relative mt-2 text-[10px] text-slate-300">Borrow • Save • Pay • Grow</p>
+          <div className="h-14" />
         </div>
       </aside>
 
       {/* MAIN CONTENT */}
       <div className="flex flex-1 flex-col overflow-hidden">
         
-        <header className="flex h-[72px] shrink-0 items-center justify-between bg-white px-4 sm:px-8 border-b border-slate-200">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden">
+        {/* HEADER */}
+        <header className="sticky top-0 z-30 flex h-20 shrink-0 items-center justify-between border-b border-slate-100 bg-white px-4 sm:px-8">
+          <div className="flex items-center gap-4 flex-1">
+            <button onClick={() => setIsSidebarOpen(true)} className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 lg:hidden">
               <Menu size={24} />
             </button>
             <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
+              <button onClick={() => router.back()} className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition hover:bg-slate-200">
                 <ArrowLeft size={18} />
               </button>
               <div>
@@ -493,14 +539,30 @@ export default function RepayPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF8A65] text-sm font-bold text-white ring-2 ring-white">
-              SC
+          
+          <div className="flex items-center gap-5 shrink-0">
+            <button className="relative grid h-10 w-10 place-items-center rounded-full bg-white border border-slate-100 text-slate-600 transition hover:bg-slate-50">
+              <Bell size={20} strokeWidth={2} />
+              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
             </button>
+            
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+
+            <div className="flex items-center gap-3 cursor-pointer">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#f97316] text-sm font-bold text-white shrink-0">
+                SC
+              </div>
+              <div className="hidden sm:block text-left">
+                <p className="text-[13px] font-bold text-slate-900">Samuel Chaga</p>
+                <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1">
+                  <ChevronRight size={12} className="rotate-90" /> View Profile
+                </p>
+              </div>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-24 md:pb-8">
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8">
           <div className="mx-auto max-w-[1000px] p-4 sm:p-8">
             
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.2fr_1fr]">
@@ -517,7 +579,7 @@ export default function RepayPage() {
                 {repayable && flow === 'pending' && (
                   <div className="rounded-xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/50">
                     <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-blue-50 ring-8 ring-blue-50/50">
-                      <Smartphone className="h-8 w-8 animate-pulse text-[#0077C8]" />
+                      <Smartphone className="h-8 w-8 animate-pulse text-[#0a5cbe]" />
                     </div>
                     <h3 className="mt-6 text-xl font-bold text-slate-900">Waiting for confirmation</h3>
                     <p className="mt-2 text-sm text-slate-500">
@@ -531,7 +593,7 @@ export default function RepayPage() {
                         const current = idx === active;
                         return (
                           <div key={label} className="flex items-center gap-3">
-                            <div className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${done ? 'bg-emerald-500' : current ? 'bg-[#0077C8]' : 'bg-slate-100'}`}>
+                            <div className={`grid h-6 w-6 shrink-0 place-items-center rounded-full ${done ? 'bg-emerald-500' : current ? 'bg-[#0a5cbe]' : 'bg-slate-100'}`}>
                               {done ? <Check className="h-3.5 w-3.5 text-white" /> : current ? <Loader2 className="h-3.5 w-3.5 animate-spin text-white" /> : null}
                             </div>
                             <span className={`text-sm ${idx <= active ? 'font-bold text-slate-900' : 'text-slate-400'}`}>{label}</span>
@@ -544,7 +606,7 @@ export default function RepayPage() {
                       <WifiOff className="h-3.5 w-3.5" /> Checking status automatically...
                     </div>
 
-                    <button onClick={resetToIdle} className="mt-6 text-xs font-bold text-[#0077C8] underline hover:text-blue-800">
+                    <button onClick={resetToIdle} className="mt-6 text-xs font-bold text-[#0a5cbe] underline hover:text-blue-800">
                       I didn't receive a prompt — start over
                     </button>
                   </div>
@@ -560,7 +622,7 @@ export default function RepayPage() {
                         <div className="relative mt-2">
                           <Phone size={18} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                           <Input
-                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 text-base font-medium focus-visible:ring-[#0077C8]/40"
+                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-11 text-base font-medium focus-visible:ring-[#0a5cbe]/40"
                             inputMode="tel"
                             placeholder="07XX XXX XXX"
                             value={phone}
@@ -576,7 +638,7 @@ export default function RepayPage() {
                         <div className="relative mt-2">
                           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">KES</span>
                           <Input
-                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-12 text-base font-bold focus-visible:ring-[#0077C8]/40"
+                            className="h-12 rounded-xl border-slate-200 bg-slate-50 pl-12 text-base font-bold focus-visible:ring-[#0a5cbe]/40"
                             inputMode="numeric"
                             placeholder={String(Math.round(outstanding))}
                             value={amountInput}
@@ -616,7 +678,7 @@ export default function RepayPage() {
                       <Button
                         onClick={onRequestStk}
                         disabled={flow === 'processing'}
-                        className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0077C8] text-sm font-bold text-white shadow-sm hover:bg-[#0060a3] disabled:opacity-60"
+                        className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0a5cbe] text-sm font-bold text-white shadow-sm hover:bg-[#084a99] disabled:opacity-60"
                       >
                         {flow === 'processing' ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : 'Send M-Pesa request'}
                       </Button>
@@ -626,7 +688,7 @@ export default function RepayPage() {
 
                 {repayable && flow !== 'pending' && (
                   <button onClick={() => setShowPaybill(true)} className="flex w-full items-center gap-4 rounded-xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200/50 transition hover:bg-slate-50">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#0077C8]">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-blue-50 text-[#0a5cbe]">
                       <HelpCircle size={20} />
                     </div>
                     <div className="flex-1">
@@ -641,7 +703,7 @@ export default function RepayPage() {
 
               {/* RIGHT COLUMN: SUMMARY */}
               <div className="lg:sticky lg:top-6 h-fit">
-                <div className="rounded-xl bg-[#0077C8] p-6 text-white shadow-lg">
+                <div className="rounded-xl bg-[#0a5cbe] p-6 text-white shadow-lg">
                   <p className="text-xs font-bold uppercase tracking-widest text-blue-200">Outstanding Balance</p>
                   <p className="mt-2 text-4xl font-extrabold tracking-tight tabular-nums">KES {formatKes(loan.outstanding_total)}</p>
                   <div className="mt-4 flex items-center gap-2 border-t border-white/10 pt-4 text-sm font-medium text-blue-100">
@@ -656,14 +718,14 @@ export default function RepayPage() {
       </div>
 
       {/* MOBILE BOTTOM NAV */}
-      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-slate-200 bg-white px-2 py-3 md:hidden">
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-slate-200 bg-white px-2 py-3 lg:hidden">
         <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
           <Home size={22} /><span className="text-[10px] font-medium">Home</span>
         </button>
         <button onClick={() => router.push('/apply')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
           <Compass size={22} /><span className="text-[10px] font-medium">Apply</span>
         </button>
-        <button onClick={() => router.push('/loans')} className="flex flex-col items-center gap-1 text-[#0077C8]">
+        <button onClick={() => router.push('/loans')} className="flex flex-col items-center gap-1 text-[#0a5cbe]">
           <FileText size={22} /><span className="text-[10px] font-bold">Loans</span>
         </button>
         <button onClick={() => router.push('/profile')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600">
