@@ -189,7 +189,6 @@ function AvatarMenu({ initials, name, email, onLogout, loggingOut }: { initials:
 /* ------------------------------------------------------------------ */
 function LoadingState() {
   return (
-    /* Added 'fixed inset-0 z-[9999]' to cover the purple bottom nav during initial load */
     <div className="fixed inset-0 z-[9999] flex min-h-screen w-full flex-col items-center justify-center bg-[#F4F6F8]">
       <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0077C8] border-t-transparent" />
       <p className="mt-4 text-sm font-medium text-slate-500">Loading your dashboard...</p>
@@ -340,6 +339,10 @@ export default function HomePage() {
             <FileText size={20} className="text-white/70" />
             Activity
           </Link>
+          <Link href="/terms" className="flex items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
+            <FileText size={20} className="text-white/70" />
+            Terms & Conditions
+          </Link>
           <Link href="/help" className="flex items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white">
             <HelpCircle size={20} className="text-white/70" />
             Help
@@ -457,9 +460,7 @@ export default function HomePage() {
                 <p className="mt-1 text-xs text-slate-500">Based on your current credit score.</p>
               </div>
 
-              <Link href="/apply/loan" className="mt-6 flex w-full items-center justify-center gap-2 rounded-lg border border-[#0077C8] bg-white px-4 py-3 text-sm font-bold text-[#0077C8] transition hover:bg-blue-50">
-                Apply for a Loan
-              </Link>
+              {/* "Apply for a Loan" button removed from this card */}
             </div>
           </div>
 
@@ -607,6 +608,9 @@ export default function HomePage() {
               </Link>
               <Link href="/activity" className="flex items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80">
                 <FileText size={20} /> Activity
+              </Link>
+              <Link href="/terms" className="flex items-center gap-4 rounded-lg px-4 py-3.5 text-sm font-medium text-white/80">
+                <FileText size={20} /> Terms & Conditions
               </Link>
             </nav>
             <div className="p-6">
