@@ -8,7 +8,7 @@ import {
   LogOut, Receipt, User, WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Home,
   Shield, Calendar, Send, Briefcase, Leaf, Search, X, Landmark, MoreHorizontal, Info,
   ClipboardList, AlertTriangle, Plus, Clock, Lightbulb, Lock, Headphones, ArrowDownLeft,
-  Sparkles, BadgeCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import { imara } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -466,19 +466,25 @@ export default function HomePage() {
                     <BadgeCheck size={26} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a53b4" />
                   </div>
                   <p className="mt-1 text-[12px] text-blue-50 sm:text-[14px]">Your money, loans and payments in one place.</p>
-                  <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-500/90 px-3 py-1 text-[11px] font-semibold text-white">
-                    <Sparkles size={12} /> Everything looks good!
+                  <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-500 py-1 pl-1.5 pr-3.5 text-[11px] font-semibold text-white shadow-sm">
+                    <span className="grid h-[18px] w-[18px] place-items-center rounded-full bg-white/25">
+                      <Leaf size={11} fill="currentColor" className="text-white" />
+                    </span>
+                    Everything looks good!
                   </span>
                 </div>
 
                 <div className="relative z-10 mr-3 shrink-0 sm:mr-0">
-                  <div className="relative h-[110px] w-[66px] rotate-[8deg] rounded-[14px] border-[3px] border-slate-900 bg-slate-900 shadow-2xl sm:h-[148px] sm:w-[86px]">
-                    <div className="flex h-full w-full flex-col items-center justify-center rounded-[10px] bg-gradient-to-b from-emerald-400 to-emerald-600 text-white">
-                      <Smartphone size={18} className="mb-1 opacity-80" />
-                      <span className="text-[9px] font-extrabold tracking-wide">M-PESA</span>
+                  <div className="relative h-[120px] w-[72px] rotate-[10deg] rounded-[18px] border-[4px] border-[#0a1f44] bg-[#0a1f44] shadow-[0_18px_30px_rgba(2,12,40,0.45)] sm:h-[164px] sm:w-[96px] sm:rounded-[22px]">
+                    <div className="absolute left-1/2 top-1 z-10 h-1.5 w-8 -translate-x-1/2 rounded-full bg-[#0a1f44] sm:h-2 sm:w-10" />
+                    <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-[13px] bg-gradient-to-b from-emerald-400 via-emerald-500 to-emerald-600 text-white sm:rounded-[17px]">
+                      <span className="grid h-7 w-7 place-items-center rounded-lg bg-white/90 sm:h-9 sm:w-9 sm:rounded-xl">
+                        <Leaf size={16} fill="currentColor" className="text-emerald-600" />
+                      </span>
+                      <span className="text-[10px] font-extrabold italic tracking-wide sm:text-[12px]">M-PESA</span>
                     </div>
-                    <div className="absolute -bottom-3 -right-5 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/80 bg-emerald-500 shadow-lg sm:h-11 sm:w-11">
-                      <Check size={20} strokeWidth={3} className="text-white" />
+                    <div className="absolute -bottom-4 -right-6 flex h-10 w-10 items-center justify-center rounded-full border-[3px] border-white bg-emerald-500 shadow-lg sm:h-12 sm:w-12">
+                      <Check size={22} strokeWidth={3.5} className="text-white" />
                     </div>
                   </div>
                 </div>
