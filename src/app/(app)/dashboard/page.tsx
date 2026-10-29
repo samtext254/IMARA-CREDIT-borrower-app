@@ -451,40 +451,21 @@ export default function HomePage() {
             {/* ================= LEFT COLUMN ================= */}
             <div className="min-w-0 space-y-5">
 
-              {/* HERO */}
-              <section className="relative flex min-h-[150px] items-center justify-between overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a3a8a] via-[#0a53b4] to-[#0b66d0] px-5 py-5 text-white sm:min-h-[178px] sm:px-8">
+              {/* HERO (Phone Graphic Removed) */}
+              <section className="relative flex min-h-[150px] flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a3a8a] via-[#0a53b4] to-[#0b66d0] px-6 py-6 text-white sm:min-h-[178px] sm:px-8">
                 <div className="pointer-events-none absolute inset-0 opacity-40">
                   <div className="absolute -bottom-24 left-1/3 h-56 w-[120%] -rotate-6 rounded-[100%] border border-white/20" />
                   <div className="absolute -bottom-32 left-1/4 h-56 w-[120%] -rotate-3 rounded-[100%] border border-white/10" />
                   <div className="absolute -right-10 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
                 </div>
 
-                <div className="relative z-10 min-w-0">
+                <div className="relative z-10 max-w-2xl">
                   <p className="text-[15px] font-medium text-blue-50 sm:text-[17px]">{greeting()},</p>
-                  <div className="mt-0.5 flex items-center gap-2.5">
-                    <h2 className="truncate text-[24px] font-extrabold uppercase leading-tight sm:text-[34px]">{derived.displayName}</h2>
-                    <BadgeCheck size={26} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a53b4" />
+                  <div className="mt-1 flex items-center gap-2.5">
+                    <h2 className="truncate text-[26px] font-extrabold uppercase leading-tight sm:text-[34px]">{derived.displayName}</h2>
+                    <BadgeCheck size={28} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a53b4" />
                   </div>
-                  <p className="mt-1 text-[12px] text-blue-50 sm:text-[14px]">Your money, loans and payments in one place.</p>
-                </div>
-
-                <div className="relative z-10 mr-3 shrink-0 sm:mr-0">
-                  <div className="relative h-[110px] w-[66px] rotate-[8deg] rounded-[14px] border-[3px] border-slate-900 bg-slate-900 shadow-2xl sm:h-[148px] sm:w-[86px]">
-                    <div className="flex h-full w-full flex-col items-center justify-center rounded-[10px] bg-gradient-to-b from-emerald-400 to-emerald-600 text-white">
-                      <Smartphone size={18} className="mb-1 opacity-80" />
-                      <span className="text-[9px] font-extrabold tracking-wide">M-PESA</span>
-                    </div>
-                    <div className="absolute -bottom-3 -right-5 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white/80 bg-emerald-500 shadow-lg sm:h-11 sm:w-11">
-                      <Check size={20} strokeWidth={3} className="text-white" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="relative z-10 hidden max-w-[190px] border-l border-white/20 pl-5 text-[13px] font-medium leading-snug text-blue-50 md:block">
-                  <p>Send money, pay bills, buy airtime and more — all in one place.</p>
-                  <Link href="/m-pesa" aria-label="Open M-PESA services" className="mt-3 grid h-6 w-6 place-items-center rounded-full bg-emerald-400 text-[#06304a]">
-                    <ArrowRight size={13} strokeWidth={3} />
-                  </Link>
+                  <p className="mt-2 text-[13px] text-blue-50 sm:text-[15px]">Your money, loans and payments in one place.</p>
                 </div>
               </section>
 
