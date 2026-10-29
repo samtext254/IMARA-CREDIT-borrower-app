@@ -220,7 +220,7 @@ export default function HomePage() {
   const [showKycModal, setShowKycModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  // Desktop sidebar always starts collapsed on every login (never persisted).
+  
   const [collapsed, setCollapsed] = useState(true);
   const profileRef = useRef<HTMLDivElement>(null);
   const profileMobileRef = useRef<HTMLDivElement>(null);
@@ -356,7 +356,7 @@ export default function HomePage() {
   return (
     <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#F4F7FB] font-sans text-slate-800">
 
-      {/* ==================== DESKTOP SIDEBAR (collapsed by default) ==================== */}
+      {/* ==================== DESKTOP SIDEBAR ==================== */}
       <aside
         className={`relative hidden shrink-0 flex-col bg-gradient-to-b from-[#0b2a57] to-[#081d3f] text-white transition-[width] duration-300 lg:flex ${
           collapsed ? 'w-[84px]' : 'w-[268px]'
@@ -451,21 +451,15 @@ export default function HomePage() {
             {/* ================= LEFT COLUMN ================= */}
             <div className="min-w-0 space-y-5">
 
-              {/* HERO (Phone Graphic Removed) */}
-              <section className="relative flex min-h-[150px] flex-col justify-center overflow-hidden rounded-2xl bg-gradient-to-r from-[#0a3a8a] via-[#0a53b4] to-[#0b66d0] px-6 py-6 text-white sm:min-h-[178px] sm:px-8">
-                <div className="pointer-events-none absolute inset-0 opacity-40">
-                  <div className="absolute -bottom-24 left-1/3 h-56 w-[120%] -rotate-6 rounded-[100%] border border-white/20" />
-                  <div className="absolute -bottom-32 left-1/4 h-56 w-[120%] -rotate-3 rounded-[100%] border border-white/10" />
-                  <div className="absolute -right-10 -top-16 h-52 w-52 rounded-full bg-sky-300/20 blur-3xl" />
-                </div>
-
-                <div className="relative z-10 max-w-2xl">
-                  <p className="text-[15px] font-medium text-blue-50 sm:text-[17px]">{greeting()},</p>
+              {/* HERO (Clean Blue Style) */}
+              <section className="relative flex min-h-[150px] flex-col justify-center overflow-hidden rounded-2xl bg-[#0a5cbe] px-6 py-6 text-white sm:min-h-[170px] sm:px-8">
+                <div className="relative z-10">
+                  <p className="text-[15px] font-medium text-blue-100 sm:text-[16px]">{greeting()},</p>
                   <div className="mt-1 flex items-center gap-2.5">
-                    <h2 className="truncate text-[26px] font-extrabold uppercase leading-tight sm:text-[34px]">{derived.displayName}</h2>
-                    <BadgeCheck size={28} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a53b4" />
+                    <h2 className="text-[28px] font-bold uppercase leading-tight tracking-tight sm:text-[32px]">{derived.displayName}</h2>
+                    <BadgeCheck size={26} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a5cbe" />
                   </div>
-                  <p className="mt-2 text-[13px] text-blue-50 sm:text-[15px]">Your money, loans and payments in one place.</p>
+                  <p className="mt-2 text-[13px] text-blue-100 sm:text-[14px]">Your money, loans and payments in one place.</p>
                 </div>
               </section>
 
