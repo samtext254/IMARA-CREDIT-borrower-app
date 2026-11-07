@@ -8,7 +8,7 @@ import {
   LogOut, Receipt, User, WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Home,
   Shield, Calendar, Send, Briefcase, Leaf, Search, X, Landmark, MoreHorizontal, Info,
   ClipboardList, AlertTriangle, Plus, Clock, Lightbulb, Lock, Headphones, ArrowDownLeft,
-  Sparkles, BadgeCheck,
+  BadgeCheck,
 } from 'lucide-react';
 import { imara } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -133,8 +133,6 @@ const QUICK_ACTIONS = [
   { icon: PiggyBank, label: 'Save Money', href: '/savings', color: 'bg-emerald-500' },
   { icon: ClipboardList, label: 'Apply for Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
 ];
-
-const CREDIT_TIPS = ['Pay your loans on time', 'Keep your wallet active', 'Reduce credit utilization'];
 
 const CARD = 'rounded-2xl border border-slate-100 bg-white shadow-[0_2px_12px_rgba(15,41,77,0.05)]';
 
@@ -331,6 +329,7 @@ export default function HomePage() {
   if (loading || !borrower || !derived) return <LoadingState />;
 
   const loanActive = activeLoan !== null;
+  const isOverdue = activeLoan?.status === 'OVERDUE';
   const repayHref = loanActive ? `/repay/${activeLoan.id}` : '/loans';
   const ringR = 26;
   const ringC = 2 * Math.PI * ringR;
@@ -451,20 +450,19 @@ export default function HomePage() {
             {/* ================= LEFT COLUMN ================= */}
             <div className="min-w-0 space-y-5">
 
-              {/* HERO (Clean Blue Style) */}
+              {/* HERO */}
               <section className="relative flex min-h-[150px] flex-col justify-center overflow-hidden rounded-2xl bg-[#0a5cbe] px-6 py-6 text-white sm:min-h-[170px] sm:px-8">
                 <div className="relative z-10">
                   <p className="text-[15px] font-medium text-blue-100 sm:text-[16px]">{greeting()},</p>
                   <div className="mt-1 flex items-center gap-2.5">
                     <h2 className="text-[28px] font-bold uppercase leading-tight tracking-tight sm:text-[32px]">{derived.displayName}</h2>
-                    <BadgeCheck size={26} className="shrink-0 text-emerald-400" fill="currentColor" stroke="#0a5cbe" />
                   </div>
                   <p className="mt-2 text-[13px] text-blue-100 sm:text-[14px]">Your money, loans and payments in one place.</p>
                 </div>
               </section>
 
-              {/* THREE CARDS: WALLET / OUTSTANDING LOAN / CREDIT SCORE */}
-              <section className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.35fr_1fr]">
+              {/* TWO CARDS: WALLET / OUTSTANDING LOAN */}
+              <section className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.35fr]">
                 {/* Wallet */}
                 <div className={`${CARD} flex flex-col p-4`}>
                   <div className="flex items-center gap-3">
@@ -478,19 +476,9 @@ export default function HomePage() {
                   <Link href="/wallet" className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:brightness-105">
                     <Plus size={15} /> Add Money
                   </Link>
-                  <Link href="/transactions" className="mt-3 flex items-center justify-between rounded-xl bg-[#F1F5FB] p-2.5 transition hover:bg-[#E8EEF8]">
-                    <span className="flex items-center gap-2.5">
-                      <span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-[#1565d8]"><Clock size={16} /></span>
-                      <span>
-                        <span className="block text-[11px] text-slate-500">Recent Activity</span>
-                        <span className="block text-[12px] font-bold text-slate-800">KES 0.00</span>
-                      </span>
-                    </span>
-                    <ChevronRight size={15} className="text-[#1565d8]" />
-                  </Link>
                 </div>
 
-                {/* Outstanding loan */}
+                {/* Outstanding loan + Credit Score combined */}
                 <div className={`${CARD} flex flex-col p-4`}>
                   <div className="flex items-center gap-3">
                     <CardIcon icon={Landmark} tile="bg-emerald-600" />
@@ -500,7 +488,7 @@ export default function HomePage() {
                   <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
                   <div className="mt-3 flex items-center gap-3">
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${ringPct}%` }} />
+                      <div className={`h-full rounded-full ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${ringPct}%` }} />
                     </div>
                     <span className="text-[11px] font-bold text-slate-700">{ringPct}%</span>
                   </div>
@@ -517,50 +505,24 @@ export default function HomePage() {
                       <Clock size={16} className="mt-0.5 text-slate-500" />
                       <div>
                         <p className="text-slate-500">Due In</p>
-                        <p className="text-[13px] font-bold text-slate-900">{loanActive ? dueLabel : '—'}</p>
+                        <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>
+                          {loanActive ? dueLabel : '—'}
+                        </p>
                       </div>
                     </div>
                   </div>
+
+                  {/* Credit Score Sentence */}
+                  <div className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-4">
+                    <Shield size={16} className="text-slate-400" />
+                    <p className="text-[13px] text-slate-600">
+                      Your credit score is <span className={`font-bold ${derived.pill.replace('bg-', 'text-').split(' ')[0]}`}>{derived.creditStatus}</span> ({derived.rawScore}%)
+                    </p>
+                  </div>
+
                   <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">
                     Repay Loan <ArrowRight size={14} />
                   </Link>
-                </div>
-
-                {/* Credit score */}
-                <div className={`${CARD} flex flex-col p-4`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-[15px] font-bold text-[#0f2f66]">Credit Score</h3>
-                    <Link href="/credit-score" className="flex items-center gap-1 text-[11px] font-semibold text-[#0a5cbe] hover:underline">
-                      View details <ArrowRight size={11} />
-                    </Link>
-                  </div>
-                  <div className="relative mx-auto mt-2 flex w-[136px] flex-col items-center">
-                    <svg width="136" height="82" viewBox="0 0 100 60">
-                      <defs>
-                        <linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0" stopColor="#F43F5E" />
-                          <stop offset="0.5" stopColor="#F59E0B" />
-                          <stop offset="1" stopColor="#10B981" />
-                        </linearGradient>
-                      </defs>
-                      <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="#EEF2F7" strokeWidth="9" strokeLinecap="round" />
-                      <path d="M 10 55 A 40 40 0 0 1 90 55" fill="none" stroke="url(#gaugeGrad)" strokeWidth="9" strokeLinecap="round" strokeDasharray={gaugeLen} strokeDashoffset={gaugeLen - (gaugeLen * derived.scorePct) / 100} />
-                    </svg>
-                    <span className="absolute bottom-6 text-[28px] font-extrabold leading-none text-slate-900">{derived.rawScore}</span>
-                    <span className={`-mt-1 rounded-full px-4 py-0.5 text-[11px] font-bold ${derived.pill}`}>{derived.creditStatus}</span>
-                  </div>
-                  <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
-                    <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-[#0f2f66]">
-                      <Lightbulb size={13} className="text-emerald-600" /> Tips to improve your score
-                    </p>
-                    <ul className="space-y-1">
-                      {CREDIT_TIPS.map((t) => (
-                        <li key={t} className="flex items-center gap-1.5 text-[11px] text-slate-600">
-                          <Check size={12} className="text-emerald-600" /> {t}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
                 </div>
               </section>
 
@@ -568,9 +530,7 @@ export default function HomePage() {
               <section className={`${CARD} p-4 sm:p-5`}>
                 <div className="mb-4 flex items-center justify-between">
                   <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
-                  <Link href="/actions" className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">
-                    View all <ArrowRight size={12} />
-                  </Link>
+                  {/* Removed "View all" link */}
                 </div>
                 <div className="grid grid-cols-3 gap-y-5 sm:grid-cols-6">
                   {QUICK_ACTIONS.map((a) => (
@@ -653,7 +613,7 @@ export default function HomePage() {
                   <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
                     <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
                       <circle cx="32" cy="32" r={ringR} fill="none" stroke="#DCE6F5" strokeWidth="6" />
-                      <circle cx="32" cy="32" r={ringR} fill="none" stroke="#0f9d74" strokeWidth="6" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringC - (ringC * ringPct) / 100} />
+                      <circle cx="32" cy="32" r={ringR} fill="none" stroke={isOverdue ? '#F43F5E' : '#0f9d74'} strokeWidth="6" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringC - (ringC * ringPct) / 100} />
                     </svg>
                     <span className="absolute text-[13px] font-extrabold text-[#0f2f66]">{ringPct}%</span>
                   </div>
@@ -671,7 +631,9 @@ export default function HomePage() {
                   <div className="flex items-center justify-between pt-3.5">
                     <span className="flex items-center gap-3 text-[13px] text-slate-500"><ClipboardList size={16} /> Loan Status</span>
                     {loanActive ? (
-                      <span className="rounded-full bg-emerald-50 px-4 py-1 text-[12px] font-bold text-emerald-600">{activeLoan.status === 'OVERDUE' ? 'Overdue' : 'Active'}</span>
+                      <span className={`rounded-full px-4 py-1 text-[12px] font-bold ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                        {isOverdue ? 'Overdue' : 'Active'}
+                      </span>
                     ) : (
                       <span className="rounded-full bg-slate-100 px-4 py-1 text-[12px] font-bold text-slate-600">None</span>
                     )}
