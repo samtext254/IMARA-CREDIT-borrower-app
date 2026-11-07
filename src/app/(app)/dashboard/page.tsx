@@ -514,8 +514,6 @@ export default function HomePage() {
                   <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
                   <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
                   
-                  {/* Progress Bar Removed */}
-
                   <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
                     <div className="flex items-start gap-2.5">
                       <Calendar size={16} className="mt-0.5 text-slate-500" />
@@ -542,7 +540,7 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* QUICK ACTIONS (CATEGORIZED) */}
+              {/* QUICK ACTIONS (CATEGORIZED & SPACED TIGHTER) */}
               <section className={`${CARD} overflow-hidden`}>
                 <div className="border-b border-slate-100 bg-white px-5 py-4">
                   <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
@@ -554,13 +552,14 @@ export default function HomePage() {
                       <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                         {group.title}
                       </h4>
-                      <div className="flex overflow-x-auto gap-4 pb-2 sm:grid sm:grid-cols-4 sm:overflow-visible scrollbar-hide">
+                      {/* Changed to justify-start and gap-3 to fix big spaces */}
+                      <div className="flex flex-wrap gap-3 sm:gap-4">
                         {group.actions.map((a) => (
-                          <Link key={a.label} href={a.href} className="group flex shrink-0 w-[72px] sm:w-auto flex-col items-center gap-2">
-                            <div className={`flex h-[56px] w-[56px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
-                              <a.icon size={24} strokeWidth={1.9} />
+                          <Link key={a.label} href={a.href} className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-auto">
+                            <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
+                              <a.icon size={22} strokeWidth={1.9} />
                             </div>
-                            <span className="text-center text-[11px] font-semibold text-slate-700">{a.label}</span>
+                            <span className="text-center text-[11px] font-semibold leading-tight text-slate-700">{a.label}</span>
                           </Link>
                         ))}
                       </div>
