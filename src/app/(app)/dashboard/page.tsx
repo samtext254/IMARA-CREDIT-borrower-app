@@ -8,7 +8,6 @@ import {
   LogOut, Receipt, User, WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Home,
   Shield, Calendar, Send, Briefcase, Leaf, Search, X, Landmark, MoreHorizontal, Info,
   ClipboardList, AlertTriangle, Plus, Clock, Lightbulb, Lock, Headphones, ArrowDownLeft,
-  BadgeCheck,
 } from 'lucide-react';
 import { imara } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -473,12 +472,19 @@ export default function HomePage() {
                   </div>
                   <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES 0.00</h3>
                   <p className="text-[13px] text-slate-500">Available funds</p>
-                  <Link href="/wallet" className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:brightness-105">
-                    <Plus size={15} /> Add Money
-                  </Link>
+                  
+                  {/* Two Buttons */}
+                  <div className="mt-4 flex gap-2">
+                    <Link href="/m-pesa" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#EEF3FA] py-2.5 text-[12px] font-bold text-[#0a5cbe] transition hover:bg-blue-100">
+                      <Send size={14} /> Send
+                    </Link>
+                    <Link href="/wallet" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:brightness-105">
+                      <Plus size={14} /> Deposit
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Outstanding loan + Credit Score combined */}
+                {/* Outstanding loan */}
                 <div className={`${CARD} flex flex-col p-4`}>
                   <div className="flex items-center gap-3">
                     <CardIcon icon={Landmark} tile="bg-emerald-600" />
@@ -486,12 +492,9 @@ export default function HomePage() {
                   </div>
                   <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
                   <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                      <div className={`h-full rounded-full ${isOverdue ? 'bg-red-500' : 'bg-emerald-500'}`} style={{ width: `${ringPct}%` }} />
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-700">{ringPct}%</span>
-                  </div>
+                  
+                  {/* Progress Bar Removed */}
+
                   <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
                     <div className="flex items-start gap-2.5">
                       <Calendar size={16} className="mt-0.5 text-slate-500" />
@@ -510,14 +513,6 @@ export default function HomePage() {
                         </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Credit Score Sentence */}
-                  <div className="mt-4 flex items-center gap-1.5 border-t border-slate-100 pt-4">
-                    <Shield size={16} className="text-slate-400" />
-                    <p className="text-[13px] text-slate-600">
-                      Your credit score is <span className={`font-bold ${derived.pill.replace('bg-', 'text-').split(' ')[0]}`}>{derived.creditStatus}</span> ({derived.rawScore}%)
-                    </p>
                   </div>
 
                   <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">
@@ -638,6 +633,14 @@ export default function HomePage() {
                       <span className="rounded-full bg-slate-100 px-4 py-1 text-[12px] font-bold text-slate-600">None</span>
                     )}
                   </div>
+                </div>
+
+                {/* Credit Score Moved Here */}
+                <div className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-4">
+                  <Shield size={16} className="text-slate-400" />
+                  <p className="text-[13px] text-slate-600">
+                    Your credit score is <span className={`font-bold ${derived.pill.replace('bg-', 'text-').split(' ')[0]}`}>{derived.creditStatus}</span> ({derived.rawScore}%)
+                  </p>
                 </div>
               </section>
 
