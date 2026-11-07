@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Bell,
   ChevronRight,
@@ -15,6 +16,9 @@ import {
   ShieldCheck,
   TrendingUp,
   WalletCards,
+  Home,
+  Compass,
+  User,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { imara, ImaraApiError } from '@/lib/api';
@@ -70,7 +74,7 @@ function SettingsRow({
       onClick={onClick}
       className="flex w-full items-center gap-3.5 border-b border-gray-100 bg-white px-5 py-3.5 text-left transition active:bg-gray-50 last:border-b-0"
     >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#E8F4FF] text-[#0056b3]">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#EEF3FA] text-[#0a5cbe]">
         {icon}
       </div>
 
@@ -133,7 +137,7 @@ function ProgressRing({ percent, size = 56 }: { percent: number; size?: number }
           r={r}
           fill="none"
           stroke="currentColor"
-          className="text-[#0056b3]/20"
+          className="text-[#0a5cbe]/20"
           strokeWidth={stroke}
         />
         <circle
@@ -142,14 +146,14 @@ function ProgressRing({ percent, size = 56 }: { percent: number; size?: number }
           r={r}
           fill="none"
           stroke="currentColor"
-          className="text-[#0056b3]"
+          className="text-[#0a5cbe]"
           strokeWidth={stroke}
           strokeDasharray={`${dash} ${c}`}
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="text-[12px] font-bold leading-none tracking-tight text-[#0056b3] tabular-nums">
+        <span className="text-[12px] font-bold leading-none tracking-tight text-[#0a5cbe] tabular-nums">
           {Math.round(percent)}%
         </span>
       </div>
@@ -171,7 +175,7 @@ function KycCard({
 
   if (kycStatus === 'VERIFIED') {
     return (
-      <div className="overflow-hidden rounded-3xl bg-[#0056b3] px-5 py-5 text-white shadow-[0_10px_28px_-12px_rgba(0,86,179,0.5)]">
+      <div className="overflow-hidden rounded-3xl bg-[#0a5cbe] px-5 py-5 text-white shadow-[0_10px_28px_-12px_rgba(10,92,190,0.5)]">
         <div className="flex items-start gap-3">
           <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white">
             <ShieldCheck size={20} strokeWidth={2.2} />
@@ -248,7 +252,7 @@ function KycCard({
 
         <button
           onClick={onAction}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0056b3] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0a5cbe] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
         >
           Review and resubmit
           <ChevronRight size={15} strokeWidth={2.5} />
@@ -284,7 +288,7 @@ function KycCard({
 
       <button
         onClick={onAction}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0056b3] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0a5cbe] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
       >
         Complete your profile
         <ChevronRight size={15} strokeWidth={2.5} />
@@ -299,7 +303,7 @@ function KycCard({
 function LoadingState() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] grid place-items-center">
-      <Loader2 className="animate-spin text-[#0056b3]" size={28} />
+      <Loader2 className="animate-spin text-[#0a5cbe]" size={28} />
     </div>
   );
 }
@@ -407,165 +411,192 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#F8F9FA] pb-24">
-      {/* ============ NAV ============ */}
-      <div className="sticky top-0 z-30 bg-[#0056b3]">
-        <div className="flex items-center gap-3 px-5 py-4">
-          <div className="relative shrink-0">
-            <div className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20">
-              {derived.initials}
+      
+      {/* Centered Container for Desktop */}
+      <div className="mx-auto max-w-2xl bg-white min-h-screen shadow-sm relative">
+        
+        {/* ============ NAV ============ */}
+        <div className="sticky top-0 z-30 bg-[#0a5cbe]">
+          <div className="flex items-center gap-3 px-5 py-4">
+            <div className="relative shrink-0">
+              <div className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20">
+                {derived.initials}
+              </div>
+              {kycVerified && (
+                <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-[#0a5cbe] bg-emerald-500 text-white">
+                  <svg viewBox="0 0 10 10" className="h-2 w-2">
+                    <path
+                      d="M1.5 5l2 2 5-5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+              )}
             </div>
-            {kycVerified && (
-              <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-[#0056b3] bg-brand-500 text-[#0056b3]">
-                <svg viewBox="0 0 10 10" className="h-2 w-2">
-                  <path
-                    d="M1.5 5l2 2 5-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            )}
-          </div>
 
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[16px] font-semibold tracking-tight text-white">
-              {derived.displayName}
-            </h1>
-            <p className="mt-0.5 truncate text-[11px] font-medium text-white/60">
-              {borrower.phone || borrower.email}
-            </p>
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-[16px] font-semibold tracking-tight text-white uppercase">
+                {derived.displayName}
+              </h1>
+              <p className="mt-0.5 truncate text-[11px] font-medium text-white/80">
+                {borrower.phone || borrower.email}
+              </p>
+            </div>
           </div>
+          <div className="h-1 w-full bg-emerald-500" />
         </div>
-        <div className="h-1 w-full bg-brand-500" />
-      </div>
 
-      {/* ============ KYC CARD ============ */}
-      <div className="px-3 pt-3">
-        {kyc ? (
-          <KycCard kyc={kyc} onAction={() => router.push('/kyc')} />
-        ) : (
-          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white px-5 py-5 text-[13px] text-gray-500">
-            KYC status unavailable. Pull to refresh.
+        {/* ============ KYC CARD ============ */}
+        <div className="px-4 pt-4">
+          {kyc ? (
+            <KycCard kyc={kyc} onAction={() => router.push('/kyc')} />
+          ) : (
+            <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white px-5 py-5 text-[13px] text-gray-500">
+              KYC status unavailable. Pull to refresh.
+            </div>
+          )}
+        </div>
+
+        {/* ============ CREDIT SCORE CARD ============ */}
+        {eligibility?.credit_limit && (
+          <div className="px-4 pt-4">
+            <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <TrendingUp size={18} className="text-[#0a5cbe]" />
+                  <h2 className="text-[14px] font-bold text-gray-900 tracking-tight">Credit Score</h2>
+                </div>
+                <span className="text-[14px] font-black text-[#0a5cbe]">
+                  {creditScore}/100
+                </span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-[#10B981] rounded-full transition-all duration-1000 ease-out" 
+                  style={{ width: `${creditScore}%` }}
+                />
+              </div>
+              
+              <div className="flex justify-between items-center mt-3">
+                <p className="text-[11px] font-medium text-gray-500">
+                  Your score determines your borrowing limit.
+                </p>
+                <span className="text-[10px] font-bold px-2 py-1 bg-[#EEF3FA] text-[#0a5cbe] rounded-md">
+                  Band {scoreBand}
+                </span>
+              </div>
+            </div>
           </div>
         )}
-      </div>
 
-      {/* ============ CREDIT SCORE CARD ============ */}
-      {eligibility?.credit_limit && (
-        <div className="px-3 pt-3">
-          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <TrendingUp size={18} className="text-[#0056b3]" />
-                <h2 className="text-[14px] font-bold text-gray-900 tracking-tight">Credit Score</h2>
-              </div>
-              <span className="text-[14px] font-black text-[#0056b3]">
-                {creditScore}/100
-              </span>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[#10B981] rounded-full transition-all duration-1000 ease-out" 
-                style={{ width: `${creditScore}%` }}
-              />
-            </div>
-            
-            <div className="flex justify-between items-center mt-3">
-              <p className="text-[11px] font-medium text-gray-500">
-                Your score determines your borrowing limit.
-              </p>
-              <span className="text-[10px] font-bold px-2 py-1 bg-[#E8F4FF] text-[#0056b3] rounded-md">
-                Band {scoreBand}
-              </span>
-            </div>
+        {/* ============ ACCOUNT SUMMARY ============ */}
+        <section className="mt-4 bg-white border-y border-gray-100">
+          <SectionHeader title="Account" />
+
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            <StatTile
+              label="Limit"
+              value={
+                maxLimit > 0
+                  ? `KES ${maxLimit.toLocaleString()}`
+                  : 'KES 0'
+              }
+            />
+            <StatTile
+              label="Available"
+              value={
+                availableLimit > 0
+                  ? `KES ${availableLimit.toLocaleString()}`
+                  : 'KES 0'
+              }
+            />
+            <StatTile
+              label="Member"
+              value={derived.memberSince.split(' ')[1] || '—'}
+              sub={derived.memberSince.split(' ')[0]}
+            />
           </div>
+        </section>
+
+        {/* ============ SETTINGS ============ */}
+        <section className="mt-4 bg-white border-y border-gray-100">
+          <SectionHeader title="Settings" />
+
+          <SettingsRow
+            icon={<Bell size={17} strokeWidth={2.2} />}
+            label="Notifications"
+            hint="Push and SMS preferences"
+          />
+          <SettingsRow
+            icon={<Lock size={17} strokeWidth={2.2} />}
+            label="Security & PIN"
+            hint="Manage your login PIN"
+          />
+          <SettingsRow
+            icon={<WalletCards size={17} strokeWidth={2.2} />}
+            label="Disbursement account"
+            hint={borrower.phone || 'Not set'}
+          />
+        </section>
+
+        {/* ============ SUPPORT ============ */}
+        <section className="mt-4 bg-white border-y border-gray-100">
+          <SectionHeader title="Support" />
+
+          <SettingsRow
+            icon={<HelpCircle size={17} strokeWidth={2.2} />}
+            label="Help centre"
+          />
+          <SettingsRow
+            icon={<FileText size={17} strokeWidth={2.2} />}
+            label="Terms & conditions"
+            onClick={() => router.push('/terms')}
+          />
+          <SettingsRow
+            icon={<Shield size={17} strokeWidth={2.2} />}
+            label="Privacy policy"
+          />
+          <SettingsRow
+            icon={<Info size={17} strokeWidth={2.2} />}
+            label="About IMARA CREDIT"
+            hint="Version 0.1.0"
+          />
+        </section>
+
+        {/* ============ FOOTER ============ */}
+        <div className="px-8 pb-8 pt-6 text-center">
+          <p className="text-[10px] font-medium tracking-wide text-gray-400">
+            IMARA CREDIT · v0.1.0
+          </p>
         </div>
-      )}
-
-      {/* ============ ACCOUNT SUMMARY ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader title="Account" />
-
-        <div className="grid grid-cols-3 divide-x divide-gray-100">
-          <StatTile
-            label="Limit"
-            value={
-              maxLimit > 0
-                ? `KES ${maxLimit.toLocaleString()}`
-                : 'KES 0'
-            }
-          />
-          <StatTile
-            label="Available"
-            value={
-              availableLimit > 0
-                ? `KES ${availableLimit.toLocaleString()}`
-                : 'KES 0'
-            }
-          />
-          <StatTile
-            label="Member"
-            value={derived.memberSince.split(' ')[1] || '—'}
-            sub={derived.memberSince.split(' ')[0]}
-          />
-        </div>
-      </section>
-
-      {/* ============ SETTINGS ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader title="Settings" />
-
-        <SettingsRow
-          icon={<Bell size={17} strokeWidth={2.2} />}
-          label="Notifications"
-          hint="Push and SMS preferences"
-        />
-        <SettingsRow
-          icon={<Lock size={17} strokeWidth={2.2} />}
-          label="Security & PIN"
-          hint="Manage your login PIN"
-        />
-        <SettingsRow
-          icon={<WalletCards size={17} strokeWidth={2.2} />}
-          label="Disbursement account"
-          hint={borrower.phone || 'Not set'}
-        />
-      </section>
-
-      {/* ============ SUPPORT ============ */}
-      <section className="mt-3 bg-white">
-        <SectionHeader title="Support" />
-
-        <SettingsRow
-          icon={<HelpCircle size={17} strokeWidth={2.2} />}
-          label="Help centre"
-        />
-        <SettingsRow
-          icon={<FileText size={17} strokeWidth={2.2} />}
-          label="Terms & conditions"
-        />
-        <SettingsRow
-          icon={<Shield size={17} strokeWidth={2.2} />}
-          label="Privacy policy"
-        />
-        <SettingsRow
-          icon={<Info size={17} strokeWidth={2.2} />}
-          label="About IMARA CREDIT"
-          hint="Version 0.1.0"
-        />
-      </section>
-
-      {/* ============ FOOTER ============ */}
-      <div className="px-8 pb-8 pt-6 text-center">
-        <p className="text-[10px] font-medium tracking-wide text-gray-400">
-          IMARA CREDIT · v0.1.0
-        </p>
       </div>
+
+      {/* ============ MOBILE BOTTOM NAV (Fixed for App Experience) ============ */}
+      <nav className="fixed bottom-0 left-0 z-40 flex w-full items-center justify-around border-t border-slate-200 bg-white px-2 py-3 md:hidden">
+        <Link href="/dashboard" className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#0a5cbe]">
+          <Home size={22} />
+          <span className="text-[10px] font-medium">Home</span>
+        </Link>
+        <Link href="/apply" className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#0a5cbe]">
+          <Compass size={22} />
+          <span className="text-[10px] font-medium">Apply</span>
+        </Link>
+        <Link href="/loans" className="flex flex-col items-center gap-1 text-slate-400 hover:text-[#0a5cbe]">
+          <FileText size={22} />
+          <span className="text-[10px] font-medium">Loans</span>
+        </Link>
+        <Link href="/profile" className="flex flex-col items-center gap-1 text-[#0a5cbe]">
+          <User size={22} />
+          <span className="text-[10px] font-bold">Profile</span>
+        </Link>
+      </nav>
+      
     </div>
   );
 }
