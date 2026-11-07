@@ -1,4 +1,3 @@
-// src/app/profile/page.tsx
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
@@ -46,8 +45,8 @@ interface BorrowerProfile {
 /* ------------------------------------------------------------------ */
 function SectionHeader({ title }: { title: string }) {
   return (
-    <div className="border-b border-ink-100 bg-white px-5 py-3">
-      <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-400">
+    <div className="border-b border-gray-100 bg-white px-5 py-3">
+      <h2 className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">
         {title}
       </h2>
     </div>
@@ -69,22 +68,22 @@ function SettingsRow({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3.5 border-b border-ink-100 bg-white px-5 py-3.5 text-left transition active:bg-ink-100/40 last:border-b-0"
+      className="flex w-full items-center gap-3.5 border-b border-gray-100 bg-white px-5 py-3.5 text-left transition active:bg-gray-50 last:border-b-0"
     >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-plum-50 text-plum-700">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-[#E8F4FF] text-[#0056b3]">
         {icon}
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[13.5px] font-semibold tracking-tight text-ink-950">
+        <p className="text-[13.5px] font-semibold tracking-tight text-gray-900">
           {label}
         </p>
         {hint && (
-          <p className="mt-0.5 text-[11px] font-medium text-ink-400">{hint}</p>
+          <p className="mt-0.5 text-[11px] font-medium text-gray-500">{hint}</p>
         )}
       </div>
 
-      <ChevronRight size={16} className="shrink-0 text-ink-400" strokeWidth={2.2} />
+      <ChevronRight size={16} className="shrink-0 text-gray-400" strokeWidth={2.2} />
     </button>
   );
 }
@@ -100,14 +99,14 @@ function StatTile({
 }) {
   return (
     <div className="flex flex-col items-center py-4">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-400">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-gray-500">
         {label}
       </p>
-      <p className="mt-1.5 text-[16px] font-bold tracking-tight text-ink-950 tabular-nums">
+      <p className="mt-1.5 text-[16px] font-bold tracking-tight text-gray-900 tabular-nums">
         {value}
       </p>
       {sub && (
-        <p className="mt-0.5 text-[10.5px] font-medium text-ink-400">{sub}</p>
+        <p className="mt-0.5 text-[10.5px] font-medium text-gray-400">{sub}</p>
       )}
     </div>
   );
@@ -134,7 +133,7 @@ function ProgressRing({ percent, size = 56 }: { percent: number; size?: number }
           r={r}
           fill="none"
           stroke="currentColor"
-          className="text-plum-800/15"
+          className="text-[#0056b3]/20"
           strokeWidth={stroke}
         />
         <circle
@@ -143,14 +142,14 @@ function ProgressRing({ percent, size = 56 }: { percent: number; size?: number }
           r={r}
           fill="none"
           stroke="currentColor"
-          className="text-plum-800"
+          className="text-[#0056b3]"
           strokeWidth={stroke}
           strokeDasharray={`${dash} ${c}`}
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 grid place-items-center">
-        <span className="text-[12px] font-bold leading-none tracking-tight text-plum-800 tabular-nums">
+        <span className="text-[12px] font-bold leading-none tracking-tight text-[#0056b3] tabular-nums">
           {Math.round(percent)}%
         </span>
       </div>
@@ -172,20 +171,20 @@ function KycCard({
 
   if (kycStatus === 'VERIFIED') {
     return (
-      <div className="overflow-hidden rounded-3xl bg-brand-500 px-5 py-5 text-plum-800 shadow-[0_10px_28px_-12px_rgba(255,206,7,0.6)]">
+      <div className="overflow-hidden rounded-3xl bg-[#0056b3] px-5 py-5 text-white shadow-[0_10px_28px_-12px_rgba(0,86,179,0.5)]">
         <div className="flex items-start gap-3">
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-plum-800/10 text-plum-800">
+          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/10 text-white">
             <ShieldCheck size={20} strokeWidth={2.2} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-plum-800/60">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/70">
               KYC status
             </p>
-            <p className="mt-1 text-[15px] font-bold tracking-tight text-plum-800">
+            <p className="mt-1 text-[15px] font-bold tracking-tight text-white">
               Profile verified
             </p>
             {verifiedAt && (
-              <p className="mt-0.5 text-[11px] text-plum-800/70">
+              <p className="mt-0.5 text-[11px] text-white/80">
                 Verified on {new Date(verifiedAt).toLocaleDateString('en-KE', {
                   day: 'numeric',
                   month: 'short',
@@ -249,7 +248,7 @@ function KycCard({
 
         <button
           onClick={onAction}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0056b3] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
         >
           Review and resubmit
           <ChevronRight size={15} strokeWidth={2.5} />
@@ -285,7 +284,7 @@ function KycCard({
 
       <button
         onClick={onAction}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-plum-800 px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-[#0056b3] px-4 py-3 text-[13px] font-bold tracking-tight text-white transition active:scale-[0.985]"
       >
         Complete your profile
         <ChevronRight size={15} strokeWidth={2.5} />
@@ -299,8 +298,8 @@ function KycCard({
 /* ------------------------------------------------------------------ */
 function LoadingState() {
   return (
-    <div className="min-h-screen bg-page grid place-items-center">
-      <Loader2 className="animate-spin text-plum-800" size={28} />
+    <div className="min-h-screen bg-[#F8F9FA] grid place-items-center">
+      <Loader2 className="animate-spin text-[#0056b3]" size={28} />
     </div>
   );
 }
@@ -391,7 +390,7 @@ export default function ProfilePage() {
 
   if (!borrower || !derived) {
     return (
-      <div className="min-h-screen bg-page p-6">
+      <div className="min-h-screen bg-[#F8F9FA] p-6">
         <div className="mx-auto max-w-md rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-[13px] text-red-800">
           {error || 'Could not load your profile.'}
         </div>
@@ -403,21 +402,20 @@ export default function ProfilePage() {
   const maxLimit = eligibility?.credit_limit?.max_limit ? Number(eligibility.credit_limit.max_limit) : 0;
   const availableLimit = eligibility?.credit_limit?.available_limit ? Number(eligibility.credit_limit.available_limit) : 0;
   
-  // Credit score logic
   const creditScore = eligibility?.credit_limit?.credit_score ?? 50;
   const scoreBand = eligibility?.credit_limit?.score_band ?? 'C';
 
   return (
-    <div className="min-h-screen bg-page pb-24">
+    <div className="min-h-screen bg-[#F8F9FA] pb-24">
       {/* ============ NAV ============ */}
-      <div className="sticky top-0 z-30 bg-plum-800">
+      <div className="sticky top-0 z-30 bg-[#0056b3]">
         <div className="flex items-center gap-3 px-5 py-4">
           <div className="relative shrink-0">
             <div className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-sm font-bold text-white ring-1 ring-white/20">
               {derived.initials}
             </div>
             {kycVerified && (
-              <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-plum-800 bg-brand-500 text-plum-800">
+              <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full border-2 border-[#0056b3] bg-brand-500 text-[#0056b3]">
                 <svg viewBox="0 0 10 10" className="h-2 w-2">
                   <path
                     d="M1.5 5l2 2 5-5"
@@ -449,7 +447,7 @@ export default function ProfilePage() {
         {kyc ? (
           <KycCard kyc={kyc} onAction={() => router.push('/kyc')} />
         ) : (
-          <div className="overflow-hidden rounded-3xl border border-ink-100 bg-white px-5 py-5 text-[13px] text-ink-500">
+          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white px-5 py-5 text-[13px] text-gray-500">
             KYC status unavailable. Pull to refresh.
           </div>
         )}
@@ -458,30 +456,30 @@ export default function ProfilePage() {
       {/* ============ CREDIT SCORE CARD ============ */}
       {eligibility?.credit_limit && (
         <div className="px-3 pt-3">
-          <div className="rounded-3xl border border-ink-100 bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-gray-100 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <TrendingUp size={18} className="text-plum-700" />
-                <h2 className="text-[14px] font-bold text-ink-950 tracking-tight">Credit Score</h2>
+                <TrendingUp size={18} className="text-[#0056b3]" />
+                <h2 className="text-[14px] font-bold text-gray-900 tracking-tight">Credit Score</h2>
               </div>
-              <span className="text-[14px] font-black text-plum-800">
+              <span className="text-[14px] font-black text-[#0056b3]">
                 {creditScore}/100
               </span>
             </div>
             
             {/* Progress Bar */}
-            <div className="h-2 w-full bg-ink-100 rounded-full overflow-hidden">
+            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-leaf-500 rounded-full transition-all duration-1000 ease-out" 
+                className="h-full bg-[#10B981] rounded-full transition-all duration-1000 ease-out" 
                 style={{ width: `${creditScore}%` }}
               />
             </div>
             
             <div className="flex justify-between items-center mt-3">
-              <p className="text-[11px] font-medium text-ink-500">
+              <p className="text-[11px] font-medium text-gray-500">
                 Your score determines your borrowing limit.
               </p>
-              <span className="text-[10px] font-bold px-2 py-1 bg-plum-50 text-plum-700 rounded-md">
+              <span className="text-[10px] font-bold px-2 py-1 bg-[#E8F4FF] text-[#0056b3] rounded-md">
                 Band {scoreBand}
               </span>
             </div>
@@ -493,7 +491,7 @@ export default function ProfilePage() {
       <section className="mt-3 bg-white">
         <SectionHeader title="Account" />
 
-        <div className="grid grid-cols-3 divide-x divide-ink-100">
+        <div className="grid grid-cols-3 divide-x divide-gray-100">
           <StatTile
             label="Limit"
             value={
@@ -564,7 +562,7 @@ export default function ProfilePage() {
 
       {/* ============ FOOTER ============ */}
       <div className="px-8 pb-8 pt-6 text-center">
-        <p className="text-[10px] font-medium tracking-wide text-ink-400/80">
+        <p className="text-[10px] font-medium tracking-wide text-gray-400">
           IMARA CREDIT · v0.1.0
         </p>
       </div>
