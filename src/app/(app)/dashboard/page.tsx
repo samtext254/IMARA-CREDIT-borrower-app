@@ -8,6 +8,7 @@ import {
   LogOut, Receipt, User, WalletCards, ArrowLeftRight, FileText, Smartphone, PiggyBank, Home,
   Shield, Calendar, Send, Briefcase, Leaf, Search, X, Landmark, MoreHorizontal, Info,
   ClipboardList, AlertTriangle, Plus, Clock, Lightbulb, Lock, Headphones, ArrowDownLeft,
+  Zap, Globe, Store, CalendarClock, Wifi
 } from 'lucide-react';
 import { imara } from '@/lib/api';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -124,13 +125,33 @@ const BOTTOM_NAV = [
   { href: '/savings', label: 'Savings', icon: PiggyBank },
 ];
 
-const QUICK_ACTIONS = [
-  { icon: Send, label: 'Send Money', href: '/m-pesa', color: 'bg-emerald-500' },
-  { icon: Smartphone, label: 'Buy Airtime', href: '/m-pesa', color: 'bg-blue-500' },
-  { icon: FileText, label: 'Pay Bills', href: '/payments', color: 'bg-sky-500' },
-  { icon: ArrowLeftRight, label: 'Transfers', href: '/transactions', color: 'bg-violet-500' },
-  { icon: PiggyBank, label: 'Save Money', href: '/savings', color: 'bg-emerald-500' },
-  { icon: ClipboardList, label: 'Apply for Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
+// GROUPED QUICK ACTIONS
+const QUICK_ACTION_GROUPS = [
+  {
+    title: 'Send & Receive',
+    actions: [
+      { icon: Send, label: 'Send Money', href: '/m-pesa', color: 'bg-emerald-500' },
+      { icon: Globe, label: 'International', href: '/m-pesa', color: 'bg-indigo-500' },
+      { icon: ArrowLeftRight, label: 'Transfers', href: '/transactions', color: 'bg-violet-500' },
+    ]
+  },
+  {
+    title: 'Payments & Bills',
+    actions: [
+      { icon: FileText, label: 'Pay Bills', href: '/payments', color: 'bg-sky-500' },
+      { icon: Smartphone, label: 'Airtime', href: '/m-pesa', color: 'bg-blue-500' },
+      { icon: Zap, label: 'KPLC Tokens', href: '/payments', color: 'bg-amber-500' },
+      { icon: Store, label: 'Business Paybill', href: '/payments', color: 'bg-teal-500' },
+    ]
+  },
+  {
+    title: 'Finance & Growth',
+    actions: [
+      { icon: PiggyBank, label: 'Save Money', href: '/savings', color: 'bg-emerald-500' },
+      { icon: ClipboardList, label: 'Apply for Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
+      { icon: CalendarClock, label: 'Cash Ratiba', href: '/loans', color: 'bg-rose-500' },
+    ]
+  }
 ];
 
 const CARD = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
@@ -521,20 +542,29 @@ export default function HomePage() {
                 </div>
               </section>
 
-              {/* QUICK ACTIONS */}
-              <section className={`${CARD} p-4 sm:p-5`}>
-                <div className="mb-4 flex items-center justify-between">
+              {/* QUICK ACTIONS (CATEGORIZED) */}
+              <section className={`${CARD} overflow-hidden`}>
+                <div className="border-b border-slate-100 bg-white px-5 py-4">
                   <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
-                  {/* Removed "View all" link */}
                 </div>
-                <div className="grid grid-cols-3 gap-y-5 sm:grid-cols-6">
-                  {QUICK_ACTIONS.map((a) => (
-                    <Link key={a.label} href={a.href} className="group flex flex-col items-center gap-2">
-                      <div className={`flex h-[60px] w-[60px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
-                        <a.icon size={24} strokeWidth={1.9} />
+                
+                <div className="divide-y divide-slate-100">
+                  {QUICK_ACTION_GROUPS.map((group, idx) => (
+                    <div key={idx} className="p-4 sm:p-5">
+                      <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        {group.title}
+                      </h4>
+                      <div className="flex overflow-x-auto gap-4 pb-2 sm:grid sm:grid-cols-4 sm:overflow-visible scrollbar-hide">
+                        {group.actions.map((a) => (
+                          <Link key={a.label} href={a.href} className="group flex shrink-0 w-[72px] sm:w-auto flex-col items-center gap-2">
+                            <div className={`flex h-[56px] w-[56px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
+                              <a.icon size={24} strokeWidth={1.9} />
+                            </div>
+                            <span className="text-center text-[11px] font-semibold text-slate-700">{a.label}</span>
+                          </Link>
+                        ))}
                       </div>
-                      <span className="text-center text-[12px] font-medium text-slate-700">{a.label}</span>
-                    </Link>
+                    </div>
                   ))}
                 </div>
               </section>
