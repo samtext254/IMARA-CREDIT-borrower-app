@@ -2,55 +2,53 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, PlusCircle, FileText, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Home, WalletCards, Receipt, PiggyBank, MoreHorizontal } from 'lucide-react';
 
 const TABS = [
-  { href: '/home',       label: 'Home',    icon: Home },
-  { href: '/apply/loan', label: 'Apply',   icon: PlusCircle },
-  { href: '/loans',      label: 'Loans',   icon: FileText },
-  { href: '/profile',    label: 'Profile', icon: User },
+  { href: '/dashboard', label: 'Home', icon: Home },
+  { href: '/loans', label: 'Loans', icon: WalletCards },
+  { href: '/payments', label: 'Payments', icon: Receipt },
+  { href: '/savings', label: 'Savings', icon: PiggyBank },
 ] as const;
 
-export function BottomNav() {
-  const pathname = usePathname();
+interface BottomNavProps {
+  onMoreClick?: () => void;
+}
+
+export function BottomNav({ onMoreClick }: BottomNavProps) {
+  const pathname = usePathname() || '/dashboard';
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-plum-900 bg-plum-800 no-scrollbar">
-      {/* subtle yellow accent line at the top edge */}
-      <div className="h-0.5 w-full bg-brand-500" />
-
-      <ul className="grid grid-cols-4">
-        {TABS.map((tab) => {
-          const active =
-            tab.href === '/home'
-              ? pathname === '/home'
-              : pathname.startsWith(tab.href);
-          const Icon = tab.icon;
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+      <div className="mx-auto grid max-w-md grid-cols-5">
+        {TABS.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href || pathname.startsWith(href + '/');
           return (
-            <li key={tab.href}>
-              <Link
-                href={tab.href}
-                className={cn(
-                  'flex flex-col items-center gap-1 py-3 text-xs font-semibold transition-colors',
-                  active
-                    ? 'text-brand-500'
-                    : 'text-white/50 hover:text-white/80'
-                )}
-              >
-                <Icon
-                  className={cn(
-                    'w-5 h-5',
-                    active ? 'text-brand-500' : 'text-current'
-                  )}
-                  strokeWidth={active ? 2.6 : 2}
-                />
-                {tab.label}
-              </Link>
-            </li>
+            <Link
+              key={href}
+              href={href}
+              className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold transition-colors ${
+                active ? 'text-[#0a5cbe]' : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Icon
+                size={21}
+                fill={active ? 'currentColor' : 'none'}
+                fillOpacity={active ? 0.15 : 0}
+              />
+              {label}
+            </Link>
           );
         })}
-      </ul>
+        <button
+          type="button"
+          onClick={onMoreClick}
+          className="flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold text-slate-500 transition-colors hover:text-slate-800"
+        >
+          <MoreHorizontal size={21} />
+          More
+        </button>
+      </div>
     </nav>
   );
 }
