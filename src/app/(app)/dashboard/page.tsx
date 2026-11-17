@@ -280,34 +280,6 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Loan card (to be merged with Loan Summary in the next step) */}
-        <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
-          <div className="flex items-center gap-3">
-            <CardIcon icon={Landmark} tile="bg-emerald-600" />
-            <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
-          </div>
-          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
-          <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
-          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
-            <div className="flex items-start gap-2.5">
-              <Calendar size={16} className="mt-0.5 text-slate-500" />
-              <div>
-                <p className="text-slate-500">Next Payment</p>
-                <p className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.nextPaymentAmount) : '0'}</p>
-                <p className="text-slate-500">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 border-l border-slate-100 pl-3">
-              <Clock size={16} className="mt-0.5 text-slate-500" />
-              <div>
-                <p className="text-slate-500">Due In</p>
-                <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>{loanActive ? dueLabel : '—'}</p>
-              </div>
-            </div>
-          </div>
-          <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">Repay Loan <ArrowRight size={14} /></Link>
-        </section>
-
         <section className={`${CARD} overflow-hidden`}>
           <div className="border-b border-slate-100 bg-white px-5 py-4">
             <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
@@ -360,43 +332,32 @@ export default function DashboardPage() {
       </div>
 
       <div className="min-w-0 space-y-5">
-        <section className={`${CARD} p-4 sm:p-5`}>
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-[17px] font-bold text-[#0f2f66]">Loan Summary</h3>
-            <Link href="/loans" className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">View all <ArrowRight size={12} /></Link>
+        {/* Outstanding Loan Card (Moved from left side) */}
+        <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
+          <div className="flex items-center gap-3">
+            <CardIcon icon={Landmark} tile="bg-emerald-600" />
+            <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
           </div>
-          <div className="mb-3 flex items-center justify-between rounded-xl bg-[#EEF4FC] p-3.5">
-            <div className="flex items-center gap-3">
-              <CardIcon icon={WalletCards} tile="bg-[#1565d8]" />
+          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
+          <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+            <div className="flex items-start gap-2.5">
+              <Calendar size={16} className="mt-0.5 text-slate-500" />
               <div>
-                <p className="text-[12px] font-medium text-slate-600">Current Loan</p>
-                <p className="text-[22px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</p>
-                <p className="text-[11px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
+                <p className="text-slate-500">Next Payment</p>
+                <p className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.nextPaymentAmount) : '0'}</p>
+                <p className="text-slate-500">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</p>
               </div>
             </div>
-            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
-              <svg width="64" height="64" viewBox="0 0 64 64" className="-rotate-90">
-                <circle cx="32" cy="32" r={ringR} fill="none" stroke="#DCE6F5" strokeWidth="6" />
-                <circle cx="32" cy="32" r={ringR} fill="none" stroke={isOverdue ? '#F43F5E' : '#0f9d74'} strokeWidth="6" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringC - (ringC * ringPct) / 100} />
-              </svg>
-              <span className="absolute text-[13px] font-extrabold text-[#0f2f66]">{ringPct}%</span>
+            <div className="flex items-start gap-2.5 border-l border-slate-100 pl-3">
+              <Clock size={16} className="mt-0.5 text-slate-500" />
+              <div>
+                <p className="text-slate-500">Due In</p>
+                <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>{loanActive ? dueLabel : '—'}</p>
+              </div>
             </div>
           </div>
-          <div className="divide-y divide-slate-100">
-            <div className="flex items-center justify-between py-3.5"><span className="flex items-center gap-3 text-[13px] text-slate-500"><Calendar size={16} /> Next Payment</span><span className="text-[13px] font-bold text-slate-900">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</span></div>
-            <div className="flex items-center justify-between py-3.5"><span className="flex items-center gap-3 text-[13px] text-slate-500"><Receipt size={16} /> Monthly Installment</span><span className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.installment) : '0'}</span></div>
-            <div className="flex items-center justify-between pt-3.5"><span className="flex items-center gap-3 text-[13px] text-slate-500"><ClipboardList size={16} /> Loan Status</span>
-              {loanActive ? (
-                <span className={`rounded-full px-4 py-1 text-[12px] font-bold ${isOverdue ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'}`}>{isOverdue ? 'Overdue' : 'Active'}</span>
-              ) : (
-                <span className="rounded-full bg-slate-100 px-4 py-1 text-[12px] font-bold text-slate-600">None</span>
-              )}
-            </div>
-          </div>
-          <div className="mt-2 flex items-center gap-1.5 border-t border-slate-100 pt-4">
-            <Shield size={16} className="text-slate-400" />
-            <p className="text-[13px] text-slate-600">Your credit score is <span className={`font-bold ${derived.pill.replace('bg-', 'text-').split(' ')[0]}`}>{derived.creditStatus}</span> ({derived.rawScore}%)</p>
-          </div>
+          <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">Repay Loan <ArrowRight size={14} /></Link>
         </section>
 
         <section className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-[#E9F8F0] to-[#D3F0E1] p-5">
@@ -416,17 +377,6 @@ export default function DashboardPage() {
               <div className="absolute -bottom-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-lg"><Check size={17} strokeWidth={3} className="text-white" /></div>
             </div>
           </div>
-        </section>
-
-        <section className={`${CARD} p-5`}>
-          <div className="flex items-center gap-4">
-            <Headphones size={40} strokeWidth={1.4} className="shrink-0 text-[#0f2f66]" />
-            <div>
-              <h3 className="text-[16px] font-bold text-[#0f2f66]">Need help?</h3>
-              <p className="text-[12px] text-slate-500">Our support team is here for you.</p>
-            </div>
-          </div>
-          <Link href="/support" className="mx-auto mt-4 flex w-[78%] items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50/50 py-2.5 text-[13px] font-semibold text-[#0a5cbe] transition hover:bg-blue-50">Contact Support <ArrowRight size={14} /></Link>
         </section>
       </div>
     </div>
