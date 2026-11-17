@@ -103,9 +103,6 @@ function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boo
           <p className={`text-[22px] tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
             <span className="font-semibold">Imara</span> <span className="font-medium">Credit</span>
           </p>
-          <p className={`text-[8.5px] font-medium ${dark ? 'text-slate-300' : 'text-slate-500'}`}>
-            Loans • Payments • Financial Growth
-          </p>
         </div>
       )}
     </div>
