@@ -18,7 +18,9 @@ type NavItem = {
   label: string;
   icon: any;
   href?: string;
-  dropdown?: { href: string; label: string }[];
+  badge?: string | number;
+  badgeColor?: string;
+  dropdown?: { href: string; label: string; badge?: string }[];
 };
 
 const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
@@ -39,6 +41,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
         dropdown: [
           { href: '/m-pesa', label: 'M-PESA' },
           { href: '/airtel-money', label: 'Airtel Money' },
+          { href: '/wallet', label: 'Wallet', badge: 'New' },
         ]
       },
       { 
@@ -50,6 +53,13 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
           { href: '/bank/family', label: 'Family Bank' },
         ]
       },
+      {
+        label: 'Pay Bills',
+        icon: Receipt,
+        href: '/payments',
+        badge: 'New',
+        badgeColor: 'bg-emerald-500 text-white'
+      }
     ]
   },
   {
@@ -58,6 +68,8 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { 
         label: 'Loans', 
         icon: WalletCards,
+        badge: 2, // Dynamic count will replace this
+        badgeColor: 'bg-red-500 text-white',
         dropdown: [
           { href: '/apply/loan', label: 'Apply Loan' },
           { href: '/loans/repay', label: 'Repay Loan' },
@@ -121,7 +133,7 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
   return (
     <div className="space-y-0">
       {NAV_GROUPS.map((group, groupIndex) => (
-        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-white/10' : ''}`}>
+        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-white/5' : ''}`}>
           {!collapsed && (
             <h3 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400/80">
               {group.title}
@@ -133,6 +145,7 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
               const Icon = item.icon;
               const hasDropdown = item.dropdown && item.dropdown.length > 0;
               const isDropdownOpen = openDropdowns[item.label];
+              const isGroupActive = item.dropdown?.some(sub => pathname.startsWith(sub.href));
               
               if (!hasDropdown && item.href) {
                 const active = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -142,46 +155,57 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
                     href={item.href}
                     onClick={onNavigate}
                     title={collapsed ? item.label : undefined}
-                    className={`group relative flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
-                      collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-2.5'
+                    className={`group relative flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-150 ${
+                      collapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'
                     } ${
                       active 
-                        ? 'bg-gradient-to-r from-[#1565d8] to-[#0f4fb0] text-white shadow-md shadow-blue-900/20' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        ? 'bg-emerald-500/10 text-emerald-400' 
+                        : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
                     }`}
                   >
-                    <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} />
-                    {!collapsed && <span>{item.label}</span>}
-                    
-                    {collapsed && active && (
-                      <span className="absolute left-0 h-6 w-1 rounded-r-full bg-emerald-400" />
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                      {active && (
+                        <span className="absolute left-0 h-6 w-1 rounded-r-full bg-emerald-400" />
+                      )}
+                      <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-emerald-400' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </div>
+                    {!collapsed && item.badge && (
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeColor || 'bg-emerald-500/20 text-emerald-400'}`}>
+                        {item.badge}
+                      </span>
                     )}
                   </Link>
                 );
               }
 
-              const isGroupActive = item.dropdown?.some(sub => pathname.startsWith(sub.href));
-              
               return (
                 <div key={item.label}>
                   <button
                     type="button"
                     onClick={() => toggleDropdown(item.label)}
                     title={collapsed ? item.label : undefined}
-                    className={`w-full group flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                    className={`w-full group flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-150 ${
                       collapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'
                     } ${
                       isDropdownOpen || isGroupActive
-                        ? 'text-white' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        ? 'bg-white/[0.03] text-white' 
+                        : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
                     }`}
                   >
                     <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
-                      <Icon size={20} strokeWidth={1.7} className={isGroupActive ? 'text-white' : 'text-slate-400'} />
+                      <Icon size={20} strokeWidth={1.7} className={isGroupActive ? 'text-emerald-400' : 'text-slate-400'} />
                       {!collapsed && <span>{item.label}</span>}
                     </div>
                     {!collapsed && (
-                      <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${item.badgeColor || 'bg-red-500 text-white'}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                        <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                      </div>
                     )}
                   </button>
 
@@ -194,13 +218,18 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
                             key={subItem.href}
                             href={subItem.href}
                             onClick={onNavigate}
-                            className={`block rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-[13px] transition-colors ${
                               subActive 
-                                ? 'bg-white/10 font-semibold text-white' 
+                                ? 'bg-emerald-500/10 font-semibold text-emerald-400' 
                                 : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }`}
                           >
-                            {subItem.label}
+                            <span>{subItem.label}</span>
+                            {subItem.badge && (
+                              <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400">
+                                {subItem.badge}
+                              </span>
+                            )}
                           </Link>
                         );
                       })}
@@ -322,13 +351,13 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
   const initials = displayName.split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase();
 
   const profileMenu = isProfileOpen && (
-    <div className="absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
-      <button type="button" onClick={() => router.push('/profile')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50">
+    <div className="absolute right-0 top-full z-50 mt-3 w-56 origin-top-right rounded-xl border border-slate-200 bg-white p-2 shadow-xl animate-in fade-in slide-in-from-top-2 duration-200">
+      <button type="button" onClick={() => router.push('/profile')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-slate-50">
         <User size={16} className="text-slate-500" />
         <span className="text-sm font-semibold text-slate-700">My profile</span>
       </button>
       <div className="my-1 border-t border-slate-100" />
-      <button type="button" onClick={onLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-red-50 disabled:opacity-60">
+      <button type="button" onClick={onLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-red-50 disabled:opacity-60">
         <LogOut size={16} className="text-red-600" />
         <span className="text-sm font-bold text-red-600">{loggingOut ? 'Logging out…' : 'Log out'}</span>
       </button>
@@ -338,8 +367,8 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#F0F4F8] font-sans text-slate-800">
       
-      <aside className={`relative hidden shrink-0 flex-col bg-[#0b2a57] text-white transition-[width] duration-300 lg:flex ${collapsed ? 'w-[88px]' : 'w-[280px]'}`}>
-        <button type="button" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} className="absolute -right-3 top-8 z-20 grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-[#0f2f66] shadow-md transition hover:bg-slate-50">
+      <aside className={`relative hidden shrink-0 flex-col bg-[#0b2a57] text-white transition-[width] duration-200 ease-in-out lg:flex ${collapsed ? 'w-[88px]' : 'w-[280px]'}`}>
+        <button type="button" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} className="absolute -right-3 top-8 z-20 grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-[#0f2f66] shadow-md transition-all duration-150 hover:scale-110 hover:bg-slate-50">
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
         
@@ -353,7 +382,7 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
         
         <div className="mt-auto border-t border-white/10 p-4">
           <div className={`flex flex-col gap-1 ${collapsed ? 'items-center' : 'items-start px-2'}`}>
-            <span className="text-[11px] font-medium text-slate-400">
+            <span className="text-[11px] font-medium text-slate-500">
               {collapsed ? 'v2.0' : 'Version 2.0.0'}
             </span>
           </div>
@@ -363,18 +392,19 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         
         <header className="hidden h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-8 lg:flex">
-          <div className="flex w-full max-w-[540px] items-center gap-3 rounded-full border border-slate-200 bg-[#F8FAFC] px-5 py-3">
+          <div className="flex w-full max-w-[540px] items-center gap-3 rounded-full border border-slate-200 bg-[#F8FAFC] px-5 py-3 transition-colors duration-150 focus-within:border-[#0a5cbe] focus-within:bg-white">
             <Search size={17} className="text-slate-500" />
             <input type="text" placeholder="Search services, transactions, loans..." className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/notifications" className="relative grid h-10 w-10 place-items-center rounded-full text-[#0f2f66] transition hover:bg-slate-50" aria-label="Notifications">
+            <Link href="/notifications" className="relative grid h-10 w-10 place-items-center rounded-full text-[#0f2f66] transition-colors duration-150 hover:bg-slate-50" aria-label="Notifications">
               <Bell size={21} /><span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
             </Link>
-            <div ref={profileRef} className="relative flex cursor-pointer items-center gap-3" onClick={() => setIsProfileOpen((v) => !v)}>
+            <div ref={profileRef} className="relative flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1 transition-colors duration-150 hover:bg-slate-50" onClick={() => setIsProfileOpen((v) => !v)}>
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0a5cbe] text-sm font-bold text-white">{initials}</div>
               <p className="text-[13px] font-bold uppercase text-slate-900">{displayName}</p>
-              <ChevronDown size={15} className="text-slate-500" />{profileMenu}
+              <ChevronDown size={15} className={`text-slate-500 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} />
+              {profileMenu}
             </div>
           </div>
         </header>
@@ -404,14 +434,14 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
       {isSidebarOpen && (
         <div className="fixed inset-0 z-[10000] lg:hidden">
           <button aria-label="Close menu" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-[#0b2a57] text-white shadow-2xl">
+          <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-[#0b2a57] text-white shadow-2xl animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between border-b border-white/10 px-5 pb-2 pt-6">
               <Logo dark />
-              <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white" aria-label="Close menu"><X size={22} /></button>
+              <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white transition-colors" aria-label="Close menu"><X size={22} /></button>
             </div>
             <nav className="mt-2 flex-1 overflow-y-auto px-4 no-scrollbar">
               <NavLinks pathname={pathname} onNavigate={() => setIsSidebarOpen(false)} />
-              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
+              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5 transition-colors duration-150">
                 <FileText size={21} strokeWidth={1.7} className="text-slate-200" /> Terms &amp; Conditions
               </Link>
             </nav>
@@ -419,7 +449,7 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
               <div className="mb-4 flex flex-col items-center">
                 <span className="text-[11px] font-medium text-slate-400">Version 2.0.0</span>
               </div>
-              <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] disabled:opacity-60">
+              <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] transition-colors duration-150 hover:bg-slate-100 disabled:opacity-60">
                 <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Logout'}
               </button>
             </div>
