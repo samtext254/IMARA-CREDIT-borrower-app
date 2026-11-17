@@ -5,8 +5,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Bell, ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, User,
-  WalletCards, Receipt, PiggyBank, Home, ShieldCheck, ShieldAlert, ArrowLeftRight,
-  Search, X, Leaf, Wallet, Settings
+  WalletCards, Receipt, Smartphone, PiggyBank, Home, Shield, ArrowLeftRight,
+  Briefcase, Search, X, Lock, FileText, Landmark
 } from 'lucide-react';
 import { BottomNav } from '@/components/borrower/BottomNav';
 import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
@@ -17,45 +17,72 @@ import KycModal from '@/components/KycModal';
 type NavItem = {
   label: string;
   icon: any;
-  href: string;
-  /** Extra route prefixes that keep this item highlighted (sub-pages live inside the page as tabs). */
-  match?: string[];
-  badge?: string | number;
+  href?: string;
+  dropdown?: { href: string; label: string }[];
 };
 
-const NAV_GROUPS: { title?: string; items: NavItem[] }[] = [
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    items: [{ href: '/dashboard', label: 'Home', icon: Home }],
-  },
-  {
-    title: 'Money',
+    title: 'Overview',
     items: [
-      { href: '/wallet', label: 'Wallet', icon: Wallet, badge: 'New', match: ['/m-pesa', '/airtel-money', '/bank'] },
-      { href: '/payments', label: 'Pay bills', icon: Receipt, badge: 'New' },
-    ],
+      { href: '/dashboard', label: 'Home', icon: Home },
+      { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+      { href: '/statements', label: 'Statements', icon: FileText },
+    ]
   },
   {
-    title: 'Borrow',
+    title: 'Money Transfer',
     items: [
-      // TODO: replace the static 2 with the real count of loans due.
-      { href: '/loans', label: 'Loans', icon: WalletCards, badge: 2, match: ['/apply', '/credit-score'] },
-    ],
+      { 
+        label: 'Mobile Money', 
+        icon: Smartphone,
+        dropdown: [
+          { href: '/m-pesa', label: 'M-PESA' },
+          { href: '/airtel-money', label: 'Airtel Money' },
+        ]
+      },
+      { 
+        label: 'Bank Transfer', 
+        icon: Landmark,
+        dropdown: [
+          { href: '/bank/equity', label: 'Equity Bank' },
+          { href: '/bank/kcb', label: 'KCB Bank' },
+          { href: '/bank/family', label: 'Family Bank' },
+        ]
+      },
+    ]
   },
   {
-    title: 'Grow',
-    items: [{ href: '/savings', label: 'Save & invest', icon: PiggyBank }],
-  },
-  {
-    title: 'Activity',
-    items: [{ href: '/transactions', label: 'Transactions', icon: ArrowLeftRight, match: ['/statements'] }],
-  },
-  {
-    title: 'Help',
+    title: 'Credit & Growth',
     items: [
-      { href: '/support', label: 'Support', icon: HelpCircle },
-      { href: '/settings', label: 'Settings', icon: Settings },
-    ],
+      { 
+        label: 'Loans', 
+        icon: WalletCards,
+        dropdown: [
+          { href: '/apply/loan', label: 'Apply Loan' },
+          { href: '/loans/repay', label: 'Repay Loan' },
+          { href: '/loans', label: 'My Loans' },
+          { href: '/loans/statement', label: 'Loan Statement' },
+        ]
+      },
+      { 
+        label: 'Savings', 
+        icon: PiggyBank,
+        dropdown: [
+          { href: '/savings/open', label: 'Open Savings Acc' },
+          { href: '/savings', label: 'My Savings' },
+        ]
+      },
+      { href: '/credit-score', label: 'Credit Score', icon: Shield },
+      { href: '/products', label: 'Products', icon: Briefcase },
+    ]
   },
+  {
+    title: 'Support',
+    items: [
+      { href: '/support', label: 'Help & Support', icon: HelpCircle },
+    ]
+  }
 ];
 
 const KYC_DISMISS_PREFIX = 'kyc-dismissed';
@@ -67,74 +94,119 @@ function kycDismissKey(data: KycStatusResponse | null): string {
 
 function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
   return (
-    <div className={`flex items-center gap-2.5 ${compact ? 'justify-center' : ''}`}>
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-emerald-400 text-[#0b2a57]">
-        <Leaf size={20} strokeWidth={2.2} />
-      </span>
+    <div className={`flex items-center ${compact ? 'justify-center' : ''}`}>
       {!compact && (
-        <p className={`text-[20px] leading-tight tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
-          <span className="font-semibold">Imara</span> <span className="font-medium">Credit</span>
+        <div className="leading-tight">
+          <p className={`text-[22px] tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
+            <span className="font-semibold">Imara</span> <span className="font-medium">Credit</span>
+          </p>
+        </div>
+      )}
+      {compact && (
+        <p className={`text-[20px] font-semibold tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
+          IC
         </p>
       )}
     </div>
   );
 }
 
-function isActivePath(pathname: string, item: NavItem) {
-  return [item.href, ...(item.match || [])].some((p) => pathname === p || pathname.startsWith(p + '/'));
-}
-
 function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: string; onNavigate?: () => void; collapsed?: boolean }) {
-  return (
-    <div>
-      {NAV_GROUPS.map((group, groupIndex) => (
-        <div key={group.title || 'top'} className={groupIndex === 0 ? 'pt-3' : collapsed ? 'mt-3 border-t border-white/10 pt-3' : 'mt-6'}>
-          {group.title && !collapsed && (
-            <h3 className="mb-1.5 px-3 text-xs font-semibold text-slate-400">{group.title}</h3>
-          )}
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
 
+  const toggleDropdown = (label: string) => {
+    setOpenDropdowns(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  return (
+    <div className="space-y-0">
+      {NAV_GROUPS.map((group, groupIndex) => (
+        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-white/10' : ''}`}>
+          {!collapsed && (
+            <h3 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400/80">
+              {group.title}
+            </h3>
+          )}
+          
           <div className="space-y-1">
             {group.items.map((item) => {
               const Icon = item.icon;
-              const active = isActivePath(pathname, item);
-              const isCount = typeof item.badge === 'number';
+              const hasDropdown = item.dropdown && item.dropdown.length > 0;
+              const isDropdownOpen = openDropdowns[item.label];
+              
+              if (!hasDropdown && item.href) {
+                const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={onNavigate}
+                    title={collapsed ? item.label : undefined}
+                    className={`group relative flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                      collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-2.5'
+                    } ${
+                      active 
+                        ? 'bg-gradient-to-r from-[#1565d8] to-[#0f4fb0] text-white shadow-md shadow-blue-900/20' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} />
+                    {!collapsed && <span>{item.label}</span>}
+                    
+                    {collapsed && active && (
+                      <span className="absolute left-0 h-6 w-1 rounded-r-full bg-emerald-400" />
+                    )}
+                  </Link>
+                );
+              }
 
+              const isGroupActive = item.dropdown?.some(sub => pathname.startsWith(sub.href));
+              
               return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  onClick={onNavigate}
-                  title={collapsed ? item.label : undefined}
-                  aria-current={active ? 'page' : undefined}
-                  className={`group relative flex items-center rounded-xl text-[14px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 ${
-                    collapsed ? 'justify-center py-3' : 'gap-3 px-3 py-2.5'
-                  } ${
-                    active
-                      ? 'bg-emerald-400/15 font-semibold text-white'
-                      : 'text-slate-300 hover:bg-white/[0.07] hover:text-white'
-                  }`}
-                >
-                  {active && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-emerald-400" />}
-                  <Icon
-                    size={20}
-                    strokeWidth={active ? 2.2 : 1.7}
-                    className={active ? 'text-emerald-400' : 'text-slate-400 transition-colors group-hover:text-slate-200'}
-                  />
-                  {!collapsed && <span>{item.label}</span>}
+                <div key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => toggleDropdown(item.label)}
+                    title={collapsed ? item.label : undefined}
+                    className={`w-full group flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                      collapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'
+                    } ${
+                      isDropdownOpen || isGroupActive
+                        ? 'text-white' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                      <Icon size={20} strokeWidth={1.7} className={isGroupActive ? 'text-white' : 'text-slate-400'} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    )}
+                  </button>
 
-                  {item.badge !== undefined && !collapsed && (
-                    <span
-                      className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                        isCount ? 'bg-red-500 text-white' : 'bg-emerald-400/20 text-emerald-300'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
+                  {!collapsed && isDropdownOpen && item.dropdown && (
+                    <div className="mt-1 ml-4 space-y-1 border-l border-white/10 pl-3">
+                      {item.dropdown.map((subItem) => {
+                        const subActive = pathname === subItem.href;
+                        return (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={onNavigate}
+                            className={`block rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                              subActive 
+                                ? 'bg-white/10 font-semibold text-white' 
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                  {item.badge !== undefined && collapsed && (
-                    <span className={`absolute right-3 top-2 h-2 w-2 rounded-full ${isCount ? 'bg-red-500' : 'bg-emerald-400'}`} />
-                  )}
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -144,53 +216,10 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
   );
 }
 
-function SidebarFooter({ kyc, collapsed, onVerify }: { kyc: KycStatusResponse | null; collapsed: boolean; onVerify: () => void }) {
-  if (!kyc) return null;
-  const verified = kyc.kycStatus === 'VERIFIED';
-
-  if (collapsed) {
-    return (
-      <button
-        type="button"
-        onClick={verified ? undefined : onVerify}
-        title={verified ? 'Account verified' : 'Complete verification'}
-        className="relative mx-auto grid h-11 w-11 place-items-center rounded-xl text-slate-300 hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
-      >
-        {verified ? <ShieldCheck size={20} className="text-emerald-400" /> : <ShieldAlert size={20} className="text-amber-400" />}
-        {!verified && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-amber-400" />}
-      </button>
-    );
-  }
-
-  if (verified) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-1 text-[13px] font-medium text-slate-300">
-        <ShieldCheck size={18} className="text-emerald-400" /> Account verified
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
-      <div className="flex items-center gap-2 text-[13px] font-semibold text-white">
-        <ShieldAlert size={18} className="text-amber-400" /> Verify your account
-      </div>
-      <p className="mt-1.5 text-[12.5px] leading-snug text-slate-300">Finish verification to unlock loans and a higher limit.</p>
-      <button
-        type="button"
-        onClick={onVerify}
-        className="mt-3 w-full rounded-lg bg-emerald-400 py-2 text-[13px] font-bold text-[#0b2a57] transition-colors hover:bg-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-      >
-        Complete verification
-      </button>
-    </div>
-  );
-}
-
 export function AppLayoutShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname() || '/dashboard';
-
+  
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [borrower, setBorrower] = useState<any>(null);
@@ -201,7 +230,7 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
-
+  
   const profileRef = useRef<HTMLDivElement>(null);
   const profileMobileRef = useRef<HTMLDivElement>(null);
 
@@ -298,10 +327,6 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
         <User size={16} className="text-slate-500" />
         <span className="text-sm font-semibold text-slate-700">My profile</span>
       </button>
-      <button type="button" onClick={() => router.push('/settings')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-slate-50">
-        <Settings size={16} className="text-slate-500" />
-        <span className="text-sm font-semibold text-slate-700">Settings</span>
-      </button>
       <div className="my-1 border-t border-slate-100" />
       <button type="button" onClick={onLogout} disabled={loggingOut} className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition hover:bg-red-50 disabled:opacity-60">
         <LogOut size={16} className="text-red-600" />
@@ -312,27 +337,31 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#F0F4F8] font-sans text-slate-800">
-
-      <aside className={`relative hidden shrink-0 flex-col bg-[#0b2a57] text-white transition-[width] duration-200 ease-in-out lg:flex ${collapsed ? 'w-[88px]' : 'w-[280px]'}`}>
-        <button type="button" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} className="absolute -right-3 top-8 z-20 grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-[#0f2f66] shadow-md transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+      
+      <aside className={`relative hidden shrink-0 flex-col bg-[#0b2a57] text-white transition-[width] duration-300 lg:flex ${collapsed ? 'w-[88px]' : 'w-[280px]'}`}>
+        <button type="button" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} className="absolute -right-3 top-8 z-20 grid h-6 w-6 place-items-center rounded-full border border-slate-200 bg-white text-[#0f2f66] shadow-md transition hover:bg-slate-50">
           {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </button>
-
-        <div className={`flex h-[72px] items-center border-b border-white/10 ${collapsed ? 'justify-center px-2' : 'px-5'}`}>
+        
+        <div className={`flex h-[72px] items-center border-b border-white/10 ${collapsed ? 'justify-center px-2' : 'px-6'}`}>
           <Logo dark compact={collapsed} />
         </div>
-
-        <nav aria-label="Main" className={`flex-1 overflow-y-auto py-2 no-scrollbar ${collapsed ? 'px-3' : 'px-4'}`}>
+        
+        <nav className={`flex-1 overflow-y-auto py-2 no-scrollbar ${collapsed ? 'px-3' : 'px-4'}`}>
           <NavLinks pathname={pathname} collapsed={collapsed} />
         </nav>
-
-        <div className={`border-t border-white/10 ${collapsed ? 'px-3 py-4' : 'p-4'}`}>
-          <SidebarFooter kyc={kycData} collapsed={collapsed} onVerify={() => setShowKycModal(true)} />
+        
+        <div className="mt-auto border-t border-white/10 p-4">
+          <div className={`flex flex-col gap-1 ${collapsed ? 'items-center' : 'items-start px-2'}`}>
+            <span className="text-[11px] font-medium text-slate-400">
+              {collapsed ? 'v2.0' : 'Version 2.0.0'}
+            </span>
+          </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
+        
         <header className="hidden h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-8 lg:flex">
           <div className="flex w-full max-w-[540px] items-center gap-3 rounded-full border border-slate-200 bg-[#F8FAFC] px-5 py-3">
             <Search size={17} className="text-slate-500" />
@@ -369,28 +398,29 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
       </div>
 
       <BottomNav onMoreClick={() => setIsSidebarOpen(true)} />
-
+      
       <DownloadAppButton />
 
       {isSidebarOpen && (
         <div className="fixed inset-0 z-[10000] lg:hidden">
           <button aria-label="Close menu" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-[#0b2a57] text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 pb-3 pt-6">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 pb-2 pt-6">
               <Logo dark />
               <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white" aria-label="Close menu"><X size={22} /></button>
             </div>
-            <nav aria-label="Main" className="flex-1 overflow-y-auto px-4 no-scrollbar">
+            <nav className="mt-2 flex-1 overflow-y-auto px-4 no-scrollbar">
               <NavLinks pathname={pathname} onNavigate={() => setIsSidebarOpen(false)} />
+              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
+                <FileText size={21} strokeWidth={1.7} className="text-slate-200" /> Terms &amp; Conditions
+              </Link>
             </nav>
-            <div className="space-y-3 border-t border-white/10 p-5">
-              <SidebarFooter
-                kyc={kycData}
-                collapsed={false}
-                onVerify={() => { setIsSidebarOpen(false); setShowKycModal(true); }}
-              />
+            <div className="border-t border-white/10 p-5">
+              <div className="mb-4 flex flex-col items-center">
+                <span className="text-[11px] font-medium text-slate-400">Version 2.0.0</span>
+              </div>
               <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] disabled:opacity-60">
-                <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Log out'}
+                <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Logout'}
               </button>
             </div>
           </aside>
