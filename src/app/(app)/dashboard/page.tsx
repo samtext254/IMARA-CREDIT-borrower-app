@@ -6,7 +6,7 @@ import {
   ArrowRight, Check, CheckCircle2, Receipt, WalletCards, ArrowLeftRight,
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
   Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
-  Headphones, ArrowDownLeft, AlertTriangle, ArrowUpRight, Eye, EyeOff, Wallet
+  Headphones, ArrowDownLeft, AlertTriangle, Eye, EyeOff, Wallet
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -260,8 +260,8 @@ export default function DashboardPage() {
               <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
                 <Wallet size={16} /> Wallet
               </p>
-              <p className="mt-1 text-[36px] font-extrabold leading-tight tracking-tight sm:text-[44px]">
-                <span className="mr-2 text-[18px] font-semibold text-slate-300 sm:text-[20px]">KES</span>
+              <p className="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[32px]">
+                <span className="mr-1.5 text-[14px] font-semibold text-slate-300 sm:text-[16px]">KES</span>
                 {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
               </p>
               <p className="mt-0.5 text-[13px] text-slate-300">
@@ -271,9 +271,6 @@ export default function DashboardPage() {
               <div className="mt-5 flex flex-wrap gap-3">
                 <Link href="/wallet" className={`${HERO_BTN} bg-emerald-400 text-[#0b2a57] hover:bg-emerald-300`}>
                   <Plus size={16} /> Deposit
-                </Link>
-                <Link href="/wallet" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
-                  <ArrowUpRight size={16} /> Withdraw
                 </Link>
                 <Link href="/m-pesa" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
                   <Send size={16} /> Send
@@ -287,8 +284,8 @@ export default function DashboardPage() {
                 <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
                   <PiggyBank size={16} /> Savings
                 </p>
-                <p className="mt-1 text-[22px] font-bold leading-tight tracking-tight md:text-[28px]">
-                  <span className="mr-1.5 text-[13px] font-semibold text-slate-300 md:text-[15px]">KES</span>
+                <p className="mt-1 text-[18px] font-bold leading-tight tracking-tight md:text-[20px]">
+                  <span className="mr-1 text-[12px] font-semibold text-slate-300 md:text-[13px]">KES</span>
                   {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
                 </p>
               </div>
