@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, WalletCards, Receipt, PiggyBank, MoreHorizontal } from 'lucide-react';
+import { Home, WalletCards, Landmark, PiggyBank, MoreHorizontal } from 'lucide-react';
 
 const TABS = [
   { href: '/dashboard', label: 'Home', icon: Home },
   { href: '/loans', label: 'Loans', icon: WalletCards },
-  { href: '/payments', label: 'Payments', icon: Receipt },
+  { href: '/transactions', label: 'Transfer', icon: Landmark },
   { href: '/savings', label: 'Savings', icon: PiggyBank },
 ] as const;
 

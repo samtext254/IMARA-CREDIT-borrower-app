@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Bell, ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, User,
   WalletCards, Receipt, Smartphone, PiggyBank, Home, Shield, ArrowLeftRight,
-  Briefcase, Leaf, Search, X, Lock, FileText, Landmark
+  Briefcase, Search, X, Lock, FileText, Landmark
 } from 'lucide-react';
 import { BottomNav } from '@/components/borrower/BottomNav';
 import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
@@ -94,16 +94,18 @@ function kycDismissKey(data: KycStatusResponse | null): string {
 
 function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
   return (
-    <div className={`flex items-center gap-2.5 ${compact ? 'justify-center' : ''}`}>
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center">
-        <Leaf size={32} className="text-emerald-500" fill="currentColor" />
-      </div>
+    <div className={`flex items-center ${compact ? 'justify-center' : ''}`}>
       {!compact && (
         <div className="leading-tight">
           <p className={`text-[22px] tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
             <span className="font-semibold">Imara</span> <span className="font-medium">Credit</span>
           </p>
         </div>
+      )}
+      {compact && (
+        <p className={`text-[20px] font-semibold tracking-tight ${dark ? 'text-white' : 'text-[#0f2f66]'}`}>
+          IC
+        </p>
       )}
     </div>
   );
@@ -117,11 +119,11 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
   };
 
   return (
-    <div className="space-y-6 pb-6">
-      {NAV_GROUPS.map((group) => (
-        <div key={group.title}>
+    <div className="space-y-0">
+      {NAV_GROUPS.map((group, groupIndex) => (
+        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-white/10' : ''}`}>
           {!collapsed && (
-            <h3 className="mb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400/80">
+            <h3 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400/80">
               {group.title}
             </h3>
           )}
@@ -140,7 +142,7 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
                     href={item.href}
                     onClick={onNavigate}
                     title={collapsed ? item.label : undefined}
-                    className={`group flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                    className={`group relative flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
                       collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-2.5'
                     } ${
                       active 
@@ -345,7 +347,7 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
           <Logo dark compact={collapsed} />
         </div>
         
-        <nav className={`flex-1 overflow-y-auto py-6 no-scrollbar ${collapsed ? 'px-3' : 'px-4'}`}>
+        <nav className={`flex-1 overflow-y-auto py-2 no-scrollbar ${collapsed ? 'px-3' : 'px-4'}`}>
           <NavLinks pathname={pathname} collapsed={collapsed} />
         </nav>
         
@@ -353,10 +355,6 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
           <div className={`flex flex-col gap-1 ${collapsed ? 'items-center' : 'items-start px-2'}`}>
             <span className="text-[11px] font-medium text-slate-400">
               {collapsed ? 'v2.0' : 'Version 2.0.0'}
-            </span>
-            <span className="text-[10px] text-slate-500 flex items-center gap-1">
-              {!collapsed && <Lock size={10} />}
-              {!collapsed && 'Secure & Trusted'}
             </span>
           </div>
         </div>
@@ -411,16 +409,15 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
               <Logo dark />
               <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white" aria-label="Close menu"><X size={22} /></button>
             </div>
-            <nav className="mt-6 flex-1 overflow-y-auto px-4 no-scrollbar">
+            <nav className="mt-2 flex-1 overflow-y-auto px-4 no-scrollbar">
               <NavLinks pathname={pathname} onNavigate={() => setIsSidebarOpen(false)} />
-              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-4 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
+              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
                 <FileText size={21} strokeWidth={1.7} className="text-slate-200" /> Terms &amp; Conditions
               </Link>
             </nav>
             <div className="border-t border-white/10 p-5">
               <div className="mb-4 flex flex-col items-center">
                 <span className="text-[11px] font-medium text-slate-400">Version 2.0.0</span>
-                <span className="flex items-center gap-1 text-[10px] text-slate-500"><Lock size={10} /> Secure & Trusted</span>
               </div>
               <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] disabled:opacity-60">
                 <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Logout'}
