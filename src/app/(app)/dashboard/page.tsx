@@ -6,7 +6,7 @@ import {
   ArrowRight, Check, CheckCircle2, Receipt, WalletCards, ArrowLeftRight,
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
   Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
-  Headphones, ArrowDownLeft, AlertTriangle, ArrowUpRight, Eye, EyeOff
+  Headphones, ArrowDownLeft, AlertTriangle, ArrowUpRight, Eye, EyeOff, Wallet
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -129,7 +129,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [balanceHidden, setBalanceHidden] = useState(false);
 
-  // Remember the person's choice to hide the balance.
+  // Remember the person's choice to hide balances.
   useEffect(() => {
     try { setBalanceHidden(window.localStorage.getItem('imara.balance.hidden') === '1'); } catch {}
   }, []);
@@ -228,9 +228,10 @@ export default function DashboardPage() {
   const ringPct = loanActive ? derived.progress : 0;
   const dueLabel = derived.dueIn === null ? '—' : derived.dueIn < 0 ? `${Math.abs(derived.dueIn)} days ago` : derived.dueIn === 0 ? 'Today' : `${derived.dueIn} day${derived.dueIn === 1 ? '' : 's'}`;
 
-  // TODO: replace with the real wallet balance once the wallet API is available
-  // (e.g. walletApi.getBalance()). Until then it is always 0.
+  // TODO: replace both with real values once the wallet and savings APIs are available
+  // (e.g. walletApi.getBalance(), savingsApi.getTotal()). Until then they are always 0.
   const walletBalance = 0;
+  const savingsBalance = 0;
 
   const HERO_BTN = 'flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:flex-none sm:px-6';
 
@@ -238,42 +239,66 @@ export default function DashboardPage() {
     <div className="mx-auto grid max-w-[1260px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
       
       <div className="min-w-0 space-y-5">
-        {/* Hero: greeting + wallet balance + wallet actions */}
-        <section aria-label="Wallet" className="rounded-2xl bg-[#0b2a57] px-5 py-6 text-white sm:px-8 sm:py-7">
-          <p className="text-[15px] font-medium text-slate-300">{greeting()}, {derived.firstName}</p>
-
-          <div className="mt-5 flex items-center gap-2">
-            <p className="text-[13px] text-slate-300">Available funds</p>
+        {/* Hero: greeting + wallet (main) + savings (secondary) in one card */}
+        <section aria-label="Balances" className="rounded-2xl bg-[#0b2a57] px-5 py-6 text-white sm:px-8 sm:py-7">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[15px] font-medium text-slate-300">{greeting()}, {derived.firstName}</p>
             <button
               type="button"
               onClick={toggleBalance}
-              aria-label={balanceHidden ? 'Show balance' : 'Hide balance'}
+              aria-label={balanceHidden ? 'Show balances' : 'Hide balances'}
               aria-pressed={balanceHidden}
-              className="grid h-7 w-7 place-items-center rounded-full text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+              className="grid h-8 w-8 place-items-center rounded-full text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
             >
-              {balanceHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+              {balanceHidden ? <EyeOff size={17} /> : <Eye size={17} />}
             </button>
           </div>
 
-          <p className="mt-1 text-[36px] font-extrabold leading-tight tracking-tight sm:text-[44px]">
-            <span className="mr-2 text-[18px] font-semibold text-slate-300 sm:text-[20px]">KES</span>
-            {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
-          </p>
+          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-[1.5fr_1fr] md:gap-8">
+            {/* Wallet */}
+            <div>
+              <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
+                <Wallet size={16} /> Wallet
+              </p>
+              <p className="mt-1 text-[36px] font-extrabold leading-tight tracking-tight sm:text-[44px]">
+                <span className="mr-2 text-[18px] font-semibold text-slate-300 sm:text-[20px]">KES</span>
+                {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
+              </p>
+              <p className="mt-0.5 text-[13px] text-slate-300">
+                {walletBalance === 0 ? 'Add money to get started.' : 'Available funds'}
+              </p>
 
-          {walletBalance === 0 && (
-            <p className="mt-1 text-[13px] text-slate-300">Add money to get started.</p>
-          )}
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href="/wallet" className={`${HERO_BTN} bg-emerald-400 text-[#0b2a57] hover:bg-emerald-300`}>
+                  <Plus size={16} /> Deposit
+                </Link>
+                <Link href="/wallet" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
+                  <ArrowUpRight size={16} /> Withdraw
+                </Link>
+                <Link href="/m-pesa" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
+                  <Send size={16} /> Send
+                </Link>
+              </div>
+            </div>
 
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link href="/wallet" className={`${HERO_BTN} bg-emerald-400 text-[#0b2a57] hover:bg-emerald-300`}>
-              <Plus size={16} /> Deposit
-            </Link>
-            <Link href="/wallet" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
-              <ArrowUpRight size={16} /> Withdraw
-            </Link>
-            <Link href="/m-pesa" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
-              <Send size={16} /> Send
-            </Link>
+            {/* Savings: stacked on desktop, compact row on mobile */}
+            <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-5 md:block md:border-l md:border-t-0 md:pl-8 md:pt-0">
+              <div>
+                <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
+                  <PiggyBank size={16} /> Savings
+                </p>
+                <p className="mt-1 text-[22px] font-bold leading-tight tracking-tight md:text-[28px]">
+                  <span className="mr-1.5 text-[13px] font-semibold text-slate-300 md:text-[15px]">KES</span>
+                  {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
+                </p>
+              </div>
+              <Link
+                href="/savings"
+                className="inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-emerald-300 transition-colors hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 md:mt-3"
+              >
+                {savingsBalance === 0 ? 'Start saving' : 'Add to savings'} <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         </section>
 
