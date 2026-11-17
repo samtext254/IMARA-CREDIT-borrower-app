@@ -6,35 +6,31 @@ import {
   ArrowRight, Check, CheckCircle2, Receipt, WalletCards, ArrowLeftRight,
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
   Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
-  Headphones, ArrowDownLeft, AlertTriangle, Eye, EyeOff, Wallet
+  Headphones, ArrowDownLeft, AlertTriangle, Eye, EyeOff, Wallet,
+  BarChart3, Package
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
 
 const QUICK_ACTION_GROUPS = [
   {
-    title: 'Send & Receive',
+    title: 'Loans & Credit',
     actions: [
-      { icon: Send, label: 'Send Money', href: '/m-pesa', color: 'bg-emerald-500' },
-      { icon: Globe, label: 'International', href: '/m-pesa', color: 'bg-indigo-500' },
-      { icon: ArrowLeftRight, label: 'Transfers', href: '/transactions', color: 'bg-violet-500' },
+      { icon: ClipboardList, label: 'Apply Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
+      { icon: FileText, label: 'Loan Statement', href: '/loans/statement', color: 'bg-sky-500' },
     ]
   },
   {
-    title: 'Payments & Bills',
+    title: 'Savings & Score',
     actions: [
-      { icon: FileText, label: 'Pay Bills', href: '/payments', color: 'bg-sky-500' },
-      { icon: Smartphone, label: 'Airtime', href: '/m-pesa', color: 'bg-blue-500' },
-      { icon: Zap, label: 'KPLC Tokens', href: '/payments', color: 'bg-amber-500' },
-      { icon: Store, label: 'Business Paybill', href: '/payments', color: 'bg-teal-500' },
+      { icon: PiggyBank, label: 'My Savings', href: '/savings', color: 'bg-emerald-500' },
+      { icon: BarChart3, label: 'Credit Score', href: '/credit-score', color: 'bg-amber-500' },
     ]
   },
   {
-    title: 'Finance & Growth',
+    title: 'Explore',
     actions: [
-      { icon: PiggyBank, label: 'Save Money', href: '/savings', color: 'bg-emerald-500' },
-      { icon: ClipboardList, label: 'Apply for Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
-      { icon: CalendarClock, label: 'Cash Ratiba', href: '/loans', color: 'bg-rose-500' },
+      { icon: Package, label: 'Products', href: '/products', color: 'bg-violet-500' },
     ]
   }
 ];
