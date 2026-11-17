@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight, Check, CheckCircle2, Receipt, WalletCards, ArrowLeftRight,
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
-  Landmark, Info, Send, Plus, Calendar, Clock, ClipboardList, Shield,
-  Headphones, ArrowDownLeft, AlertTriangle
+  Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
+  Headphones, ArrowDownLeft, AlertTriangle, ArrowUpRight, Eye, EyeOff
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -45,6 +45,9 @@ function formatKes(amount: any): string {
   if (amount === null || amount === undefined || amount === '') return '0';
   const n = typeof amount === 'string' ? parseFloat(amount) : amount;
   return isNaN(n) ? '0' : Math.round(n).toLocaleString('en-KE');
+}
+function formatKesDecimals(amount: number): string {
+  return amount.toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
@@ -89,6 +92,9 @@ function greeting(): string {
   if (h < 17) return 'Good afternoon';
   return 'Good evening';
 }
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+}
 
 function activityRow(item: ActivityItem) {
   const ok = 'bg-emerald-50 text-emerald-600';
@@ -121,6 +127,19 @@ export default function DashboardPage() {
   const [activeSchedule, setActiveSchedule] = useState<LoanScheduleEntry[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [balanceHidden, setBalanceHidden] = useState(false);
+
+  // Remember the person's choice to hide the balance.
+  useEffect(() => {
+    try { setBalanceHidden(window.localStorage.getItem('imara.balance.hidden') === '1'); } catch {}
+  }, []);
+  function toggleBalance() {
+    setBalanceHidden((v) => {
+      const next = !v;
+      try { window.localStorage.setItem('imara.balance.hidden', next ? '1' : '0'); } catch {}
+      return next;
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -163,8 +182,8 @@ export default function DashboardPage() {
 
   const derived = useMemo(() => {
     if (!borrower) return null;
-    const fullName = [borrower.first_name, borrower.last_name].filter(Boolean).join(' ').trim();
-    const displayName = fullName || borrower.email.split('@')[0];
+    const emailName = String(borrower.email || '').split('@')[0];
+    const firstName = capitalize(borrower.first_name || emailName);
     const progress = activeLoan ? computeProgress(activeLoan) : 0;
     const nextInst = activeSchedule.length > 0 ? nextInstallment(activeSchedule) : null;
     const loanOutstanding = activeLoan ? toNumber(activeLoan.outstanding_total) : 0;
@@ -189,13 +208,13 @@ export default function DashboardPage() {
     else if (rawScore >= 500) { creditStatus = 'Good'; pill = 'bg-blue-50 text-blue-600'; }
     else if (rawScore >= 300) { creditStatus = 'Fair'; pill = 'bg-amber-50 text-amber-600'; }
 
-    return { displayName, progress, nextPaymentAmount, nextPaymentDate, dueIn, installment, rawScore, creditStatus, pill, loanOutstanding, totalDue };
+    return { firstName, progress, nextPaymentAmount, nextPaymentDate, dueIn, installment, rawScore, creditStatus, pill, loanOutstanding, totalDue };
   }, [borrower, eligibility, activeLoan, activeSchedule]);
 
   if (loading || !borrower || !derived) {
     return (
       <div className="flex h-[60vh] w-full flex-col items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0a5cbe] border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent" />
         <p className="mt-4 text-sm font-medium text-slate-500">Loading your dashboard...</p>
       </div>
     );
@@ -209,60 +228,81 @@ export default function DashboardPage() {
   const ringPct = loanActive ? derived.progress : 0;
   const dueLabel = derived.dueIn === null ? '—' : derived.dueIn < 0 ? `${Math.abs(derived.dueIn)} days ago` : derived.dueIn === 0 ? 'Today' : `${derived.dueIn} day${derived.dueIn === 1 ? '' : 's'}`;
 
+  // TODO: replace with the real wallet balance once the wallet API is available
+  // (e.g. walletApi.getBalance()). Until then it is always 0.
+  const walletBalance = 0;
+
+  const HERO_BTN = 'flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:flex-none sm:px-6';
+
   return (
     <div className="mx-auto grid max-w-[1260px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
       
       <div className="min-w-0 space-y-5">
-        <section className="relative flex min-h-[150px] flex-col justify-center overflow-hidden rounded-2xl bg-[#0a5cbe] px-6 py-6 text-white sm:min-h-[170px] sm:px-8">
-          <div className="relative z-10">
-            <p className="text-[15px] font-medium text-blue-100 sm:text-[16px]">{greeting()},</p>
-            <div className="mt-1 flex items-center gap-2.5">
-              <h2 className="text-[28px] font-bold uppercase leading-tight tracking-tight sm:text-[32px]">{derived.displayName}</h2>
-            </div>
-            <p className="mt-2 text-[13px] text-blue-100 sm:text-[14px]">Your money, loans and payments in one place.</p>
+        {/* Hero: greeting + wallet balance + wallet actions */}
+        <section aria-label="Wallet" className="rounded-2xl bg-[#0b2a57] px-5 py-6 text-white sm:px-8 sm:py-7">
+          <p className="text-[15px] font-medium text-slate-300">{greeting()}, {derived.firstName}</p>
+
+          <div className="mt-5 flex items-center gap-2">
+            <p className="text-[13px] text-slate-300">Available funds</p>
+            <button
+              type="button"
+              onClick={toggleBalance}
+              aria-label={balanceHidden ? 'Show balance' : 'Hide balance'}
+              aria-pressed={balanceHidden}
+              className="grid h-7 w-7 place-items-center rounded-full text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
+            >
+              {balanceHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+
+          <p className="mt-1 text-[36px] font-extrabold leading-tight tracking-tight sm:text-[44px]">
+            <span className="mr-2 text-[18px] font-semibold text-slate-300 sm:text-[20px]">KES</span>
+            {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
+          </p>
+
+          {walletBalance === 0 && (
+            <p className="mt-1 text-[13px] text-slate-300">Add money to get started.</p>
+          )}
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href="/wallet" className={`${HERO_BTN} bg-emerald-400 text-[#0b2a57] hover:bg-emerald-300`}>
+              <Plus size={16} /> Deposit
+            </Link>
+            <Link href="/wallet" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
+              <ArrowUpRight size={16} /> Withdraw
+            </Link>
+            <Link href="/m-pesa" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
+              <Send size={16} /> Send
+            </Link>
           </div>
         </section>
 
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.35fr]">
-          <div className={`${CARD} flex flex-col p-4`}>
-            <div className="flex items-center gap-3">
-              <CardIcon icon={WalletCards} tile="bg-[#1565d8]" />
-              <p className="flex items-center gap-1 text-[14px] font-semibold text-slate-800">Wallet Balance <Info size={12} className="text-slate-400" /></p>
-            </div>
-            <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES 0.00</h3>
-            <p className="text-[13px] text-slate-500">Available funds</p>
-            <div className="mt-4 flex gap-2">
-              <Link href="/m-pesa" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-[#EEF3FA] py-2.5 text-[12px] font-bold text-[#0a5cbe] transition hover:bg-blue-100"><Send size={14} /> Send</Link>
-              <Link href="/wallet" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-[12px] font-bold text-white shadow-sm transition hover:brightness-105"><Plus size={14} /> Deposit</Link>
-            </div>
+        {/* Loan card (to be merged with Loan Summary in the next step) */}
+        <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
+          <div className="flex items-center gap-3">
+            <CardIcon icon={Landmark} tile="bg-emerald-600" />
+            <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
           </div>
-
-          <div className={`${CARD} flex flex-col p-4`}>
-            <div className="flex items-center gap-3">
-              <CardIcon icon={Landmark} tile="bg-emerald-600" />
-              <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
-            </div>
-            <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
-            <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
-              <div className="flex items-start gap-2.5">
-                <Calendar size={16} className="mt-0.5 text-slate-500" />
-                <div>
-                  <p className="text-slate-500">Next Payment</p>
-                  <p className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.nextPaymentAmount) : '0'}</p>
-                  <p className="text-slate-500">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-2.5 border-l border-slate-100 pl-3">
-                <Clock size={16} className="mt-0.5 text-slate-500" />
-                <div>
-                  <p className="text-slate-500">Due In</p>
-                  <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>{loanActive ? dueLabel : '—'}</p>
-                </div>
+          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
+          <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+            <div className="flex items-start gap-2.5">
+              <Calendar size={16} className="mt-0.5 text-slate-500" />
+              <div>
+                <p className="text-slate-500">Next Payment</p>
+                <p className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.nextPaymentAmount) : '0'}</p>
+                <p className="text-slate-500">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</p>
               </div>
             </div>
-            <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">Repay Loan <ArrowRight size={14} /></Link>
+            <div className="flex items-start gap-2.5 border-l border-slate-100 pl-3">
+              <Clock size={16} className="mt-0.5 text-slate-500" />
+              <div>
+                <p className="text-slate-500">Due In</p>
+                <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>{loanActive ? dueLabel : '—'}</p>
+              </div>
+            </div>
           </div>
+          <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">Repay Loan <ArrowRight size={14} /></Link>
         </section>
 
         <section className={`${CARD} overflow-hidden`}>
