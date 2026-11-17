@@ -12,27 +12,12 @@ import {
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
 
-const QUICK_ACTION_GROUPS = [
-  {
-    title: 'Loans & Credit',
-    actions: [
-      { icon: ClipboardList, label: 'Apply Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
-      { icon: FileText, label: 'Loan Statement', href: '/loans/statement', color: 'bg-sky-500' },
-    ]
-  },
-  {
-    title: 'Savings & Score',
-    actions: [
-      { icon: PiggyBank, label: 'My Savings', href: '/savings', color: 'bg-emerald-500' },
-      { icon: BarChart3, label: 'Credit Score', href: '/credit-score', color: 'bg-amber-500' },
-    ]
-  },
-  {
-    title: 'Explore',
-    actions: [
-      { icon: Package, label: 'Products', href: '/products', color: 'bg-violet-500' },
-    ]
-  }
+const QUICK_ACTIONS = [
+  { icon: ClipboardList, label: 'Apply Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
+  { icon: FileText, label: 'Loan Statement', href: '/loans/statement', color: 'bg-sky-500' },
+  { icon: PiggyBank, label: 'My Savings', href: '/savings', color: 'bg-emerald-500' },
+  { icon: BarChart3, label: 'Credit Score', href: '/credit-score', color: 'bg-amber-500' },
+  { icon: Package, label: 'Products', href: '/products', color: 'bg-violet-500' },
 ];
 
 const CARD = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
@@ -327,20 +312,15 @@ export default function DashboardPage() {
           <div className="border-b border-slate-100 bg-white px-5 py-4">
             <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
           </div>
-          <div className="divide-y divide-slate-100">
-            {QUICK_ACTION_GROUPS.map((group, idx) => (
-              <div key={idx} className="p-4 sm:p-5">
-                <h4 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">{group.title}</h4>
-                <div className="flex flex-wrap gap-3 sm:gap-4">
-                  {group.actions.map((a) => (
-                    <Link key={a.label} href={a.href} className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-auto">
-                      <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}><a.icon size={22} strokeWidth={1.9} /></div>
-                      <span className="text-center text-[11px] font-semibold leading-tight text-slate-700">{a.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <div className="p-4 sm:p-5">
+            <div className="flex flex-wrap gap-3 sm:gap-4">
+              {QUICK_ACTIONS.map((a) => (
+                <Link key={a.label} href={a.href} className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-auto">
+                  <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}><a.icon size={22} strokeWidth={1.9} /></div>
+                  <span className="text-center text-[11px] font-semibold leading-tight text-slate-700">{a.label}</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </section>
 
