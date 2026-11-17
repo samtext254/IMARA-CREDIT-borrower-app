@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Bell, ChevronDown, ChevronLeft, ChevronRight, HelpCircle, LogOut, User,
   WalletCards, Receipt, Smartphone, PiggyBank, Home, Shield, ArrowLeftRight,
-  Briefcase, Leaf, Search, X, Lock, FileText
+  Briefcase, Leaf, Search, X, Lock, FileText, Landmark
 } from 'lucide-react';
 import { BottomNav } from '@/components/borrower/BottomNav';
 import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
@@ -14,34 +14,73 @@ import { imara, ImaraApiError } from '@/lib/api';
 import { getKycStatus, type KycStatusResponse } from '@/lib/kyc-api';
 import KycModal from '@/components/KycModal';
 
-const NAV_GROUPS = [
+type NavItem = {
+  label: string;
+  icon: any;
+  href?: string;
+  dropdown?: { href: string; label: string }[];
+};
+
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
-    title: 'Main',
+    title: 'Overview',
     items: [
       { href: '/dashboard', label: 'Home', icon: Home },
       { href: '/transactions', label: 'Transactions', icon: ArrowLeftRight },
+      { href: '/statements', label: 'Statements', icon: FileText },
     ]
   },
   {
-    title: 'Money',
+    title: 'Money Transfer',
     items: [
-      { href: '/m-pesa', label: 'M-PESA Services', icon: Smartphone },
-      { href: '/payments', label: 'Payments', icon: Receipt },
+      { 
+        label: 'Mobile Money', 
+        icon: Smartphone,
+        dropdown: [
+          { href: '/m-pesa', label: 'M-PESA' },
+          { href: '/airtel-money', label: 'Airtel Money' },
+        ]
+      },
+      { 
+        label: 'Bank Transfer', 
+        icon: Landmark,
+        dropdown: [
+          { href: '/bank/equity', label: 'Equity Bank' },
+          { href: '/bank/kcb', label: 'KCB Bank' },
+          { href: '/bank/family', label: 'Family Bank' },
+        ]
+      },
     ]
   },
   {
     title: 'Credit & Growth',
     items: [
-      { href: '/loans', label: 'Loans', icon: WalletCards },
+      { 
+        label: 'Loans', 
+        icon: WalletCards,
+        dropdown: [
+          { href: '/apply/loan', label: 'Apply Loan' },
+          { href: '/loans/repay', label: 'Repay Loan' },
+          { href: '/loans', label: 'My Loans' },
+          { href: '/loans/statement', label: 'Loan Statement' },
+        ]
+      },
+      { 
+        label: 'Savings', 
+        icon: PiggyBank,
+        dropdown: [
+          { href: '/savings/open', label: 'Open Savings Acc' },
+          { href: '/savings', label: 'My Savings' },
+        ]
+      },
       { href: '/credit-score', label: 'Credit Score', icon: Shield },
-      { href: '/savings', label: 'Savings', icon: PiggyBank },
       { href: '/products', label: 'Products', icon: Briefcase },
     ]
   },
   {
-    title: 'Help',
+    title: 'Support',
     items: [
-      { href: '/support', label: 'Support', icon: HelpCircle },
+      { href: '/support', label: 'Help & Support', icon: HelpCircle },
     ]
   }
 ];
@@ -74,8 +113,14 @@ function Logo({ dark = false, compact = false }: { dark?: boolean; compact?: boo
 }
 
 function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: string; onNavigate?: () => void; collapsed?: boolean }) {
+  const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({});
+
+  const toggleDropdown = (label: string) => {
+    setOpenDropdowns(prev => ({ ...prev, [label]: !prev[label] }));
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       {NAV_GROUPS.map((group) => (
         <div key={group.title}>
           {!collapsed && (
@@ -85,34 +130,84 @@ function NavLinks({ pathname, onNavigate, collapsed = false }: { pathname: strin
           )}
           
           <div className="space-y-1">
-            {group.items.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href || pathname.startsWith(href + '/');
+            {group.items.map((item) => {
+              const Icon = item.icon;
+              const hasDropdown = item.dropdown && item.dropdown.length > 0;
+              const isDropdownOpen = openDropdowns[item.label];
+              
+              if (!hasDropdown && item.href) {
+                const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    onClick={onNavigate}
+                    title={collapsed ? item.label : undefined}
+                    className={`group flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                      collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-2.5'
+                    } ${
+                      active 
+                        ? 'bg-gradient-to-r from-[#1565d8] to-[#0f4fb0] text-white shadow-md shadow-blue-900/20' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} />
+                    {!collapsed && <span>{item.label}</span>}
+                    
+                    {collapsed && active && (
+                      <span className="absolute left-0 h-6 w-1 rounded-r-full bg-emerald-400" />
+                    )}
+                  </Link>
+                );
+              }
+
+              const isGroupActive = item.dropdown?.some(sub => pathname.startsWith(sub.href));
+              
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onNavigate}
-                  title={collapsed ? label : undefined}
-                  aria-label={label}
-                  className={`group relative flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 ${
-                    collapsed ? 'justify-center px-0 py-3' : 'gap-3 px-4 py-2.5'
-                  } ${
-                    active 
-                      ? 'bg-gradient-to-r from-[#1565d8] to-[#0f4fb0] text-white shadow-md shadow-blue-900/20' 
-                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                  }`}
-                >
-                  <Icon 
-                    size={20} 
-                    strokeWidth={active ? 2.2 : 1.7} 
-                    className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} 
-                  />
-                  {!collapsed && <span>{label}</span>}
-                  
-                  {collapsed && active && (
-                    <span className="absolute left-0 h-6 w-1 rounded-r-full bg-emerald-400" />
+                <div key={item.label}>
+                  <button
+                    type="button"
+                    onClick={() => toggleDropdown(item.label)}
+                    title={collapsed ? item.label : undefined}
+                    className={`w-full group flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                      collapsed ? 'justify-center px-0 py-3' : 'px-4 py-2.5'
+                    } ${
+                      isDropdownOpen || isGroupActive
+                        ? 'text-white' 
+                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                      <Icon size={20} strokeWidth={1.7} className={isGroupActive ? 'text-white' : 'text-slate-400'} />
+                      {!collapsed && <span>{item.label}</span>}
+                    </div>
+                    {!collapsed && (
+                      <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    )}
+                  </button>
+
+                  {!collapsed && isDropdownOpen && item.dropdown && (
+                    <div className="mt-1 ml-4 space-y-1 border-l border-white/10 pl-3">
+                      {item.dropdown.map((subItem) => {
+                        const subActive = pathname === subItem.href;
+                        return (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            onClick={onNavigate}
+                            className={`block rounded-lg px-3 py-2 text-[13px] transition-colors ${
+                              subActive 
+                                ? 'bg-white/10 font-semibold text-white' 
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            }`}
+                          >
+                            {subItem.label}
+                          </Link>
+                        );
+                      })}
+                    </div>
                   )}
-                </Link>
+                </div>
               );
             })}
           </div>
@@ -253,21 +348,19 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
           <Logo dark compact={collapsed} />
         </div>
         
-        <nav className={`flex-1 overflow-y-auto py-6 ${collapsed ? 'px-3' : 'px-4'}`}>
+        <nav className={`flex-1 overflow-y-auto py-6 no-scrollbar ${collapsed ? 'px-3' : 'px-4'}`}>
           <NavLinks pathname={pathname} collapsed={collapsed} />
         </nav>
         
         <div className="mt-auto border-t border-white/10 p-4">
-          {!collapsed && (
-            <div className="relative mb-4 overflow-hidden rounded-2xl bg-white/[0.03] p-4 ring-1 ring-white/10">
-              <Leaf size={20} className="mb-2 text-emerald-400" fill="currentColor" />
-              <p className="text-[13px] font-semibold leading-tight text-white">Your financial journey, made easier.</p>
-              <p className="mt-1 text-[10px] text-slate-400">Borrow • Save • Pay • Grow</p>
-            </div>
-          )}
-          <div className={`flex items-center gap-2 text-[11px] text-slate-400 ${collapsed ? 'justify-center' : 'px-2'}`}>
-            <Lock size={14} />
-            {!collapsed && <span>Secure & Trusted</span>}
+          <div className={`flex flex-col gap-1 ${collapsed ? 'items-center' : 'items-start px-2'}`}>
+            <span className="text-[11px] font-medium text-slate-400">
+              {collapsed ? 'v2.0' : 'Version 2.0.0'}
+            </span>
+            <span className="text-[10px] text-slate-500 flex items-center gap-1">
+              {!collapsed && <Lock size={10} />}
+              {!collapsed && 'Secure & Trusted'}
+            </span>
           </div>
         </div>
       </aside>
@@ -317,17 +410,21 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[10000] lg:hidden">
           <button aria-label="Close menu" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
           <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-[#0b2a57] text-white shadow-2xl">
-            <div className="flex items-center justify-between px-5 pb-2 pt-6 border-b border-white/10">
+            <div className="flex items-center justify-between border-b border-white/10 px-5 pb-2 pt-6">
               <Logo dark />
               <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white" aria-label="Close menu"><X size={22} /></button>
             </div>
-            <nav className="mt-6 flex-1 overflow-y-auto px-4">
+            <nav className="mt-6 flex-1 overflow-y-auto px-4 no-scrollbar">
               <NavLinks pathname={pathname} onNavigate={() => setIsSidebarOpen(false)} />
               <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-4 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
                 <FileText size={21} strokeWidth={1.7} className="text-slate-200" /> Terms &amp; Conditions
               </Link>
             </nav>
-            <div className="p-5 border-t border-white/10">
+            <div className="border-t border-white/10 p-5">
+              <div className="mb-4 flex flex-col items-center">
+                <span className="text-[11px] font-medium text-slate-400">Version 2.0.0</span>
+                <span className="flex items-center gap-1 text-[10px] text-slate-500"><Lock size={10} /> Secure & Trusted</span>
+              </div>
               <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] disabled:opacity-60">
                 <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Logout'}
               </button>
