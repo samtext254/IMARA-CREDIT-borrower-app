@@ -229,64 +229,55 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* UNIFIED BALANCE CARD */}
-        <section className={`${CARD} overflow-hidden`}>
-          <div className="p-5 sm:p-6">
-            {/* Top: Wallet */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Wallet size={20} />
+        {/* WALLET & SAVINGS CARDS - LIGHT THEME */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          
+          {/* Wallet Card */}
+          <div className={`${CARD} p-5 relative overflow-hidden`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <Wallet size={18} />
               </div>
-              <p className="text-[14px] font-semibold text-slate-600">Wallet Balance</p>
+              <p className="text-[13px] font-semibold text-slate-600">Wallet Balance</p>
             </div>
-            
-            <p className="text-[32px] font-extrabold leading-tight text-[#0f2f66] sm:text-[36px]">
-              <span className="mr-2 text-[16px] font-semibold text-slate-400">KES</span>
+            <p className="text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+              <span className="mr-1 text-[14px] font-semibold text-slate-400">KES</span>
               {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
             </p>
-            <p className="mt-1 text-[13px] text-slate-500">
-              {walletBalance === 0 ? 'Add money to get started.' : 'Available funds for spending'}
+            <p className="mt-1 text-[12px] text-slate-500">
+              {walletBalance === 0 ? 'Add money to get started.' : 'Available funds'}
             </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/wallet" className="flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-emerald-700">
-                <Plus size={16} /> Deposit
+            <div className="mt-5 flex gap-2">
+              <Link href="/wallet" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-[12px] font-bold text-white transition hover:bg-emerald-700">
+                <Plus size={14} /> Deposit
               </Link>
-              <Link href="/m-pesa" className="flex items-center justify-center gap-2 rounded-xl bg-slate-100 px-6 py-2.5 text-[13px] font-bold text-slate-700 transition hover:bg-slate-200">
-                <Send size={16} /> Send
+              <Link href="/m-pesa" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-2 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200">
+                <Send size={14} /> Send
               </Link>
             </div>
           </div>
 
-          {/* Bottom Divider Section */}
-          <div className="grid grid-cols-2 border-t border-slate-100 bg-slate-50/50">
-            {/* Savings */}
-            <div className="p-5 sm:p-6 border-r border-slate-100">
-              <div className="flex items-center gap-2 mb-1">
-                <PiggyBank size={16} className="text-violet-500" />
-                <p className="text-[12px] font-semibold text-slate-600">Savings</p>
+          {/* Savings Card */}
+          <div className={`${CARD} p-5 relative overflow-hidden`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                <PiggyBank size={18} />
               </div>
-              <p className="text-[20px] font-bold text-[#0f2f66]">
-                <span className="mr-1 text-[12px] font-semibold text-slate-400">KES</span>
-                {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
-              </p>
-              <Link href="/savings" className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:underline">
-                View Goals <ArrowRight size={12} />
-              </Link>
+              <p className="text-[13px] font-semibold text-slate-600">Total Savings</p>
             </div>
-
-            {/* Loan */}
-            <div className="p-5 sm:p-6">
-              <div className="flex items-center gap-2 mb-1">
-                <Landmark size={16} className="text-slate-500" />
-                <p className="text-[12px] font-semibold text-slate-600">Loan Balance</p>
-              </div>
-              <p className="text-[20px] font-bold text-[#0f2f66]">
-                <span className="mr-1 text-[12px] font-semibold text-slate-400">KES</span>
-                {formatKes(loanActive ? derived.loanOutstanding : 0)}
-              </p>
-              <Link href={loanActive ? repayHref : "/apply/loan"} className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:underline">
-                {loanActive ? 'Repay Loan' : 'Apply for Loan'} <ArrowRight size={12} />
+            <p className="text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+              <span className="mr-1 text-[14px] font-semibold text-slate-400">KES</span>
+              {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">
+              Earn up to 10% p.a.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <Link href="/savings" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-violet-600 py-2 text-[12px] font-bold text-white transition hover:bg-violet-700">
+                <Plus size={14} /> Add Money
+              </Link>
+              <Link href="/savings" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-2 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200">
+                View Goals
               </Link>
             </div>
           </div>
@@ -355,6 +346,61 @@ export default function DashboardPage() {
       {/* RIGHT COLUMN */}
       <div className="min-w-0 space-y-5">
         
+        {/* LOAN CARD */}
+        <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
+          <div className="flex items-center gap-3">
+            <CardIcon icon={Landmark} tile="bg-emerald-600" />
+            <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
+          </div>
+          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+            KES {formatKes(loanActive ? derived.loanOutstanding : 0)}
+          </h3>
+          <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
+
+          {loanActive && (
+            <div className="mt-4">
+              <div className="mb-1 flex justify-between text-[10px] font-semibold text-slate-500">
+                <span>Repaid</span>
+                <span>{derived.progress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${isOverdue ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${derived.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
+            <div className="flex items-start gap-2.5">
+              <Calendar size={16} className="mt-0.5 text-slate-500" />
+              <div>
+                <p className="text-slate-500">Next Payment</p>
+                <p className="text-[13px] font-bold text-slate-900">KES {loanActive ? formatKes(derived.nextPaymentAmount) : '0'}</p>
+                <p className="text-slate-500">{loanActive ? formatDate(derived.nextPaymentDate) : '—'}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5 border-l border-slate-100 pl-3">
+              <Clock size={16} className="mt-0.5 text-slate-500" />
+              <div>
+                <p className="text-slate-500">Due In</p>
+                <p className={`text-[13px] font-bold ${isOverdue ? 'text-red-600' : 'text-slate-900'}`}>{loanActive ? dueLabel : '—'}</p>
+              </div>
+            </div>
+          </div>
+
+          {loanActive ? (
+            <Link href={repayHref} className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">
+              Repay Loan <ArrowRight size={14} />
+            </Link>
+          ) : (
+            <Link href="/apply/loan" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#0a5cbe] py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#084b9c]">
+              Apply for a Loan <ArrowRight size={14} />
+            </Link>
+          )}
+        </section>
+
         {/* SAVINGS GOAL WIDGET */}
         <section className={`${CARD} p-5`}>
           <div className="flex items-center justify-between mb-4">
