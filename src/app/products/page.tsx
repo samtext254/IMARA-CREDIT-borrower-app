@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Loader2, Menu, X, Home, Wallet, FileText, Settings, LogOut } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Loader2, Shield, Info } from 'lucide-react';
 import Link from 'next/link';
 import { loans as loansApi } from '@/lib/loans';
 import type { LoanProduct, Loan, Eligibility } from '@/lib/loans';
@@ -26,7 +26,6 @@ function getProductVisuals(name: string) {
   }
   if (upper.includes('BIASHARA') || upper.includes('BUSINESS')) {
     return {
-      // Using a reliable Unsplash image for business (your gstatic link was blocked)
       image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=600',
       ctaText: 'Grow Now'
     };
@@ -44,6 +43,8 @@ function getProductVisuals(name: string) {
   };
 }
 
+const CARD = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
+
 export default function LoanProductsPage() {
   const router = useRouter();
   const [products, setProducts] = useState<LoanProduct[]>([]);
@@ -52,8 +53,6 @@ export default function LoanProductsPage() {
   const [kycData, setKycData] = useState<KycStatusResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,130 +108,104 @@ export default function LoanProductsPage() {
   }
 
   if (loading) {
-    return <div className="min-h-screen bg-[#F8F9FA] grid place-items-center"><Loader2 className="animate-spin text-[#0056b3]" size={28} /></div>;
+    return (
+      <div className="flex h-[60vh] w-full flex-col items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-emerald-600" />
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading products...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F9FA] pb-24 relative overflow-hidden">
+    <div className="mx-auto max-w-[1260px] space-y-5 pb-10">
       
-      {/* SIDE DRAWER */}
-      {isMenuOpen && (
-        <div className="fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsMenuOpen(false)} />
-          <div className="relative w-72 bg-[#0056b3] h-full shadow-2xl flex flex-col animate-in slide-in-from-left duration-300">
-            <div className="flex items-center justify-between p-5 border-b border-white/10">
-              <div>
-                <h2 className="text-[18px] font-bold text-white tracking-tight">Imara Credit</h2>
-                <p className="text-[11px] text-white/70">Your goals. Our support.</p>
-              </div>
-              <button onClick={() => setIsMenuOpen(false)} className="text-white/80 hover:text-white">
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-              <Link href="/home" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
-                <Home size={18} /> Dashboard
-              </Link>
-              <Link href="/products" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg bg-white/20 text-white font-bold transition">
-                <Wallet size={18} /> Products
-              </Link>
-              <Link href="/loans" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
-                <FileText size={18} /> My Loans
-              </Link>
-              <Link href="/notifications" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
-                <ClockIcon size={18} /> Activity
-              </Link>
-              <Link href="/profile" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition">
-                <Settings size={18} /> Settings
-              </Link>
-            </div>
-            <div className="p-4 border-t border-white/10">
-              <button onClick={() => router.push('/login')} className="flex w-full items-center gap-3 px-3 py-3 rounded-lg text-white/80 hover:bg-red-500/20 hover:text-red-300 transition">
-                <LogOut size={18} /> Logout
-              </button>
-            </div>
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={() => router.back()} 
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 shadow-sm transition hover:bg-slate-50"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-[22px] font-bold text-[#0f2f66]">Loan Products</h1>
+            <p className="text-[13px] text-slate-500">Choose the best financial solution for your needs.</p>
           </div>
         </div>
-      )}
-
-      {/* NAV */}
-      <div className="sticky top-0 z-30 bg-[#0056b3]">
-        <div className="flex items-center gap-3 px-5 py-4">
-          <button onClick={() => setIsMenuOpen(true)} className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition active:scale-95">
-            <Menu size={20} strokeWidth={2.2} />
-          </button>
-          <h1 className="text-[16px] font-semibold tracking-tight text-white">Loan Products</h1>
-        </div>
-        <div className="h-1 w-full bg-brand-500" />
       </div>
 
+      {/* ERROR / EMPTY STATES */}
       {error ? (
-        <div className="p-6 text-center text-red-600">{error}</div>
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center font-semibold text-red-700">
+          {error}
+        </div>
       ) : products.length === 0 ? (
-        <div className="p-6 text-center text-ink-500">No products available at the moment.</div>
+        <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-500">
+          <Info className="mx-auto mb-3 h-10 w-10 text-slate-300" />
+          <p className="font-medium">No products available at the moment.</p>
+        </div>
       ) : (
-        <div className="mt-4">
-          <div className="flex overflow-x-auto snap-x snap-mandatory hide-scroll-bar gap-3 px-4 pb-8 pt-2">
-            {products.map((p) => {
-              const visuals = getProductVisuals(p.name);
+        
+        /* RESPONSIVE GRID (1 Col Mobile, 2 Col Tablet, 3 Col Desktop) */
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {products.map((p) => {
+            const visuals = getProductVisuals(p.name);
 
-              return (
-                <div 
-                  key={p.id} 
-                  // CHANGED: Reduced width to 180px for phone fitting
-                  className="snap-center shrink-0 w-[180px] bg-white rounded-2xl shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] border border-ink-100 overflow-hidden flex flex-col"
-                >
-                  {/* Image Header - Reduced height */}
-                  <div className="h-[100px] w-full relative bg-ink-100">
-                    <img 
-                      src={visuals.image} 
-                      alt={p.name} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded text-[8px] font-bold text-[#0056b3]">
-                      Up to KES {Number(p.max_amount).toLocaleString()}
-                    </div>
+            return (
+              <div 
+                key={p.id} 
+                className={`${CARD} overflow-hidden flex flex-col transition-all hover:shadow-md hover:border-emerald-100`}
+              >
+                {/* Image Header */}
+                <div className="h-[140px] w-full relative bg-slate-100 shrink-0">
+                  <img 
+                    src={visuals.image} 
+                    alt={p.name} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                  
+                  {/* Pill Badge */}
+                  <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-bold text-[#0f2f66] shadow-sm">
+                    Up to KES {Number(p.max_amount).toLocaleString()}
                   </div>
-
-                  {/* Content - Reduced padding and text */}
-                  <div className="p-2.5 flex flex-col flex-1">
-                    <h3 className="text-[12px] font-bold text-[#0a2540] leading-tight">
+                  
+                  {/* Title over image */}
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="text-[16px] font-bold text-white leading-tight drop-shadow-md">
                       {p.name}
                     </h3>
-                    <p className="mt-0.5 text-[10px] text-ink-500 leading-snug flex-1">
-                      Terms up to {p.max_term_days} days.
-                    </p>
-                    
-                    {/* CTA - Smaller */}
-                    <button 
-                      onClick={() => handleApplyClick(p)}
-                      className="mt-2 flex items-center gap-1 text-[10px] font-bold text-[#D32F2F] transition active:opacity-60"
-                    >
-                      {visuals.ctaText}
-                      <ArrowRight size={10} strokeWidth={2.5} />
-                    </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Content */}
+                <div className="p-4 flex flex-col flex-1">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Shield size={14} className="text-emerald-600" />
+                    <p className="text-[12px] font-medium text-slate-600">
+                      Terms up to {p.max_term_days} days
+                    </p>
+                  </div>
+                  
+                  <p className="text-[13px] text-slate-500 leading-relaxed flex-1">
+                    Quick approval and instant disbursement to your wallet.
+                  </p>
+                  
+                  {/* CTA Button */}
+                  <button 
+                    onClick={() => handleApplyClick(p)}
+                    className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-slate-50 border border-slate-200 py-2.5 text-[13px] font-bold text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                  >
+                    {visuals.ctaText}
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
-      
-      <style jsx global>{`
-        .hide-scroll-bar::-webkit-scrollbar { display: none; }
-        .hide-scroll-bar { -ms-overflow-style: none; scrollbar-width: none; }
-      `}</style>
     </div>
-  );
-}
-
-function ClockIcon({ size, ...props }: any) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
   );
 }
