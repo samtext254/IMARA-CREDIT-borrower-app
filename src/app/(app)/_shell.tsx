@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
   Bell, ChevronDown, HelpCircle, LogOut, User,
   WalletCards, Receipt, Smartphone, PiggyBank, Home, Shield, ArrowLeftRight,
-  Briefcase, Search, X, Lock, FileText, Landmark
+  Briefcase, Search, X, FileText, Landmark
 } from 'lucide-react';
 import { BottomNav } from '@/components/borrower/BottomNav';
 import { DownloadAppButton } from '@/components/pwa/DownloadAppButton';
@@ -114,8 +114,8 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
   return (
     <div className="space-y-0">
       {NAV_GROUPS.map((group, groupIndex) => (
-        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-white/10' : ''}`}>
-          <h3 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400/80">
+        <div key={group.title} className={`py-4 ${groupIndex !== 0 ? 'border-t border-slate-200' : ''}`}>
+          <h3 className="mb-3 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
             {group.title}
           </h3>
           
@@ -134,11 +134,14 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                     onClick={onNavigate}
                     className={`group relative flex items-center gap-3 rounded-xl px-4 py-2.5 text-[14px] font-medium transition-all duration-200 ${
                       active 
-                        ? 'bg-gradient-to-r from-[#1565d8] to-[#0f4fb0] text-white shadow-md shadow-blue-900/20' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        ? 'bg-emerald-50 text-emerald-700' 
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
-                    <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-white' : 'text-slate-400 group-hover:text-slate-200 transition-colors'} />
+                    {active && (
+                      <span className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-emerald-500" />
+                    )}
+                    <Icon size={20} strokeWidth={active ? 2.2 : 1.7} className={active ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600 transition-colors'} />
                     <span>{item.label}</span>
                   </Link>
                 );
@@ -153,19 +156,19 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                     onClick={() => toggleDropdown(item.label)}
                     className={`w-full group flex items-center justify-between rounded-xl px-4 py-2.5 text-[14px] font-medium transition-all duration-200 ${
                       isDropdownOpen || isGroupActive
-                        ? 'text-white' 
-                        : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                        ? 'text-slate-900' 
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <Icon size={20} strokeWidth={1.7} className={isGroupActive ? 'text-white' : 'text-slate-400'} />
+                      <Icon size={20} strokeWidth={isGroupActive ? 2.2 : 1.7} className={isGroupActive ? 'text-emerald-600' : 'text-slate-400 group-hover:text-slate-600'} />
                       <span>{item.label}</span>
                     </div>
-                    <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''} ${isGroupActive ? 'text-emerald-600' : 'text-slate-400'}`} />
                   </button>
 
                   {isDropdownOpen && item.dropdown && (
-                    <div className="mt-1 ml-4 space-y-1 border-l border-white/10 pl-3">
+                    <div className="mt-1 ml-4 space-y-1 border-l border-slate-200 pl-3">
                       {item.dropdown.map((subItem) => {
                         const subActive = pathname === subItem.href;
                         return (
@@ -175,8 +178,8 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
                             onClick={onNavigate}
                             className={`block rounded-lg px-3 py-2 text-[13px] transition-colors ${
                               subActive 
-                                ? 'bg-white/10 font-semibold text-white' 
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                ? 'bg-emerald-50 font-semibold text-emerald-700' 
+                                : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                             }`}
                           >
                             {subItem.label}
@@ -316,16 +319,17 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 z-[100] flex overflow-hidden bg-[#F0F4F8] font-sans text-slate-800">
       
-      <aside className="hidden w-[280px] shrink-0 flex-col bg-[#0b2a57] text-white lg:flex">
-        <div className="flex h-[72px] items-center border-b border-white/10 px-6">
-          <Logo dark />
+      {/* DESKTOP SIDEBAR - LIGHT THEME */}
+      <aside className="hidden w-[280px] shrink-0 flex-col bg-white border-r border-slate-200 lg:flex">
+        <div className="flex h-[72px] items-center border-b border-slate-100 px-6">
+          <Logo />
         </div>
         
         <nav className="flex-1 overflow-y-auto px-4 py-2 no-scrollbar">
           <NavLinks pathname={pathname} />
         </nav>
         
-        <div className="mt-auto border-t border-white/10 p-4">
+        <div className="mt-auto border-t border-slate-200 p-4">
           <div className="flex flex-col items-start gap-1 px-2">
             <span className="text-[11px] font-medium text-slate-400">
               Version 2.0.0
@@ -336,31 +340,33 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         
+        {/* TOPBAR */}
         <header className="hidden h-[72px] shrink-0 items-center justify-between border-b border-slate-200 bg-white px-8 lg:flex">
-          <div className="flex w-full max-w-[540px] items-center gap-3 rounded-full border border-slate-200 bg-[#F8FAFC] px-5 py-3">
-            <Search size={17} className="text-slate-500" />
+          <div className="flex w-full max-w-[540px] items-center gap-3 rounded-full border border-slate-200 bg-[#F8FAFC] px-5 py-3 transition-colors focus-within:border-emerald-500 focus-within:bg-white">
+            <Search size={17} className="text-slate-400" />
             <input type="text" placeholder="Search services, transactions, loans..." className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400" />
           </div>
           <div className="flex items-center gap-6">
-            <Link href="/notifications" className="relative grid h-10 w-10 place-items-center rounded-full text-[#0f2f66] transition hover:bg-slate-50" aria-label="Notifications">
+            <Link href="/notifications" className="relative grid h-10 w-10 place-items-center rounded-full text-slate-600 transition hover:bg-slate-100" aria-label="Notifications">
               <Bell size={21} /><span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
             </Link>
-            <div ref={profileRef} className="relative flex cursor-pointer items-center gap-3" onClick={() => setIsProfileOpen((v) => !v)}>
-              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0a5cbe] text-sm font-bold text-white">{initials}</div>
+            <div ref={profileRef} className="relative flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1 transition hover:bg-slate-50" onClick={() => setIsProfileOpen((v) => !v)}>
+              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">{initials}</div>
               <p className="text-[13px] font-bold uppercase text-slate-900">{displayName}</p>
               <ChevronDown size={15} className="text-slate-500" />{profileMenu}
             </div>
           </div>
         </header>
 
+        {/* MOBILE HEADER */}
         <header className="flex shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 pb-3 pt-4 lg:hidden">
           <Logo />
           <div className="flex items-center gap-3">
-            <Link href="/notifications" className="relative grid h-9 w-9 place-items-center text-[#0f2f66]" aria-label="Notifications">
+            <Link href="/notifications" className="relative grid h-9 w-9 place-items-center text-slate-600" aria-label="Notifications">
               <Bell size={21} /><span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
             </Link>
             <div ref={profileMobileRef} className="relative">
-              <button type="button" onClick={() => setIsProfileOpen((v) => !v)} className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0a5cbe] text-xs font-bold text-white">{initials}</button>
+              <button type="button" onClick={() => setIsProfileOpen((v) => !v)} className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-xs font-bold text-white">{initials}</button>
               {profileMenu}
             </div>
           </div>
@@ -375,25 +381,26 @@ export function AppLayoutShell({ children }: { children: React.ReactNode }) {
       
       <DownloadAppButton />
 
+      {/* MOBILE DRAWER - LIGHT THEME */}
       {isSidebarOpen && (
         <div className="fixed inset-0 z-[10000] lg:hidden">
-          <button aria-label="Close menu" className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-[#0b2a57] text-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 pb-2 pt-6">
-              <Logo dark />
-              <button onClick={() => setIsSidebarOpen(false)} className="text-white/80 hover:text-white" aria-label="Close menu"><X size={22} /></button>
+          <button aria-label="Close menu" className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 pb-4 pt-6">
+              <Logo />
+              <button onClick={() => setIsSidebarOpen(false)} className="text-slate-400 hover:text-slate-600" aria-label="Close menu"><X size={22} /></button>
             </div>
             <nav className="mt-2 flex-1 overflow-y-auto px-4 no-scrollbar">
               <NavLinks pathname={pathname} onNavigate={() => setIsSidebarOpen(false)} />
-              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-200 hover:bg-white/5">
-                <FileText size={21} strokeWidth={1.7} className="text-slate-200" /> Terms &amp; Conditions
+              <Link href="/terms" onClick={() => setIsSidebarOpen(false)} className="mt-2 flex items-center gap-4 rounded-xl px-5 py-3.5 text-[15px] font-medium text-slate-600 hover:bg-slate-100">
+                <FileText size={21} strokeWidth={1.7} className="text-slate-400" /> Terms &amp; Conditions
               </Link>
             </nav>
-            <div className="border-t border-white/10 p-5">
+            <div className="border-t border-slate-200 p-5">
               <div className="mb-4 flex flex-col items-center">
                 <span className="text-[11px] font-medium text-slate-400">Version 2.0.0</span>
               </div>
-              <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-[#0f294d] disabled:opacity-60">
+              <button onClick={onLogout} disabled={loggingOut} className="flex w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60">
                 <LogOut size={18} /> {loggingOut ? 'Logging out…' : 'Logout'}
               </button>
             </div>
