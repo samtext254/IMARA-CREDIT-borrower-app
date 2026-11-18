@@ -7,7 +7,7 @@ import {
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
   Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
   Headphones, ArrowDownLeft, ArrowUpRight, AlertTriangle, Eye, EyeOff, Wallet,
-  BarChart3, Package
+  BarChart3, Package, Target
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
@@ -291,45 +291,41 @@ export default function DashboardPage() {
 
         <section className={`${CARD} p-4 sm:p-5`}>
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[16px] font-bold text-[#0f2f66]">Recent Transactions</h3>
+            <h3 className="text-[16px] font-bold text-[#0f2f66]">Recent Activity</h3>
             <Link href="/transactions" className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">View all <ArrowRight size={12} /></Link>
           </div>
           {activity.length === 0 ? (
-            <div className="py-8 text-center text-sm text-slate-500">No recent transactions found.</div>
+            <div className="py-8 text-center text-sm text-slate-500">No recent activity.</div>
           ) : (
-            <div className="overflow-x-auto">
-              <div className="min-w-[560px]">
-                <div className="grid grid-cols-[56px_1.4fr_1.3fr_1fr_1fr] rounded-lg bg-[#F1F5FB] px-3 py-2 text-[11px] font-semibold text-slate-500">
-                  <span>Type</span><span>Description</span><span>Date &amp; Time</span><span>Amount</span><span>Status</span>
-                </div>
-                {activity.slice(0, 4).map((item: any, i) => {
-                  const row = activityRow(item);
-                  const dateString = item.created_at || item.occurred_at || item.date || null;
-                  return (
-                    <div key={i} className="grid grid-cols-[56px_1.4fr_1.3fr_1fr_1fr] items-center border-b border-slate-100 px-3 py-3 last:border-0 transition-colors hover:bg-slate-50 cursor-pointer">
-                      <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-white ${row.iconClass}`}><row.Icon size={15} /></div>
+            <div className="space-y-1">
+              {activity.slice(0, 3).map((item: any, i) => {
+                const row = activityRow(item);
+                const dateString = item.created_at || item.occurred_at || item.date || null;
+                return (
+                  <Link key={i} href="/transactions" className="flex items-center justify-between rounded-xl px-2 py-3 transition-colors hover:bg-slate-50">
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full text-white ${row.iconClass}`}>
+                        <row.Icon size={18} />
+                      </div>
                       <div>
-                        <p className="text-[12px] font-bold text-slate-900">{row.title}</p>
-                        <p className="text-[10px] text-slate-500">{row.sub}</p>
+                        <p className="text-[13px] font-bold text-slate-900">{row.title}</p>
+                        <p className="text-[11px] text-slate-500">{formatDate(dateString)} • {formatTime(dateString)}</p>
                       </div>
-                      <div className="text-[11px] text-slate-500">
-                        <p>{formatDate(dateString)}</p>
-                        {formatTime(dateString) && <p className="text-[10px]">{formatTime(dateString)}</p>}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {row.isIncome && <ArrowDownLeft size={12} className="text-emerald-500" />}
-                        {!row.isIncome && item.amount && <ArrowUpRight size={12} className="text-rose-500" />}
-                        <p className={`text-[13px] font-extrabold ${row.amountClass}`}>
-                          {item.amount ? `${row.sign}KES ${formatKes(item.amount)}` : '—'}
-                        </p>
-                      </div>
-                      <span className={`w-fit rounded-full px-3 py-1 text-[10px] font-semibold ${row.statusClass}`}>{row.status}</span>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="text-right">
+                      <p className={`text-[14px] font-bold ${row.amountClass}`}>
+                        {item.amount ? `${row.sign}KES ${formatKes(item.amount)}` : '—'}
+                      </p>
+                      <span className={`text-[10px] font-semibold ${row.statusClass.split(' ')[1]}`}>{row.status}</span>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           )}
+          <Link href="/transactions" className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-50">
+            View All Transactions
+          </Link>
         </section>
       </div>
 
@@ -388,23 +384,44 @@ export default function DashboardPage() {
           )}
         </section>
 
-        <section className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-[#E9F8F0] to-[#D3F0E1] p-5">
-          <div className="relative z-10 max-w-[70%]">
-            <h3 className="text-[19px] font-bold text-[#0f2f66]">Need a bigger loan?</h3>
-            <p className="mb-4 mt-2 text-[13px] leading-snug text-slate-700">Get up to KES 50,000 with flexible repayment terms.</p>
-            <Link href="/apply/loan" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700">
-              Apply Now <ArrowRight size={14} />
-            </Link>
-          </div>
-          <div className="absolute bottom-4 right-5 z-10 opacity-90">
-            <div className="relative">
-              <div className="flex h-20 w-16 rotate-6 flex-col items-start gap-1 rounded-md bg-white p-2 shadow-sm border border-slate-100">
-                <span className="text-[5px] font-extrabold text-slate-400">LOAN</span>
-                <div className="h-1 w-6 rounded bg-slate-200" />
-                <div className="h-1 w-8 rounded bg-slate-200" />
-                <div className="h-1 w-5 rounded bg-slate-200" />
-              </div>
+        {/* SAVINGS GOAL WIDGET */}
+        <section className={`${CARD} p-5`}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target size={18} className="text-emerald-600" />
+              <h3 className="text-[15px] font-bold text-[#0f2f66]">Savings Goal</h3>
             </div>
+            <Link href="/savings" className="text-[11px] font-semibold text-emerald-600 hover:underline">View</Link>
+          </div>
+          
+          <div className="mb-2 flex justify-between items-end">
+            <div>
+              <p className="text-[12px] text-slate-500">Emergency Fund</p>
+              <p className="text-[20px] font-extrabold text-[#0f2f66]">KES 5,000</p>
+            </div>
+            <p className="text-[11px] font-semibold text-slate-400">of KES 20,000</p>
+          </div>
+          
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 mb-3">
+            <div className="h-full rounded-full bg-emerald-500" style={{ width: '25%' }} />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+ KES 45 interest earned</p>
+            <button className="text-[12px] font-bold text-emerald-600 hover:text-emerald-700">Add Money</button>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-white p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+              <Headphones size={20} className="text-slate-600" />
+            </div>
+            <div>
+              <h3 className="text-[13px] font-bold text-slate-900">Need help?</h3>
+              <p className="text-[11px] text-slate-500">Our support team is here.</p>
+            </div>
+            <Link href="/support" className="ml-auto text-[12px] font-semibold text-emerald-600 hover:underline">Contact</Link>
           </div>
         </section>
       </div>
