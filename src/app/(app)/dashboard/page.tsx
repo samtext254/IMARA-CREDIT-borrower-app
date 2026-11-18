@@ -6,7 +6,7 @@ import {
   ArrowRight, Check, CheckCircle2, Receipt, WalletCards, ArrowLeftRight,
   Smartphone, PiggyBank, FileText, Zap, Globe, Store, CalendarClock,
   Landmark, Send, Plus, Calendar, Clock, ClipboardList, Shield,
-  Headphones, ArrowDownLeft, AlertTriangle, Eye, EyeOff, Wallet,
+  Headphones, ArrowDownLeft, ArrowUpRight, AlertTriangle, Eye, EyeOff, Wallet,
   BarChart3, Package
 } from 'lucide-react';
 import { loans as loansApi, loanDueDate } from '@/lib/loans';
@@ -81,15 +81,15 @@ function activityRow(item: ActivityItem) {
   const ok = 'bg-emerald-50 text-emerald-600';
   const done = 'bg-sky-50 text-sky-600';
   switch (item.kind) {
-    case 'repayment_received': return { title: 'Repayment received', sub: 'Loan repayment', Icon: ArrowDownLeft, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '+ ', status: 'Success', statusClass: ok };
-    case 'loan_submitted': return { title: 'Loan application', sub: 'Loan', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900', sign: '', status: 'Submitted', statusClass: done };
-    case 'loan_approved': return { title: 'Loan approved', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-slate-900', sign: '', status: 'Approved', statusClass: ok };
-    case 'loan_rejected': return { title: 'Loan declined', sub: 'Loan', Icon: Receipt, iconClass: 'bg-rose-500', amountClass: 'text-rose-600', sign: '', status: 'Declined', statusClass: 'bg-rose-50 text-rose-600' };
-    case 'loan_disbursed': return { title: 'Loan disbursed', sub: 'Loan', Icon: WalletCards, iconClass: 'bg-blue-600', amountClass: 'text-slate-900', sign: '', status: 'Completed', statusClass: done };
-    case 'loan_active': return { title: 'Loan active', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '', status: 'Success', statusClass: ok };
-    case 'loan_overdue': return { title: 'Loan overdue', sub: 'Loan', Icon: AlertTriangle, iconClass: 'bg-rose-500', amountClass: 'text-rose-600', sign: '', status: 'Overdue', statusClass: 'bg-rose-50 text-rose-600' };
-    case 'loan_paid': return { title: 'Loan fully repaid', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '', status: 'Success', statusClass: ok };
-    default: return { title: 'Loan update', sub: 'Loan', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900', sign: '', status: 'Completed', statusClass: done };
+    case 'repayment_received': return { title: 'Repayment received', sub: 'Loan repayment', Icon: ArrowDownLeft, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '+ ', status: 'Success', statusClass: ok, isIncome: true };
+    case 'loan_submitted': return { title: 'Loan application', sub: 'Loan', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900', sign: '', status: 'Submitted', statusClass: done, isIncome: false };
+    case 'loan_approved': return { title: 'Loan approved', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-slate-900', sign: '', status: 'Approved', statusClass: ok, isIncome: false };
+    case 'loan_rejected': return { title: 'Loan declined', sub: 'Loan', Icon: Receipt, iconClass: 'bg-rose-500', amountClass: 'text-rose-600', sign: '', status: 'Declined', statusClass: 'bg-rose-50 text-rose-600', isIncome: false };
+    case 'loan_disbursed': return { title: 'Loan disbursed', sub: 'Loan', Icon: WalletCards, iconClass: 'bg-blue-600', amountClass: 'text-slate-900', sign: '', status: 'Completed', statusClass: done, isIncome: true };
+    case 'loan_active': return { title: 'Loan active', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '', status: 'Success', statusClass: ok, isIncome: false };
+    case 'loan_overdue': return { title: 'Loan overdue', sub: 'Loan', Icon: AlertTriangle, iconClass: 'bg-rose-500', amountClass: 'text-rose-600', sign: '', status: 'Overdue', statusClass: 'bg-rose-50 text-rose-600', isIncome: false };
+    case 'loan_paid': return { title: 'Loan fully repaid', sub: 'Loan', Icon: CheckCircle2, iconClass: 'bg-emerald-500', amountClass: 'text-emerald-600', sign: '', status: 'Success', statusClass: ok, isIncome: false };
+    default: return { title: 'Loan update', sub: 'Loan', Icon: Receipt, iconClass: 'bg-slate-500', amountClass: 'text-slate-900', sign: '', status: 'Completed', statusClass: done, isIncome: false };
   }
 }
 
@@ -110,7 +110,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [balanceHidden, setBalanceHidden] = useState(false);
 
-  // Remember the person's choice to hide balances.
   useEffect(() => {
     try { setBalanceHidden(window.localStorage.getItem('imara.balance.hidden') === '1'); } catch {}
   }, []);
@@ -204,13 +203,8 @@ export default function DashboardPage() {
   const loanActive = activeLoan !== null;
   const isOverdue = activeLoan?.status === 'OVERDUE';
   const repayHref = loanActive ? `/repay/${activeLoan.id}` : '/loans';
-  const ringR = 26;
-  const ringC = 2 * Math.PI * ringR;
-  const ringPct = loanActive ? derived.progress : 0;
   const dueLabel = derived.dueIn === null ? '—' : derived.dueIn < 0 ? `${Math.abs(derived.dueIn)} days ago` : derived.dueIn === 0 ? 'Today' : `${derived.dueIn} day${derived.dueIn === 1 ? '' : 's'}`;
 
-  // TODO: replace both with real values once the wallet and savings APIs are available
-  // (e.g. walletApi.getBalance(), savingsApi.getTotal()). Until then they are always 0.
   const walletBalance = 0;
   const savingsBalance = 0;
 
@@ -220,7 +214,6 @@ export default function DashboardPage() {
     <div className="mx-auto grid max-w-[1260px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
       
       <div className="min-w-0 space-y-5">
-        {/* Hero: greeting + wallet (main) + savings (secondary) in one card */}
         <section aria-label="Balances" className="rounded-2xl bg-[#0b2a57] px-5 py-6 text-white sm:px-8 sm:py-7">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[15px] font-medium text-slate-300">{greeting()}, {derived.firstName}</p>
@@ -236,7 +229,6 @@ export default function DashboardPage() {
           </div>
 
           <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-[1.5fr_1fr] md:gap-8">
-            {/* Wallet */}
             <div>
               <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
                 <Wallet size={16} /> Wallet
@@ -259,7 +251,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Savings: stacked on desktop, compact row on mobile */}
             <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-5 md:block md:border-l md:border-t-0 md:pl-8 md:pt-0">
               <div>
                 <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
@@ -285,11 +276,13 @@ export default function DashboardPage() {
             <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
           </div>
           <div className="p-4 sm:p-5">
-            <div className="flex flex-wrap gap-3 sm:gap-4">
+            <div className="grid grid-cols-5 gap-2 sm:gap-4">
               {QUICK_ACTIONS.map((a) => (
-                <Link key={a.label} href={a.href} className="group flex w-[72px] shrink-0 flex-col items-center gap-1.5 sm:w-auto">
-                  <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}><a.icon size={22} strokeWidth={1.9} /></div>
-                  <span className="text-center text-[11px] font-semibold leading-tight text-slate-700">{a.label}</span>
+                <Link key={a.label} href={a.href} className="group flex flex-col items-center gap-2">
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
+                    <a.icon size={22} strokeWidth={1.9} />
+                  </div>
+                  <span className="text-center text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">{a.label}</span>
                 </Link>
               ))}
             </div>
@@ -313,14 +306,23 @@ export default function DashboardPage() {
                   const row = activityRow(item);
                   const dateString = item.created_at || item.occurred_at || item.date || null;
                   return (
-                    <div key={i} className="grid grid-cols-[56px_1.4fr_1.3fr_1fr_1fr] items-center border-b border-slate-100 px-3 py-3 last:border-0">
+                    <div key={i} className="grid grid-cols-[56px_1.4fr_1.3fr_1fr_1fr] items-center border-b border-slate-100 px-3 py-3 last:border-0 transition-colors hover:bg-slate-50 cursor-pointer">
                       <div className={`flex h-8 w-8 items-center justify-center rounded-lg text-white ${row.iconClass}`}><row.Icon size={15} /></div>
                       <div>
                         <p className="text-[12px] font-bold text-slate-900">{row.title}</p>
                         <p className="text-[10px] text-slate-500">{row.sub}</p>
                       </div>
-                      <p className="text-[11px] text-slate-500">{formatDate(dateString)} &nbsp;•&nbsp; {formatTime(dateString)}</p>
-                      <p className={`text-[13px] font-extrabold ${row.amountClass}`}>{item.amount ? `${row.sign}KES ${formatKes(item.amount)}` : '—'}</p>
+                      <div className="text-[11px] text-slate-500">
+                        <p>{formatDate(dateString)}</p>
+                        {formatTime(dateString) && <p className="text-[10px]">{formatTime(dateString)}</p>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {row.isIncome && <ArrowDownLeft size={12} className="text-emerald-500" />}
+                        {!row.isIncome && item.amount && <ArrowUpRight size={12} className="text-rose-500" />}
+                        <p className={`text-[13px] font-extrabold ${row.amountClass}`}>
+                          {item.amount ? `${row.sign}KES ${formatKes(item.amount)}` : '—'}
+                        </p>
+                      </div>
                       <span className={`w-fit rounded-full px-3 py-1 text-[10px] font-semibold ${row.statusClass}`}>{row.status}</span>
                     </div>
                   );
@@ -332,14 +334,31 @@ export default function DashboardPage() {
       </div>
 
       <div className="min-w-0 space-y-5">
-        {/* Outstanding Loan Card (Moved from left side) */}
         <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
           <div className="flex items-center gap-3">
             <CardIcon icon={Landmark} tile="bg-emerald-600" />
             <p className="text-[14px] font-semibold text-slate-800">Outstanding Loan</p>
           </div>
-          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">KES {formatKes(loanActive ? derived.loanOutstanding : 0)}</h3>
+          <h3 className="mt-3 text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+            KES {formatKes(loanActive ? derived.loanOutstanding : 0)}
+          </h3>
           <p className="text-[13px] text-slate-500">of KES {formatKes(loanActive ? derived.totalDue : 0)} total</p>
+
+          {loanActive && (
+            <div className="mt-4">
+              <div className="mb-1 flex justify-between text-[10px] font-semibold text-slate-500">
+                <span>Repaid</span>
+                <span>{derived.progress}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+                <div 
+                  className={`h-full rounded-full transition-all duration-500 ${isOverdue ? 'bg-rose-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${derived.progress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           <div className="mt-4 grid grid-cols-2 gap-3 text-[11px]">
             <div className="flex items-start gap-2.5">
               <Calendar size={16} className="mt-0.5 text-slate-500" />
@@ -357,24 +376,34 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <Link href={repayHref} className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">Repay Loan <ArrowRight size={14} /></Link>
+
+          {loanActive ? (
+            <Link href={repayHref} className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-emerald-100/80 py-2.5 text-[13px] font-bold text-emerald-800 transition hover:bg-emerald-100">
+              Repay Loan <ArrowRight size={14} />
+            </Link>
+          ) : (
+            <Link href="/apply/loan" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#0a5cbe] py-2.5 text-[13px] font-bold text-white shadow-sm transition hover:bg-[#084b9c]">
+              Apply for a Loan <ArrowRight size={14} />
+            </Link>
+          )}
         </section>
 
         <section className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-[#E9F8F0] to-[#D3F0E1] p-5">
-          <div className="pointer-events-none absolute -right-8 -top-10 h-40 w-40 rounded-full bg-emerald-300/40" />
-          <div className="pointer-events-none absolute -bottom-14 right-0 h-36 w-44 rounded-[100%] bg-emerald-400/30" />
-          <div className="relative z-10 max-w-[64%]">
+          <div className="relative z-10 max-w-[70%]">
             <h3 className="text-[19px] font-bold text-[#0f2f66]">Need a bigger loan?</h3>
             <p className="mb-4 mt-2 text-[13px] leading-snug text-slate-700">Get up to KES 50,000 with flexible repayment terms.</p>
-            <Link href="/apply/loan" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-500 px-5 py-2.5 text-sm font-bold text-white shadow transition hover:brightness-105">Apply Now <ArrowRight size={14} /></Link>
+            <Link href="/apply/loan" className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition hover:bg-emerald-700">
+              Apply Now <ArrowRight size={14} />
+            </Link>
           </div>
-          <div className="absolute bottom-4 right-5 z-10">
+          <div className="absolute bottom-4 right-5 z-10 opacity-90">
             <div className="relative">
-              <div className="flex h-24 w-[72px] rotate-3 flex-col items-start gap-1.5 rounded-md bg-white p-2.5 shadow-lg">
-                <span className="text-[6px] font-extrabold text-slate-700">LOAN</span>
-                <div className="h-1.5 w-8 rounded bg-slate-300" /><div className="h-1 w-10 rounded bg-slate-200" /><div className="h-1 w-7 rounded bg-slate-200" /><div className="h-1 w-9 rounded bg-slate-200" />
+              <div className="flex h-20 w-16 rotate-6 flex-col items-start gap-1 rounded-md bg-white p-2 shadow-sm border border-slate-100">
+                <span className="text-[5px] font-extrabold text-slate-400">LOAN</span>
+                <div className="h-1 w-6 rounded bg-slate-200" />
+                <div className="h-1 w-8 rounded bg-slate-200" />
+                <div className="h-1 w-5 rounded bg-slate-200" />
               </div>
-              <div className="absolute -bottom-3 -right-3 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-lg"><Check size={17} strokeWidth={3} className="text-white" /></div>
             </div>
           </div>
         </section>
