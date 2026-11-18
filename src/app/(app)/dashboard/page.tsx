@@ -13,11 +13,11 @@ import { loans as loansApi, loanDueDate } from '@/lib/loans';
 import type { ActivityItem, Eligibility, Loan, LoanScheduleEntry } from '@/lib/loans';
 
 const QUICK_ACTIONS = [
-  { icon: ClipboardList, label: 'Apply Loan', href: '/apply/loan', color: 'bg-[#0f2f66]' },
-  { icon: FileText, label: 'Loan Statement', href: '/loans/statement', color: 'bg-sky-500' },
-  { icon: PiggyBank, label: 'My Savings', href: '/savings', color: 'bg-emerald-500' },
-  { icon: BarChart3, label: 'Credit Score', href: '/credit-score', color: 'bg-amber-500' },
-  { icon: Package, label: 'Products', href: '/products', color: 'bg-violet-500' },
+  { icon: ClipboardList, label: 'Apply Loan', href: '/apply/loan', bg: 'bg-emerald-50', color: 'text-emerald-600' },
+  { icon: FileText, label: 'Statement', href: '/loans/statement', bg: 'bg-blue-50', color: 'text-blue-600' },
+  { icon: PiggyBank, label: 'My Savings', href: '/savings', bg: 'bg-violet-50', color: 'text-violet-600' },
+  { icon: BarChart3, label: 'Credit Score', href: '/credit-score', bg: 'bg-amber-50', color: 'text-amber-600' },
+  { icon: Package, label: 'Products', href: '/products', bg: 'bg-rose-50', color: 'text-rose-600' },
 ];
 
 const CARD = 'rounded-2xl border border-slate-200 bg-white shadow-sm';
@@ -208,91 +208,105 @@ export default function DashboardPage() {
   const walletBalance = 0;
   const savingsBalance = 0;
 
-  const HERO_BTN = 'flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl px-4 text-[13px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 sm:flex-none sm:px-6';
-
   return (
     <div className="mx-auto grid max-w-[1260px] grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_350px]">
       
       <div className="min-w-0 space-y-5">
-        <section aria-label="Balances" className="rounded-2xl bg-[#0b2a57] px-5 py-6 text-white sm:px-8 sm:py-7">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[15px] font-medium text-slate-300">{greeting()}, {derived.firstName}</p>
-            <button
-              type="button"
-              onClick={toggleBalance}
-              aria-label={balanceHidden ? 'Show balances' : 'Hide balances'}
-              aria-pressed={balanceHidden}
-              className="grid h-8 w-8 place-items-center rounded-full text-slate-300 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300"
-            >
-              {balanceHidden ? <EyeOff size={17} /> : <Eye size={17} />}
-            </button>
+        
+        {/* NEW LIGHT HEADER */}
+        <div className="flex items-center justify-between px-1">
+          <div>
+            <h1 className="text-[22px] font-bold text-[#0f2f66]">{greeting()}, {derived.firstName}</h1>
+            <p className="text-[13px] text-slate-500">Welcome back to your financial dashboard.</p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleBalance}
+            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[12px] font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50"
+          >
+            {balanceHidden ? <EyeOff size={14} /> : <Eye size={14} />}
+            {balanceHidden ? 'Show balances' : 'Hide balances'}
+          </button>
+        </div>
+
+        {/* WALLET & SAVINGS CARDS - LIGHT THEME */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          
+          {/* Wallet Card */}
+          <div className={`${CARD} p-5 relative overflow-hidden`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                <Wallet size={18} />
+              </div>
+              <p className="text-[13px] font-semibold text-slate-600">Wallet Balance</p>
+            </div>
+            <p className="text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+              <span className="mr-1 text-[14px] font-semibold text-slate-400">KES</span>
+              {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">
+              {walletBalance === 0 ? 'Add money to get started.' : 'Available funds'}
+            </p>
+            <div className="mt-5 flex gap-2">
+              <Link href="/wallet" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-[12px] font-bold text-white transition hover:bg-emerald-700">
+                <Plus size={14} /> Deposit
+              </Link>
+              <Link href="/m-pesa" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-2 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200">
+                <Send size={14} /> Send
+              </Link>
+            </div>
           </div>
 
-          <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-[1.5fr_1fr] md:gap-8">
-            <div>
-              <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
-                <Wallet size={16} /> Wallet
-              </p>
-              <p className="mt-1 text-[28px] font-bold leading-tight tracking-tight sm:text-[32px]">
-                <span className="mr-1.5 text-[14px] font-semibold text-slate-300 sm:text-[16px]">KES</span>
-                {balanceHidden ? '••••••' : formatKesDecimals(walletBalance)}
-              </p>
-              <p className="mt-0.5 text-[13px] text-slate-300">
-                {walletBalance === 0 ? 'Add money to get started.' : 'Available funds'}
-              </p>
-
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link href="/wallet" className={`${HERO_BTN} bg-emerald-400 text-[#0b2a57] hover:bg-emerald-300`}>
-                  <Plus size={16} /> Deposit
-                </Link>
-                <Link href="/m-pesa" className={`${HERO_BTN} bg-white/10 text-white hover:bg-white/20`}>
-                  <Send size={16} /> Send
-                </Link>
+          {/* Savings Card */}
+          <div className={`${CARD} p-5 relative overflow-hidden`}>
+            <div className="flex items-center gap-2 mb-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                <PiggyBank size={18} />
               </div>
+              <p className="text-[13px] font-semibold text-slate-600">Total Savings</p>
             </div>
-
-            <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-5 md:block md:border-l md:border-t-0 md:pl-8 md:pt-0">
-              <div>
-                <p className="flex items-center gap-2 text-[13px] font-medium text-slate-300">
-                  <PiggyBank size={16} /> Savings
-                </p>
-                <p className="mt-1 text-[18px] font-bold leading-tight tracking-tight md:text-[20px]">
-                  <span className="mr-1 text-[12px] font-semibold text-slate-300 md:text-[13px]">KES</span>
-                  {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
-                </p>
-              </div>
-              <Link
-                href="/savings"
-                className="inline-flex items-center gap-1.5 rounded-lg text-[13px] font-semibold text-emerald-300 transition-colors hover:text-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 md:mt-3"
-              >
-                {savingsBalance === 0 ? 'Start saving' : 'Add to savings'} <ArrowRight size={14} />
+            <p className="text-[28px] font-extrabold leading-tight text-[#0f2f66]">
+              <span className="mr-1 text-[14px] font-semibold text-slate-400">KES</span>
+              {balanceHidden ? '••••••' : formatKesDecimals(savingsBalance)}
+            </p>
+            <p className="mt-1 text-[12px] text-slate-500">
+              Earn up to 10% p.a.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <Link href="/savings" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-violet-600 py-2 text-[12px] font-bold text-white transition hover:bg-violet-700">
+                <Plus size={14} /> Add Money
+              </Link>
+              <Link href="/savings" className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-2 text-[12px] font-bold text-slate-700 transition hover:bg-slate-200">
+                View Goals
               </Link>
             </div>
           </div>
         </section>
 
-        <section className={`${CARD} overflow-hidden`}>
-          <div className="border-b border-slate-100 bg-white px-5 py-4">
-            <h3 className="text-[16px] font-bold text-[#0f2f66]">Quick Actions</h3>
-          </div>
-          <div className="p-4 sm:p-5">
-            <div className="grid grid-cols-5 gap-2 sm:gap-4">
-              {QUICK_ACTIONS.map((a) => (
-                <Link key={a.label} href={a.href} className="group flex flex-col items-center gap-2">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-full text-white shadow-sm transition-transform group-hover:scale-105 ${a.color}`}>
-                    <a.icon size={22} strokeWidth={1.9} />
-                  </div>
-                  <span className="text-center text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">{a.label}</span>
-                </Link>
-              ))}
-            </div>
+        {/* QUICK ACTIONS - SOFT COLORS */}
+        <section className="mt-2">
+          <h3 className="mb-3 text-[16px] font-bold text-[#0f2f66]">What would you like to do today?</h3>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {QUICK_ACTIONS.map((a) => (
+              <Link 
+                key={a.label} 
+                href={a.href} 
+                className="group flex flex-col items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-emerald-200 hover:shadow-md"
+              >
+                <div className={`flex h-12 w-12 items-center justify-center rounded-full ${a.bg} ${a.color} transition-transform group-hover:scale-110`}>
+                  <a.icon size={22} strokeWidth={2} />
+                </div>
+                <span className="text-center text-[11px] font-semibold text-slate-700 sm:text-[12px]">{a.label}</span>
+              </Link>
+            ))}
           </div>
         </section>
 
-        <section className={`${CARD} p-4 sm:p-5`}>
+        {/* RECENT ACTIVITY TEASER */}
+        <section className={`${CARD} p-4 sm:p-5 mt-2`}>
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-[16px] font-bold text-[#0f2f66]">Recent Activity</h3>
-            <Link href="/transactions" className="flex items-center gap-1 text-[12px] font-semibold text-[#0a5cbe] hover:underline">View all <ArrowRight size={12} /></Link>
+            <Link href="/transactions" className="flex items-center gap-1 text-[12px] font-semibold text-emerald-600 hover:underline">View all <ArrowRight size={12} /></Link>
           </div>
           {activity.length === 0 ? (
             <div className="py-8 text-center text-sm text-slate-500">No recent activity.</div>
@@ -329,7 +343,10 @@ export default function DashboardPage() {
         </section>
       </div>
 
+      {/* RIGHT COLUMN */}
       <div className="min-w-0 space-y-5">
+        
+        {/* LOAN CARD */}
         <section className={`${CARD} flex flex-col p-4 sm:p-5`}>
           <div className="flex items-center gap-3">
             <CardIcon icon={Landmark} tile="bg-emerald-600" />
@@ -407,11 +424,12 @@ export default function DashboardPage() {
           </div>
           
           <div className="flex items-center justify-between">
-            <p className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+ KES 45 interest earned</p>
+            <p className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">+ KES 45 interest</p>
             <button className="text-[12px] font-bold text-emerald-600 hover:text-emerald-700">Add Money</button>
           </div>
         </section>
 
+        {/* NEED HELP */}
         <section className="rounded-2xl border border-slate-200 bg-white p-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
